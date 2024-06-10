@@ -45,7 +45,7 @@ jobs:
         run: |
             mkdir -p ~/esp
             cd ~/esp
-            git clone -b v4.4 --recursive https://github.com/espressif/esp-idf.git
+            git clone -b v4.0 --recursive https://github.com/espressif/esp-idf.git
 
       - name: Setting up the environment
         run: |
