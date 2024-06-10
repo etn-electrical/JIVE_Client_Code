@@ -59,7 +59,7 @@ jobs:
         run: |
             echo $GITHUB_WORKSPACE
             cd $GITHUB_WORKSPACE
-            git submodule update --init --recursive
+            #git submodule update --init --recursive
       - name: see directories
         run: | 
             pwd
