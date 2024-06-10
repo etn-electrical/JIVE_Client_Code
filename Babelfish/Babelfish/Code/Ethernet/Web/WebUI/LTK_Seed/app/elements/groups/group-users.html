@@ -1,0 +1,933 @@
+<dom-module id="group-users">
+        <style>
+            px-input /deep/ input[type='number']::-webkit-inner-spin-button,
+            px-input /deep/ input[type='number']::-webkit-outer-spin-button {
+                -webkit-appearance: none !important;
+            }
+            px-input /deep/ input[type='number'] {
+                -moz-appearance: textfield !important;
+            }
+            px-input /deep/ input[type='number']::-ms-clear {
+                display: none !important;
+            }
+            .button-content{
+                display: flex;
+                background: #e0e0e0;
+                display: flex;
+                 /* border-top: 1px solid #c1c1c1; */
+                 border-bottom: 1px solid #c1c1c1;
+            }
+            .row-button{
+                width: 120px;
+                min-width: 150px;
+                padding: 0px 25px;
+                border-top: none;
+                border-bottom: none; 
+            }
+        </style>
+        <template>
+            <template is='dom-if' if="[[_displayAddUser(disableEdit, isAdminRole)]]">
+                <div class="button-content">
+                <px-row-button class="row-button" icon="px-icons:add"  on-click="addUser">Add</px-row-button>
+                <px-row-button class="row-button" icon="px-icons:reset" on-click="resetUser">Reset</px-row-button>
+                </div>
+            </template>
+            <px-row header>
+                <px-column>Full Name</px-column>
+                <px-column>Role Name</px-column>
+                <px-column>Username</px-column>
+                <px-column>Last Login</px-column>
+                <px-column>Password Change Due</px-column>
+            </px-row>
+            <template is='dom-repeat' items="{{users}}" as="user">
+                <px-row selectable on-click="toggleSidebarUser">
+                    <px-column>{{user.FullName.value}}</px-column>
+                    <px-column>{{user.Role.value}}</px-column>
+                    <px-column>{{user.UserName.value}}</px-column>					
+                    <px-column>{{user.lastLoginDetail}}</px-column>
+                    <px-column>{{user.pwdNextDate}}</px-column>
+                </px-row>
+            </template>
+    
+            <template id="userSidebar">
+                <sidebar-default>
+                    
+                    <div class="title">
+                        <px-title maintitle="[[selected.FullName.value]]"></px-title>
+                    </div>
+                    <div class="content">
+                        <template is='dom-if' if="[[isAdminRole]]">
+                            <px-row>
+                                <px-column>
+                                    <span>Full Name</span>
+                                    <br />
+                                    <px-input id="editFullName" value="{{selected.FullName.value}}" invalid="[[_validateFullName(selected.FullName.value)]]" maxlength="32" required></px-input>
+                                </px-column>
+                            </px-row>
+                        </template>
+                        
+                        <px-row>
+                            <px-column>
+                                <span>User Name</span>
+                                <br />
+                                <px-input id="editUserName" value="[[selected.UserName.value]]" disabled="true" ></px-input>
+                            </px-column>
+                        </px-row>
+                        <template is='dom-if' if="[[isAdminRole]]">
+                            <px-row>
+                                <px-column>
+                                    <span>Password Complexity</span>
+                                    <br />
+                                    <px-dropdown id ="editPwdComplexity" value="{{selected.PwdComplexity.value}}">
+                                        <px-item value="0" title="MinLen=6">0</px-item>
+                                        <px-item value="1" title="MinLen=8, Alpha=1, Num=1">1</px-item>
+                                        <px-item value="2" title="MinLen=12, Alpha=1, UpperCase=1, Num=1, SplChar=1">2</px-item>
+                                        <px-item value="3" title="MinLen=16, Alpha=2, UpperCase=1, LowerCase=1, Num=1, SplChar=2">3</px-item>		
+                                    </px-dropdown>
+                                </px-column>
+                            </px-row>
+                        </template>
+                        <template is='dom-if' if="[[isAdminRole]]">
+                            <px-row>
+                                <px-column>
+                                    <span>Password Timeout Days</span>
+                                    <br />
+                                    <px-input id="editPwdTimeoutDays" value="{{selected.PwdTimeoutDays.value}}" type="number" min="0" max='65535' invalid="[[_validatePwdTimeoutDays(selected.PwdTimeoutDays.value)]]" required></px-input>
+                                </px-column>
+                            </px-row>
+                        </template>
+                        <px-row>
+                            <px-column>
+                                <span>
+                                    Logged-In User Password
+                                </span>
+                                <br />
+                                <px-input id="loggedInUserPassword" value="{{loggedInUserPassword}}" dark type="password" invalid="[[_validatePassword(loggedInUserPassword, loggedInUserPwdComplexity, loggedInUserFullname, loggedInUsername)]]" maxlength="20" required />
+                            </px-column>
+                        </px-row>
+                    </div>
+                    <div class="content">
+                        <px-row>
+                            <px-column>
+                                <span>
+                                    New Password <iron-icon icon="px-icons:information" style="height: 16px;width: 16px;margin-bottom: 4px;" title="[[_getToolTip(selected.PwdComplexity.value)]]"></iron-icon>
+                                </span>
+                                <br />
+                                <px-input id="editPassword" value="{{editPassword}}" dark type="password" invalid="[[_validatePassword(editPassword, selected.PwdComplexity.value, selected.FullName.value, selected.UserName.value)]]" maxlength="20" required />
+                            </px-column>
+                        </px-row>
+                    </div>
+                    <div class="content">
+                        <px-row>
+                                <px-column>
+                                    <span>Confirm New Password</span>
+                                    <br />
+                                    <px-input id="editPassword2" value={{editPassword2}} dark type="password" invalid="[[_validateConfirmPassword(editPassword, editPassword2)]]" maxlength="20" required/>
+                                </px-column>
+                        </px-row>
+                    </div>
+                    <div class="content">
+                        <template is='dom-if' if="[[isAdminRole]]">
+                                <px-row>
+                                    <px-column>
+                                        <span>User Role</span>
+                                        <br />
+                                        <px-dropdown id ="editRole" items="[[roles]]" label-key="role_name" value-key="role_name" value="{{selected.Role.value}}">
+                                        </px-dropdown>
+                                    </px-column>
+                                </px-row>
+                        </template>					
+                    </div>
+                    <px-pocket class="pocket">
+                        <!--<action-save></action-save>-->
+                        <px-button positive on-tap="testTap">Save</px-button>
+                        <template is='dom-if' if="[[_displayDelete(selected.UserName.value, isAdminRole)]]">
+                            <px-button negative on-tap="deleteUser">Delete</px-button>	
+                        </template>
+                    </px-pocket>
+    
+                </sidebar-default>
+                
+            </template>
+    
+            <template id="newUserSidebar">
+                <sidebar-default>
+                    <div class="title">
+                        <px-title maintitle="Add New User"></px-title>
+                    </div>
+                    <div class="content">
+                        <px-row>
+                            <px-column>
+                                <span>Full Name</span>
+                                <br />
+                                <px-input id="newFullName" value={{newFullName}} param="[[selected.FullName]]" maxlength="32" invalid="[[_validateFullName(newFullName)]]" required ></px-input>
+                            </px-column>
+                        </px-row>		
+                        <px-row>
+                            <px-column>
+                                <span>User Name</span>
+                                <br />
+                                <px-input id="newUserName" value={{newUserName}} param="[[selected.UserName]]" maxlength="20" invalid="[[_validateUserName(newUserName)]]" required ></px-input>
+                            </px-column>
+                        </px-row>
+                        <px-row>
+                            <px-column>
+                                <span>Password Complexity</span>
+                                <br />
+                                <px-dropdown id ="newPwdComplexity" value="{{newPwdComplexity}}">
+                                     <px-item value="0" title="MinLen=6">0</px-item>
+                                     <px-item value="1" title="MinLen=8, Alpha=1, Num=1">1</px-item>
+                                     <px-item value="2" title="MinLen=12, Alpha=1, UpperCase=1, Num=1, SplChar=1">2</px-item>
+                                     <px-item value="3" title="MinLen=16, Alpha=2, UpperCase=1, LowerCase=1, Num=1, SplChar=2">3</px-item>		
+                                </px-dropdown>
+                            </px-column>
+                        </px-row>
+                        <px-row>
+                            <px-column>
+                                <span>Password Timeout Days</span>
+                                <br />
+                                <px-input id="newPwdTimeoutDays" value={{newPwdTimeoutDays}} type="number" min="0" max='65535' maxlength="5" invalid="[[_validatePwdTimeoutDays(newPwdTimeoutDays)]]" required></px-input>
+                            </px-column>
+                        </px-row>										
+                        <px-row>
+                            <px-column>
+                                <span>
+                                    New Password <iron-icon icon="px-icons:information" style="height: 16px;width: 16px;margin-bottom: 4px;" title="[[_getToolTip(newPwdComplexity)]]"></iron-icon>
+                                </span>
+                                <br />
+                                <px-input id="newPassword" type="password" value={{newPassword}} invalid="[[_validatePassword(newPassword, newPwdComplexity, newFullName, newUserName)]]" maxlength="20"  dark required/>
+                            </px-column>
+                        </px-row>
+                    </div>
+                    <div class="content"> 
+                        <px-row>
+                                <px-column>
+                                    <span>Confirm New Password</span>
+                                    <br />
+                                    <px-input id="newPassword2" type="password" value={{newPassword2}} invalid="[[_validateConfirmPassword(newPassword, newPassword2)]]" maxlength="20" dark required/>
+                                </px-column>
+                        </px-row>
+                    </div>
+                    <div class="content">
+                        <px-row>
+                                <px-column>
+                                    <span>User Role</span>
+                                    <br />
+                                    <px-dropdown id ="newRole" items="[[roles]]" label-key="role_name" value-key="role_name" value="Viewer">
+                                    </px-dropdown>
+                                </px-column>
+                        </px-row>					
+                    </div>
+                    <px-pocket class="pocket">
+                        <px-button disabled$=[[_computedSaveBtn(newFullName,newUserName,newPwdTimeoutDays,newPassword,newPassword2)]] positive on-tap="saveUser">Save</px-button>
+                    </px-pocket>
+                </sidebar-default>               
+            </template>
+            <template id="resetDefaultUserSidebar">
+                <sidebar-default>
+                    <div class="title">
+                        <px-title maintitle="Reset User"></px-title>
+                    </div>
+                    <div class="content">       
+                        <px-row>
+                            <px-column>
+                                <span>User Name</span>
+                                <br /><br />
+                                <px-input id="resetUserName" value="[[loggedInUsername]]" disabled="true" ></px-input>
+                            </px-column>
+                        </px-row>
+                    <px-row>
+                        <px-column>
+                            <span>
+                                Logged-In User Password
+                            </span>
+                            <br /><br />
+                            <px-input id="loggedInUserPassword" value="{{loggedInUserPassword}}" dark type="password" invalid="[[_validatePassword(loggedInUserPassword, loggedInUserPwdComplexity, loggedInUserFullname, loggedInUsername)]]" maxlength="20" required />
+                        </px-column>
+                    </px-row>
+                  </div>
+                  <div class="content">
+                    <px-row>
+                        <px-column>
+                            <span>Reset Options</span>
+                            <br /><br />
+                            <px-dropdown id="selectedResetOption" value="{{selectedResetOption}}">
+                                <px-item value="1">Default Admin Account</px-item>
+                                <px-item value="2">All User Accounts</px-item>		
+                           </px-dropdown>
+                        </px-column>
+                    </px-row>
+                 </div>
+                    <px-pocket class="pocket">
+                        <px-button positive disabled$=[[_computedResetBtn(loggedInUserPassword)]] on-tap="reset">Reset</px-button>
+                    </px-pocket>
+                </sidebar-default>
+            </template>    
+        </template>
+        <script>
+        Polymer({
+            is: "group-users",
+            behaviors: [
+                PB.behaviors.navElem,
+                PB.behaviors.disabled,
+                PB.behaviors.distribute,
+                Polymer.Templatizer
+            ],
+            listeners: {
+                click: 'handleClick'
+            },
+            properties: {
+                icon: String,
+                label: String,
+                loggedInUserPwdComplexity: String,
+                loggedInUsername: String,
+                loggedInUserFullname: String
+            },
+            _getToolTip: function(pwdComplexity) {
+                var message;
+                switch(pwdComplexity) {
+                    case '0': 
+                                message="Password must meet the following requirements:\n" +
+                                "- Be at least 6 characters\n" +
+                                "- Not same as User name or Full name\n" +
+                                "- Not same as existing or default password";
+                                break;
+                    case '1': 
+                                message="Password must meet the following requirements:\n" +
+                                "- Be at least 8 characters\n" +
+                                "- At least 1 letter\n" +
+                                "- At least 1 number\n" +
+                                "- Not same as User name or Full name\n" +
+                                "- Not same as existing or default password";
+                                break;
+                    case '2': 
+                                message="Password must meet the following requirements:\n" +
+                                "- Be at least 12 characters\n" +
+                                "- At least 1 letter\n" +
+                                "- At least 1 number\n" +
+                                "- At least 1 special character\n" +
+                                "- At least 1 capital letter\n" +
+                                "- Not same as User name or Full name\n" +
+                                "- Not same as existing or default password";
+                                break;
+                    case '3': 
+                                message="Password must meet the following requirements:\n" +
+                                "- Be at least 16 characters\n" +
+                                "- At least 2 letters\n" +
+                                "- At least 1 number\n" +
+                                "- At least 2 special characters\n" +
+                                "- At least 1 capital letter\n" +
+                                "- At least 1 lowercase letter\n" +
+                                "- Not same as User name or Full name\n" +
+                                "- Not same as existing or default password";
+                                break;
+                }
+                return message;
+            },
+            _validateFullName: function(fullname) {
+                if(fullname != null) {
+                    if(fullname != '') {
+                        return false;
+                    }
+                    return true;
+                }; 
+            },
+            _validateUserName: function(username) {
+                if(username != null) {
+                    if(/^[a-zA-Z0-9-_']+\.?[a-zA-Z0-9-_']*$/.test(username)) {
+                        return false;
+                    }
+                    return true;
+                }; 
+            },
+            _validatePwdTimeoutDays: function(passwordTimeoutDays) {
+                if(passwordTimeoutDays != null) {
+                    if(passwordTimeoutDays >= 0 && passwordTimeoutDays <= 65535 && passwordTimeoutDays != '' && /^[0-9]*$/.test(passwordTimeoutDays)) {
+                        return false;
+                    }
+                    return true;
+                } 
+            },
+            _validatePassword: function(password, pwdComplexity, fullName, userName) {
+                switch(pwdComplexity) {
+                    case '0': 	if(password != null) {
+                                    if(/^.{6,}$/.test(password) && !(/[^\S]/.test(password)) && password != fullName && password != userName) {
+                                        return false;
+                                    }
+                                    return true;
+                                }	
+                                break;
+                    case '1':	if(password != null) {
+                                    if(/^.{8,}$/.test(password) && /\d/.test(password) && /[a-zA-Z]/.test(password) && !(/[^\S]/.test(password)) && password != fullName && password != userName) {
+                                        return false;							
+                                    }
+                                    return true;
+                                }	
+                                break;
+                    case '2':	if(password != null) {
+                                    if(/^.{12,}$/.test(password) && /\d/.test(password) && /[a-zA-Z]/.test(password) && /[^a-zA-Z\d\s]/.test(password) && !(/[^\S]/.test(password)) && /[A-Z]/.test(password) && password != fullName && password != userName) {
+                                        return false;				
+                                    }
+                                    return true;
+                                }	
+                                break;
+                    case '3':	if(password != null) {
+                                    if(/^.{16,}$/.test(password) && /\d/.test(password) && /(?=(.*[A-Za-z]){2})/.test(password) && /(?=(.*[^a-zA-Z\d\s]){2})/.test(password) && !(/[^\S]/.test(password)) && /[A-Z]/.test(password) && /[a-z]/.test(password) && password != fullName && password != userName){
+                                        return false;					
+                                    }
+                                    return true;
+                                }	
+                                break;
+                }	
+            },
+            _validateConfirmPassword: function(pass, confirmPass) {
+                if(confirmPass != null) {
+                    if(pass == confirmPass && confirmPass != '') {
+                        return false;
+                    }
+                    return true;
+                }	
+            },
+            _computedSaveBtn: function(newFullName, newUserName, newPwdTimeoutDays, newPassword, newPassword2) {
+                if ((newFullName === null || newFullName.length === 0) && 
+                (newUserName === null || newUserName.length === 0 ) &&
+                (newPwdTimeoutDays === null || newPwdTimeoutDays.length === 0) &&
+                (newPassword === null || newPassword.length === 0) &&
+                (newPassword2 === null || newPassword2.length === 0)) { 
+                    return true; 
+                }
+                return false;
+            },
+            _computedResetBtn:function(loggedInUserPassword){
+                if(loggedInUserPassword === null || loggedInUserPassword.length === 0 ){
+                    return true; 
+                }
+                return false;
+            },
+            _displayAddUser: function (disableEdit, isAdminRole)  {
+                return (!disableEdit && isAdminRole) ;
+            },
+            _displayDelete: function (username, isAdminRole) {
+                if(!isAdminRole || (PB.currentUser.UserName.value.toLowerCase() == username.toLowerCase())) {
+                    return false;
+                }
+                return true;
+            },
+            "_disabled-changed": function(newValue, oldValue) {
+                
+                // // Set disabled on all effective children
+                //var children = this.getEffectiveChildren();
+    
+                // // Set disabled on sidebar (special case; only used in tabs with sidebars)
+                // if (this.navSidebar) {
+                // 	children = children.concat(this.navSidebar.getEffectiveChildren());
+                // }
+    
+                // console.log(children);
+    
+                // for (var n in children) {
+                // 	var c = children[n];
+                // 	if (c && c.set) {
+                // 		c.set("disabled", newValue);
+                // 	}
+                // }
+            },
+            testTap: function(e) {
+                var self = this;
+                var isAdminRole = self.isAdminRole;
+                var userID = this.selected.url;
+    
+                var	fullName;
+                var passwordComplexity;
+                var passwordTimeOutDays;
+                var role;
+                
+                var selectedUser = this.selected;
+                var sideBar = document.querySelector('#sidebar');
+                var userName = sideBar.querySelector('#editUserName').value;
+                var loggedInUserPassword = sideBar.querySelector('#loggedInUserPassword').value;
+                var newPassword = sideBar.querySelector('#editPassword').value;
+                var confirmPassword = sideBar.querySelector('#editPassword2').value;
+                
+                if(isAdminRole) {
+                    fullName = sideBar.querySelector('#editFullName').value;
+                    passwordComplexity = sideBar.querySelector('#editPwdComplexity') ? sideBar.querySelector('#editPwdComplexity').value : "";
+                    passwordTimeOutDays = sideBar.querySelector('#editPwdTimeoutDays').value;
+                    role = sideBar.querySelector('#editRole').value;
+
+                    if(!selectedUser.FullName.isDirty && !selectedUser.PwdComplexity.isDirty && !selectedUser.PwdTimeoutDays.isDirty && !selectedUser.Role.isDirty && loggedInUserPassword == null && newPassword == null && confirmPassword == null) {
+                        navbar.showConfirm("No changes to be saved.", "Alert", ["Ok"])
+                            .then(function(result) {
+                                switch (result) {
+                                    case 0: // Cancel - do nothing
+                                        break;
+                                }
+                            });
+                        return;
+                    }
+
+                    if(!fullName || !passwordComplexity || !passwordTimeOutDays || !role) {
+                        navbar.showConfirm("Please provide required inputs.", "Alert", ["Ok"])
+                            .then(function(result) {
+                                switch (result) {
+                                    case 0: // Cancel - do nothing
+                                        break;
+                                }
+                            });
+                        return;
+                    }
+
+                    if(selectedUser.PwdComplexity.isDirty && newPassword == null) {
+                        navbar.showConfirm("Please enter the new password.", "Alert", ["Ok"])
+                            .then(function(result) {
+                                switch (result) {
+                                    case 0: // Cancel - do nothing
+                                        break;
+                                }
+                            });
+                        return;
+                    }
+                }
+                else {
+                    if(!newPassword && !confirmPassword && !loggedInUserPassword) {
+                        navbar.showConfirm("Please provide required inputs.", "Alert", ["Ok"])
+                            .then(function(result) {
+                                switch (result) {
+                                    case 0: // Cancel - do nothing
+                                        break;
+                                }
+                            });
+                        return;
+                    }
+                }
+                
+                if(loggedInUserPassword == null && newPassword != null) {
+                    navbar.showConfirm("Please enter the logged in user password.", "Alert", ["Ok"])
+                        .then(function(result) {
+                            switch (result) {
+                                case 0: // Cancel - do nothing
+                                    break;
+                            }
+                        });
+                    return;
+                } else if (newPassword != null && confirmPassword == null) {
+                     navbar.showConfirm("Please enter the confirm new password.", "Alert", ["Ok"])
+                        .then(function(result) {
+                            switch (result) {
+                                case 0: // Cancel - do nothing
+                                    break;
+                            }
+                        });
+                    return;
+                } else if(newPassword != confirmPassword) {
+                    navbar.showConfirm("New password and Confirm password do not match.", "Alert", ["Ok"])
+                        .then(function(result) {
+                            switch (result) {
+                                case 0: // Cancel - do nothing
+                                    break;
+                            }
+                        });
+                    return;
+                }
+                
+                var loggedInUserPwd = (function(){
+                    var password = window.btoa(sideBar.querySelector('#loggedInUserPassword').value);
+                    return '<LoggedInUserPwd>' + password + '</LoggedInUserPwd>'
+                })();
+                
+                var newPwd = (function() {
+                    var passTemp = sideBar.querySelector('#editPassword').value;
+                    if(passTemp != null && passTemp != '') {
+                        var password = window.btoa(sideBar.querySelector('#editPassword').value);
+                        return '<Pwd>' + password + '</Pwd>'
+                    }
+                    return '';
+                })();
+    
+                var theDate = (function(){
+                    var currentEpoch = Math.floor(new Date().getTime()/1000.0);
+                    return '<PwdSetEpochTime>' + currentEpoch + '</PwdSetEpochTime>';
+                })();
+    
+                var setData;
+                var userDetails = '';
+                var formTags = ['FullName', 'PwdComplexity', 'PwdTimeoutDays', 'Role'];
+                if(isAdminRole) {
+                    for(var u=0; u<formTags.length; u++) {
+                        if(selectedUser[formTags[u]].isDirty && formTags[u] == 'FullName') {
+                            userDetails += '<' + selectedUser[formTags[u]].key + '>' + window.btoa(selectedUser[formTags[u]].value) + '</' + selectedUser[formTags[u]].key + '>';
+                        } else if(selectedUser[formTags[u]].isDirty) {
+                            userDetails += '<' + selectedUser[formTags[u]].key + '>' + selectedUser[formTags[u]].value + '</' + selectedUser[formTags[u]].key + '>';
+                        }
+                    }
+                    if((loggedInUserPassword == null || loggedInUserPassword == "") && (newPwd == null || newPwd == "")) {
+                        setData = '<UserAccount>' + userDetails + '</UserAccount>';
+                    } else {
+                        setData = '<UserAccount>' + userDetails + loggedInUserPwd + newPwd + theDate + '</UserAccount>';
+                    }
+                }
+                else {
+                    setData = '<UserAccount>' + loggedInUserPwd + newPwd + theDate + '</UserAccount>';
+                }
+    
+                PB.http('PUT', userID, setData).then(function(e) {
+                    if(loggedInUserPassword != "" && PB.currentUser.UserName.value == userName && !selectedUser.FullName.isDirty && !selectedUser.PwdTimeoutDays.isDirty) {
+                        PB.deleteLocalStorage();
+                        window.location.href ="/";
+                    } else {
+                        if(isAdminRole) {
+                            self.updateUserTable();
+                        }
+                    }
+                }, function(xhr) {
+                    var message = xhr.status + ":" + xhr.statusText;
+                    if (xhr.status && xhr.status > 0) {
+                        if (xhr.status === 400) {
+                            message = "Invalid inputs";
+                        } else if (xhr.status === 403) {
+                            message = "Invalid logged in user password";
+                        } else if (xhr.status === 422 && xhr.statusText == "SFU Session in Progress") {
+                            message = "Firmware update session in progress, please retry after sometime."
+                        }
+                        navbar.showConfirm(message, "Alert", ["Ok"])
+                            .then(function (result) {
+                                switch (result) {
+                                    case 0: // Cancel - do nothing
+                                        break;
+                                }
+                            });
+                    }
+                    return;
+                });
+            },
+            updateUserTable: function () {
+                var self = this;
+                PB.getAllUsers().then(function (data) {
+                    self.users = data;
+                    self.getSidebar().close();
+                });
+            },
+            deleteUser: function (e) {
+                var userID = this.selected.url;
+                var self = this;
+
+                PB.JQhttp('DELETE', userID).then(function (e) {
+                    self.updateUserTable();
+                    if(localStorage.getItem(md5(self.selected.UserName.value))) {
+                        localStorage.removeItem(md5(self.selected.UserName.value));
+                    }
+                }, function (xhr) {
+                    var message = xhr.statusText;
+                        if (xhr.status === 422 && xhr.statusText == "SFU Session in Progress") {
+                            message = "Firmware update session in progress, please retry after sometime."
+                        }
+                    navbar.showConfirm(message, "Alert", ["Ok"])
+                        .then(function (result) {
+                            switch (result) {
+                                case 0: // Cancel - do nothing
+                                    break;
+                            }
+                        });
+                    return;
+                });
+            },
+            saveUser: function(e) {
+                var	sideBar = document.querySelector('#sidebar');
+                var newPassword = sideBar.querySelector('#newPassword').value;
+                var confirmPassword = sideBar.querySelector('#newPassword2').value;
+                var newFullName = sideBar.querySelector('#newFullName').value;
+                var newUserName = sideBar.querySelector('#newUserName').value;
+                var newPasswordTimeOut = sideBar.querySelector('#newPwdTimeoutDays').value;
+                var newRole = sideBar.querySelector('#newRole').value;
+    
+                if(!newFullName || !newUserName || !newPassword || !newPasswordTimeOut || !newRole) {
+                    navbar.showConfirm("Please provide required inputs.", "Alert", ["Ok"])
+                        .then(function(result) {
+                            switch (result) {
+                                case 0: // Cancel - do nothing
+                                    break;
+                            }
+                        });
+                    return;
+                }
+    
+                if(newPassword != confirmPassword) {
+                    navbar.showConfirm("Passwords do not match.", "Alert", ["Ok"])
+                        .then(function(result) {
+                            switch (result) {
+                                case 0: // Cancel - do nothing
+                                    break;
+                            }
+                        });
+                    return;
+                }
+                
+                var userID = this.selected.url;
+                var newPassword = (function(){
+                    var password = window.btoa(sideBar.querySelector('#newPassword').value);
+    
+                    return '<Pwd>' + password + '</Pwd>'
+                })();
+                var theDate = (function(){
+                    var currentEpoch = Math.floor(new Date().getTime()/1000.0);
+                    return '<PwdSetEpochTime>' + currentEpoch + '</PwdSetEpochTime>';
+                })();
+    
+                var newFullName = (function(){
+                    var fullName = window.btoa(sideBar.querySelector('#newFullName').value);
+                    return '<FullName>' + fullName + '</FullName>';
+                })();
+    
+                var newUserName = (function(){
+                    var UserName = window.btoa(sideBar.querySelector('#newUserName').value);
+                    return '<UserName>' + UserName + '</UserName>';
+                })();
+    
+                var newPasswordComplexity = (function(){
+                    var passwordComplexity = sideBar.querySelector('#newPwdComplexity').value;
+                    return '<PwdComplexity>' + passwordComplexity + '</PwdComplexity>';
+                })();
+                
+                var newPasswordTimeOut = (function(){
+                    var passwordTimeOut = sideBar.querySelector('#newPwdTimeoutDays').value;
+                    return '<PwdTimeoutDays>' + passwordTimeOut + '</PwdTimeoutDays>';
+                })();
+    
+                var newRole = (function(){
+                    var role = sideBar.querySelector('#newRole').value;
+                    return '<Role>' + role + '</Role>';
+                })();
+    
+                var setData = '<UserAccount>' + newFullName + newUserName + newPasswordComplexity + newPasswordTimeOut + newPassword + newRole + theDate + '</UserAccount>';
+    
+                var self = this;
+                PB.http('POST', '/rs/users/accounts', setData).then(function(e) {
+                    self.updateUserTable();
+                }, function(xhr) {
+                    var message = xhr.statusText;
+                    if (xhr.status && xhr.status > 0) {
+                        if (xhr.status === 400) {
+                            message = "Invalid inputs";
+                        } else if (xhr.status === 422 && xhr.statusText == "SFU Session in Progress") {
+                            message = "Firmware update session in progress, please retry after sometime."
+                        }
+                        navbar.showConfirm(message, "Alert", ["Ok"])
+                            .then(function (result) {
+                                switch (result) {
+                                    case 0: // Cancel - do nothing
+                                        break;
+                                }
+                            });
+                    }   
+                    return;
+                });
+            },
+            reset:function(){
+                var sideBar = document.querySelector('#sidebar');
+                var resetOption = Number(sideBar.querySelector('#selectedResetOption').value);
+                var resetUrl = '/rs/users/accounts/reset/' + resetOption
+                var loggedInUserPassword = (function () {
+                    var password = window.btoa(sideBar.querySelector('#loggedInUserPassword').value);
+                    return '<LoggedInUserPwd>' + password + '</LoggedInUserPwd>';
+                })();
+                var setData = '<UserAccount>' + loggedInUserPassword + '</UserAccount>';
+                var self = this;
+                PB.http('POST', resetUrl, setData).then(function(e) {
+                    PB.deleteLocalStorage();
+                    self.updateUserTable();
+                }, function (xhr) {
+                    var message = xhr.statusText;
+                    if (xhr.status && xhr.status > 0) {
+                        if (xhr.status === 403) {
+                            message = "Invalid logged in user password";
+                        } else if (xhr.status === 422 && xhr.statusText == "SFU Session in Progress") {
+                            message = "Firmware update session in progress, please retry after sometime."
+                        }
+                        navbar.showConfirm(message, "Alert", ["Ok"])
+                            .then(function (result) {
+                                switch (result) {
+                                    case 0: // Cancel - do nothing
+                                        break;
+                                }
+                            });
+                    }
+                    return;
+                });
+            },	
+            attached: function() {
+                var self = this;
+                this.getTab().set("canEdit", true);
+                this.getTab().set("updateInterval", null);
+                // UserList is already populated in PB
+                //this.users = PB.userList;
+    
+                // var userdata =  PB.userList.filter(function(user){
+                // 	if(!user.FullName.value) {
+                // 		return false;
+                // 	}
+                // 	return true;				
+                // });
+    
+                // var userCalls = userdata.map(function(user){
+                // 	return user.read(true);
+                // });
+    
+                self.isAdminRole = PB.currentUser.role.toLowerCase() == "admin";
+                self.loggedInUsername = PB.currentUser.UserName.value;
+                self.loggedInUserFullname = PB.currentUser.FullName.value;
+                self.loggedInUserPwdComplexity = PB.currentUser.PwdComplexity.value;
+                self.selectedResetOption = 1;
+                
+                PB.getAllUsers().then(function(data) { 
+                    self.users = data;
+                });
+                PB.getAllRoles().then(function(data) {
+                    self.roles = data;
+                });
+            },
+            toggleSidebarUser: function(e) {
+                if (this.disableEdit) {
+                    e.currentTarget.removeAttribute("selected");
+                    return;
+                }
+                var user;
+                if(e.model){
+                    user = e.model.user;
+                } else {
+                    user = e;
+                }
+                var selectedRow = e.currentTarget;
+                // Deselect the previously selected row
+                /* This is kind of a hack. This also removes "selected" from the currently selected item, then we add it back below*/
+                var oldSelected = Polymer.dom(this.root).querySelectorAll("px-row[selected]");
+                if (oldSelected.length > 1) {
+                    oldSelected.forEach(function(selected){
+                        selected.removeAttribute("selected");
+                    });
+                }
+                
+                selectedRow.setAttribute("selected", "true");
+                this.set("selected", user);
+                
+                var template = this.$.userSidebar;
+                this.dataHost = this;
+                this.templatize(template);
+                var sidebarContent = this.stamp({});
+    
+                setTimeout(function() {
+                    this.getSidebar().open(sidebarContent, {
+                        label: user.UserName.value,
+                        userParams: [
+                            user.UserName,
+                            user.FullName,
+                            user.Role.value
+                        ]
+                    })
+                    this.resetUserDetails(user);
+                }.bind(this), 0);
+            },
+            toggleSidebarNewUser: function(e){
+                var user = e;
+    
+                // Deselect the previously selected row
+                var selectedRow = Polymer.dom(this.root).querySelector("px-row[selected]");
+                if (selectedRow) {
+                    selectedRow.removeAttribute("selected");
+                    // If target row was previously selected, close the sidebar and leave
+                    if (e.currentTarget === selectedRow) {
+                        this.selected = undefined;
+                        this.getSidebar().close();
+                        return;
+                    }
+                }
+                //e.currentTarget.setAttribute("selected", "true");
+                this.set("selected", user);
+    
+                var template = this.$.newUserSidebar;
+                this.dataHost = this;
+                this.templatize(template);
+                var sidebarContent = this.stamp({});
+    
+                setTimeout(function() {
+                    this.getSidebar().open(sidebarContent, {
+                        label: user.UserName.value,
+                        userParams: [
+                            user.UserName,
+                            user.FullName
+                        ]
+                    });
+                    this.resetNewUserForm();
+                }.bind(this), 0);			
+            },
+            addUser: function() {
+                var lastUser = this.users[this.users.length -1].url.split('/');
+                var newUserNumber = Number(lastUser[lastUser.length - 1]) + 1;
+                var url = '/rs/users/accounts/' + newUserNumber;
+                if(this.users.length < 6){
+                    var newUser = new PB.newUser(url);
+                    this.toggleSidebarNewUser(newUser);
+                }
+                else {
+                    navbar.showConfirm("You Have Exceeded The Maximum Number Of Users.", "Alert", ["Ok"]);
+                    return;
+                }
+            },
+            resetUser:function(){
+                    this.toggleSidebarResetUser();
+            },
+            toggleSidebarResetUser: function(){
+                // Deselect the previously selected row
+                var selectedRow = Polymer.dom(this.root).querySelector("px-row[selected]");
+                if (selectedRow) {
+                    selectedRow.removeAttribute("selected");
+                    // If target row was previously selected, close the sidebar and leave
+                    // if (e.currentTarget === selectedRow) {
+                    //     this.selected = undefined;
+                    //     this.getSidebar().close();
+                    //     return;
+                    // }
+                }
+                //e.currentTarget.setAttribute("selected", "true");
+                // this.set("selected", user);
+    
+                var template = this.$.resetDefaultUserSidebar;
+                this.dataHost = this;
+                this.templatize(template);
+                var resetsidebarContent = this.stamp({});
+    
+                setTimeout(function() {
+                    this.getSidebar().open(resetsidebarContent);
+                    this.resetForm();
+                }.bind(this), 0);			
+            },
+
+
+            resetUserDetails: function(user) {
+                var	sideBar = document.querySelector('#sidebar');
+                sideBar.querySelector('#loggedInUserPassword').value = null;
+                sideBar.querySelector('#editPassword').value = null;
+                sideBar.querySelector('#editPassword2').value = null;
+    
+                if (sideBar.querySelector('#editFullName') && sideBar.querySelector('#editPwdTimeoutDays') && sideBar.querySelector('#editPwdComplexity')) {
+                    sideBar.querySelector('#editFullName').value = user.cacheValue.FullName;
+                    sideBar.querySelector('#editPwdTimeoutDays').value = user.cacheValue.PwdTimeoutDays;
+                    sideBar.querySelector('#editPwdComplexity').value = user.cacheValue.PwdComplexity;
+                    sideBar.querySelector('#editRole').value = user.cacheValue.Role.value;
+                }
+            },
+            resetNewUserForm: function() {
+                var	sideBar = document.querySelector('#sidebar');
+                sideBar.querySelector('#newFullName').value = null;
+                sideBar.querySelector('#newPassword').value = null;
+                sideBar.querySelector('#newPassword2').value = null;
+                sideBar.querySelector('#newUserName').value = null;
+                sideBar.querySelector('#newPwdTimeoutDays').value = null;
+                sideBar.querySelector('#newPwdComplexity').value = "0";
+            },
+            resetForm:function(){
+                var	sideBar = document.querySelector('#sidebar');
+                sideBar.querySelector('#loggedInUserPassword').value = null;
+            }
+        });
+        </script>
+    </dom-module>

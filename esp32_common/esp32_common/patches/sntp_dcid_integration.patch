@@ -1,0 +1,78 @@
+From 988c6b89130907e4315dca1e0b2841ce60a72355 Mon Sep 17 00:00:00 2001
+From: "Verma, Vimal Kumar" <vimalkumarverma@eaton.com>
+Date: Wed, 19 Jan 2022 18:34:47 +0530
+Subject: [PATCH 1/2] DCID Integration in ESP LWIP for ESP32 SNTP Changes
+
+---
+ esp-idf/components/lwip/CMakeLists.txt                         | 2 ++
+ esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/esp-idf/components/lwip/CMakeLists.txt b/esp-idf/components/lwip/CMakeLists.txt
+index dec0ecb8..cca37f4f 100644
+--- a/esp-idf/components/lwip/CMakeLists.txt
++++ b/esp-idf/components/lwip/CMakeLists.txt
+@@ -4,6 +4,8 @@ set(include_dirs
+     lwip/src/include
+     port/esp32/include
+     port/esp32/include/arch
++    "../../../../Code/Config"
++    "../../../../Babelfish/Code/Ethernet"
+     )
+ 
+ set(srcs
+diff --git a/esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h b/esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h
+index cb627716..350dbed3 100644
+--- a/esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h
++++ b/esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h
+@@ -39,6 +39,7 @@
+ 
+ #include "lwip/opt.h"
+ #include "lwip/prot/iana.h"
++#include "Sntp_Config_ESP32.h"
+ 
+ /**
+  * @defgroup sntp_opts Options
+-- 
+2.31.1.windows.1
+
+
+From 4e945e7246dde86a61c0f56cd70168844555e859 Mon Sep 17 00:00:00 2001
+From: "Verma, Vimal Kumar" <vimalkumarverma@eaton.com>
+Date: Fri, 21 Jan 2022 15:54:10 +0530
+Subject: [PATCH 2/2] Fixed review comments
+
+---
+ esp-idf/components/lwip/CMakeLists.txt                         | 1 +
+ esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/esp-idf/components/lwip/CMakeLists.txt b/esp-idf/components/lwip/CMakeLists.txt
+index cca37f4f..b28cce18 100644
+--- a/esp-idf/components/lwip/CMakeLists.txt
++++ b/esp-idf/components/lwip/CMakeLists.txt
+@@ -4,6 +4,7 @@ set(include_dirs
+     lwip/src/include
+     port/esp32/include
+     port/esp32/include/arch
++#Adding path of files to integrate, user-defined UPDATE TIME and RETRY TIME for SNTP through DCID
+     "../../../../Code/Config"
+     "../../../../Babelfish/Code/Ethernet"
+     )
+diff --git a/esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h b/esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h
+index 350dbed3..c4138345 100644
+--- a/esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h
++++ b/esp-idf/components/lwip/lwip/src/include/lwip/apps/sntp_opts.h
+@@ -39,7 +39,8 @@
+ 
+ #include "lwip/opt.h"
+ #include "lwip/prot/iana.h"
+-#include "Sntp_Config_ESP32.h"
++#include "Sntp_Config_ESP32.h"	///< Changes done by platform team to provide user-defined SNTP_UPDATE_TIME
++								///< and SNTP_RECV_TIMEOUT( SNTP_RETRY_TIMEOUT ) through DCID
+ 
+ /**
+  * @defgroup sntp_opts Options
+-- 
+2.31.1.windows.1
+

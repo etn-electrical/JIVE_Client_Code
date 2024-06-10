@@ -1,0 +1,16 @@
+{
+  "name": "neon-animation",
+  "description": "",
+  "version": "1.2.2",
+  "authors": [
+    "The Polymer Authors"
+  ],
+  "keywords": [
+    "stub"
+  ],
+  "main": [],
+  "private": true,
+  "ignore": [],
+  "dependencies": {},
+  "devDependencies": {}
+}

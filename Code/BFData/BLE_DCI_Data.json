@@ -1,0 +1,1998 @@
+{
+ "User": {
+"Observer": {
+
+       "Assembly_3,Main":{
+
+           "GroupcharacteristicUUID": "ddec704e-7364-42a9-9afc-3c1d94112462",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    "Category1,CategorySecStart": {
+       "Setting 1,par": { 
+           "characteristicUUID": "2a0adaef-8d66-459c-917b-21d4c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "0-1",
+           "type": "BYTE",
+           "defaultValue": 69,
+           "range":[],
+           "enum":["BIT0",
+                   "BIT1",
+                   "BIT2",
+                   "BIT3",
+                   "BIT4",
+                   "BIT5",
+                   "BIT6",
+                   "BIT7",
+           ],
+           "description": "Enter hex:\nMin: 0\nMax: F\nDefault: 0xA",
+           "display": "BYTE"
+       },
+       "MAC ADDRESS,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4593-917b-21d1c0c122bb",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 2,
+           "total_length": "1-7",
+           "type": "UINT8",
+           "defaultValue": [168,192,173,171,237,59],
+           "range":[],
+           "enum":[],
+           "description": "The device Ethernet mac address:\nMin: 0\nMax: FF\nDefault: AB:C0:AD:AB:ED:3B",
+           "display": "MACADDRESS"
+       },
+    "Sample App,GroupStart": {
+
+       "Assembly_6,Main":{
+
+           "GroupcharacteristicUUID": "17bfe00b-74fa-42dc-b220-ec1cbaad568d",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "LED OUTPUT,par": { 
+           "characteristicUUID": "769c5280-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "0-2",
+           "type": "WORD",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["LED 1","LED 2","LED 3","LED 4"],
+           "description": "Switch to Control LED",
+           "display": "BOOL"
+       },
+       "SWITCH STATUS,par": { 
+           "characteristicUUID": "769c5430-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "2-4",
+           "type": "WORD",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["SWITCH 1","SWITCH 2","SWITCH 3","SWITCH 4"],
+           "description": "Switches to display the LED status",
+           "display": "SAMPLE_READ"
+       },
+       "Test Counter,par": { 
+           "characteristicUUID": "b24801da-f817-11ea-adc1-0242ac120002",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 2,
+           "total_length": "4-6",
+           "type": "UINT16",
+           "defaultValue": 0,
+           "range":[],
+           "enum":[],
+           "description": "Counter",
+           "display": "DECIMAL"
+       },
+       },
+       },
+       },
+    "Group1,GroupStart": {
+
+       "Assembly_7,Main":{
+
+           "GroupcharacteristicUUID": "1d887465-59f1-4899-a7a3-06a732765c6b",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting A,par": { 
+           "characteristicUUID": "2a0adaef-8d76-459c-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 4,
+           "total_length": "0-2",
+           "type": "WORD",
+           "defaultValue": 22068,
+           "range":[],
+           "enum":["BIT0",
+                   "BIT1",
+                   "BIT2",
+                   "BIT3",
+                   "BIT4",
+                   "BIT5",
+                   "BIT6",
+                   "BIT7",
+                   "BIT8",
+                   "BIT9",
+                   "BIT10",
+                   "BIT11",
+                   "BIT12",
+                   "BIT13",
+                   "BIT14",
+                   "BIT15",
+           ],
+           "description": "Enter hex:\nMin: 0\nMax: FFFF\nDefault: 0xB",
+           "display": "WORD"
+       },
+    "Group2,GroupStart": {
+
+       "Assembly_8,Main":{
+
+           "GroupcharacteristicUUID": "fc247c96-0969-4ff2-8307-d5645084c7e5",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+    "Group 3,GroupStart": {
+
+       "Assembly_9,Main":{
+
+           "GroupcharacteristicUUID": "96315e6f-6d75-4058-a3c9-51afef2c592e",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting E,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4528-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 5,
+           "total_length": "0-2",
+           "type": "UINT16",
+           "defaultValue": 5,
+           "range":[0,20],
+           "enum":[],
+           "description": "Enter Slider value:\nMin: 0\nMax: 20\nDefault: 5",
+           "display": "SLIDER"
+       },
+    "Group 4,GroupStart": {
+
+       "Assembly_10,Main":{
+
+           "GroupcharacteristicUUID": "2017f363-d7a4-4231-81e3-83d43a65f340",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+    "Group 5,GroupStart": {
+
+       "Assembly_11,Main":{
+
+           "GroupcharacteristicUUID": "92459057-6fce-4065-8170-4951f48f957c",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Reading 1,par": { 
+           "characteristicUUID": "2a0adaef-8d66-1005-917b-21d1c3c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 32,
+           "total_length": "0-32",
+           "type": "STRING",
+           "defaultValue": "TEST STRING",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 0\nMax: 32\nDefault: TEST STRING",
+           "display": "STRING"
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+    "Category 2,CategorySecStart": {
+       "Reading 2,par": { 
+           "characteristicUUID": "769c508c-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 7,
+           "total_length": "7-11",
+           "type": "FLOAT",
+           "defaultValue": 500.00,
+           "range":[500.00,5423564.00],
+           "enum":[],
+           "description": "Enter Float:\nMin: 500\nMax: 54235645\nDefault: 500.0",
+           "display": "FLOAT"
+       },
+       },
+    "Category 3,CategorySecStart": {
+       },
+    "Category 4,CategorySecStart": {
+       "Log Array,par": { 
+           "characteristicUUID": "769c7168-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "3",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 130,
+           "total_length": "11-141",
+           "type": "UINT8",
+           "defaultValue": ,
+           "range":[],
+           "enum":[],
+           "description": "Log Data",
+           "display": "STRING"
+       },
+       "Log Index,par": { 
+           "characteristicUUID": "769c8168-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "4",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 4,
+           "total_length": "141-145",
+           "type": "UINT32",
+           "defaultValue": 0,
+           "range":[],
+           "enum":[],
+           "description": "Log Index",
+           "display": "DECIMAL"
+       },
+       },
+    "Category 5,CategorySecStart": {
+       "Present Status,par": { 
+           "characteristicUUID": "2a0adaef-8d66-1012-917b-21d1c3c132bb",
+           "characteristicNo": "5",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 5,
+           "total_length": "145-147",
+           "type": "UINT16",
+           "defaultValue": 500,
+           "range":[500,65535],
+           "enum":[],
+           "description": "Enter UINT16:\nMin: 500\nMax: 65535\nDefault: 35000",
+           "display": "DECIMAL"
+       },
+       },
+    },
+    },
+"Operator": {
+
+       "Assembly_3,Main":{
+
+           "GroupcharacteristicUUID": "ddec704e-7364-42a9-9afc-3c1d94112462",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    "Category1,CategorySecStart": {
+       "Setting 1,par": { 
+           "characteristicUUID": "2a0adaef-8d66-459c-917b-21d4c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "0-1",
+           "type": "BYTE",
+           "defaultValue": 69,
+           "range":[],
+           "enum":["BIT0",
+                   "BIT1",
+                   "BIT2",
+                   "BIT3",
+                   "BIT4",
+                   "BIT5",
+                   "BIT6",
+                   "BIT7",
+           ],
+           "description": "Enter hex:\nMin: 0\nMax: F\nDefault: 0xA",
+           "display": "BYTE"
+       },
+       "MAC ADDRESS,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4593-917b-21d1c0c122bb",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 2,
+           "total_length": "1-7",
+           "type": "UINT8",
+           "defaultValue": [168,192,173,171,237,59],
+           "range":[],
+           "enum":[],
+           "description": "The device Ethernet mac address:\nMin: 0\nMax: FF\nDefault: AB:C0:AD:AB:ED:3B",
+           "display": "MACADDRESS"
+       },
+    "Sample App,GroupStart": {
+
+       "Assembly_6,Main":{
+
+           "GroupcharacteristicUUID": "17bfe00b-74fa-42dc-b220-ec1cbaad568d",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "LED OUTPUT,par": { 
+           "characteristicUUID": "769c5280-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "0-2",
+           "type": "WORD",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["LED 1","LED 2","LED 3","LED 4"],
+           "description": "Switch to Control LED",
+           "display": "BOOL"
+       },
+       "SWITCH STATUS,par": { 
+           "characteristicUUID": "769c5430-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "2-4",
+           "type": "WORD",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["SWITCH 1","SWITCH 2","SWITCH 3","SWITCH 4"],
+           "description": "Switches to display the LED status",
+           "display": "SAMPLE_READ"
+       },
+       "Test Counter,par": { 
+           "characteristicUUID": "b24801da-f817-11ea-adc1-0242ac120002",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 2,
+           "total_length": "4-6",
+           "type": "UINT16",
+           "defaultValue": 0,
+           "range":[],
+           "enum":[],
+           "description": "Counter",
+           "display": "DECIMAL"
+       },
+       },
+       },
+       },
+    "Group1,GroupStart": {
+
+       "Assembly_7,Main":{
+
+           "GroupcharacteristicUUID": "1d887465-59f1-4899-a7a3-06a732765c6b",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting A,par": { 
+           "characteristicUUID": "2a0adaef-8d76-459c-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 4,
+           "total_length": "0-2",
+           "type": "WORD",
+           "defaultValue": 22068,
+           "range":[],
+           "enum":["BIT0",
+                   "BIT1",
+                   "BIT2",
+                   "BIT3",
+                   "BIT4",
+                   "BIT5",
+                   "BIT6",
+                   "BIT7",
+                   "BIT8",
+                   "BIT9",
+                   "BIT10",
+                   "BIT11",
+                   "BIT12",
+                   "BIT13",
+                   "BIT14",
+                   "BIT15",
+           ],
+           "description": "Enter hex:\nMin: 0\nMax: FFFF\nDefault: 0xB",
+           "display": "WORD"
+       },
+    "Group2,GroupStart": {
+
+       "Assembly_8,Main":{
+
+           "GroupcharacteristicUUID": "fc247c96-0969-4ff2-8307-d5645084c7e5",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "IP ADDRESS,par": { 
+           "characteristicUUID": "2a0adaef-8d28-4593-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 3,
+           "total_length": "0-4",
+           "type": "UINT8",
+           "defaultValue": [168,192,173,171],
+           "range":[],
+           "enum":[],
+           "description": "Device IP Adress:\nMin: 0\nMax: 255\nDefault: 168.192.173.171",
+           "display": "IPV4"
+       },
+    "Group 3,GroupStart": {
+
+       "Assembly_9,Main":{
+
+           "GroupcharacteristicUUID": "96315e6f-6d75-4058-a3c9-51afef2c592e",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting E,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4528-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 5,
+           "total_length": "0-2",
+           "type": "UINT16",
+           "defaultValue": 5,
+           "range":[0,20],
+           "enum":[],
+           "description": "Enter Slider value:\nMin: 0\nMax: 20\nDefault: 5",
+           "display": "SLIDER"
+       },
+    "Group 4,GroupStart": {
+
+       "Assembly_10,Main":{
+
+           "GroupcharacteristicUUID": "2017f363-d7a4-4231-81e3-83d43a65f340",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+    "Group 5,GroupStart": {
+
+       "Assembly_11,Main":{
+
+           "GroupcharacteristicUUID": "92459057-6fce-4065-8170-4951f48f957c",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Reading 1,par": { 
+           "characteristicUUID": "2a0adaef-8d66-1005-917b-21d1c3c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 32,
+           "total_length": "0-32",
+           "type": "STRING",
+           "defaultValue": "TEST STRING",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 0\nMax: 32\nDefault: TEST STRING",
+           "display": "STRING"
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+    "Category 2,CategorySecStart": {
+       "Reading 2,par": { 
+           "characteristicUUID": "769c508c-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 7,
+           "total_length": "7-11",
+           "type": "FLOAT",
+           "defaultValue": 500.00,
+           "range":[500.00,5423564.00],
+           "enum":[],
+           "description": "Enter Float:\nMin: 500\nMax: 54235645\nDefault: 500.0",
+           "display": "FLOAT"
+       },
+       },
+    "Category 3,CategorySecStart": {
+       },
+    "Category 4,CategorySecStart": {
+       "Log Array,par": { 
+           "characteristicUUID": "769c7168-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "3",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 130,
+           "total_length": "11-141",
+           "type": "UINT8",
+           "defaultValue": ,
+           "range":[],
+           "enum":[],
+           "description": "Log Data",
+           "display": "STRING"
+       },
+       "Log Index,par": { 
+           "characteristicUUID": "769c8168-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "4",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 4,
+           "total_length": "141-145",
+           "type": "UINT32",
+           "defaultValue": 0,
+           "range":[],
+           "enum":[],
+           "description": "Log Index",
+           "display": "DECIMAL"
+       },
+       },
+    "Category 5,CategorySecStart": {
+       "Present Status,par": { 
+           "characteristicUUID": "2a0adaef-8d66-1012-917b-21d1c3c132bb",
+           "characteristicNo": "5",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 5,
+           "total_length": "145-147",
+           "type": "UINT16",
+           "defaultValue": 500,
+           "range":[500,65535],
+           "enum":[],
+           "description": "Enter UINT16:\nMin: 500\nMax: 65535\nDefault: 35000",
+           "display": "DECIMAL"
+       },
+       "Device Time,par": { 
+           "characteristicUUID": "2a0adaef-8d66-459c-917b-21d5c7c132bb",
+           "characteristicNo": "6",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 10,
+           "total_length": "147-151",
+           "type": "UINT32",
+           "defaultValue": 1514955660,
+           "range":[],
+           "enum":[],
+           "description": "Enter device time:\nDefault: 1/03/2018 - 10.13 AM",
+           "display": "DATE"
+       },
+       },
+    },
+    },
+"Engineer": {
+
+       "Assembly_3,Main":{
+
+           "GroupcharacteristicUUID": "ddec704e-7364-42a9-9afc-3c1d94112462",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    "Category1,CategorySecStart": {
+       "Setting 1,par": { 
+           "characteristicUUID": "2a0adaef-8d66-459c-917b-21d4c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "0-1",
+           "type": "BYTE",
+           "defaultValue": 69,
+           "range":[],
+           "enum":["BIT0",
+                   "BIT1",
+                   "BIT2",
+                   "BIT3",
+                   "BIT4",
+                   "BIT5",
+                   "BIT6",
+                   "BIT7",
+           ],
+           "description": "Enter hex:\nMin: 0\nMax: F\nDefault: 0xA",
+           "display": "BYTE"
+       },
+       "MAC ADDRESS,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4593-917b-21d1c0c122bb",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 2,
+           "total_length": "1-7",
+           "type": "UINT8",
+           "defaultValue": [168,192,173,171,237,59],
+           "range":[],
+           "enum":[],
+           "description": "The device Ethernet mac address:\nMin: 0\nMax: FF\nDefault: AB:C0:AD:AB:ED:3B",
+           "display": "MACADDRESS"
+       },
+    "Sample App,GroupStart": {
+
+       "Assembly_6,Main":{
+
+           "GroupcharacteristicUUID": "17bfe00b-74fa-42dc-b220-ec1cbaad568d",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "LED OUTPUT,par": { 
+           "characteristicUUID": "769c5280-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "0-2",
+           "type": "WORD",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["LED 1","LED 2","LED 3","LED 4"],
+           "description": "Switch to Control LED",
+           "display": "BOOL"
+       },
+       "SWITCH STATUS,par": { 
+           "characteristicUUID": "769c5430-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "2-4",
+           "type": "WORD",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["SWITCH 1","SWITCH 2","SWITCH 3","SWITCH 4"],
+           "description": "Switches to display the LED status",
+           "display": "SAMPLE_READ"
+       },
+       "Test Counter,par": { 
+           "characteristicUUID": "b24801da-f817-11ea-adc1-0242ac120002",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 2,
+           "total_length": "4-6",
+           "type": "UINT16",
+           "defaultValue": 0,
+           "range":[],
+           "enum":[],
+           "description": "Counter",
+           "display": "DECIMAL"
+       },
+       },
+       },
+       },
+    "Group1,GroupStart": {
+
+       "Assembly_7,Main":{
+
+           "GroupcharacteristicUUID": "1d887465-59f1-4899-a7a3-06a732765c6b",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting A,par": { 
+           "characteristicUUID": "2a0adaef-8d76-459c-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 4,
+           "total_length": "0-2",
+           "type": "WORD",
+           "defaultValue": 22068,
+           "range":[],
+           "enum":["BIT0",
+                   "BIT1",
+                   "BIT2",
+                   "BIT3",
+                   "BIT4",
+                   "BIT5",
+                   "BIT6",
+                   "BIT7",
+                   "BIT8",
+                   "BIT9",
+                   "BIT10",
+                   "BIT11",
+                   "BIT12",
+                   "BIT13",
+                   "BIT14",
+                   "BIT15",
+           ],
+           "description": "Enter hex:\nMin: 0\nMax: FFFF\nDefault: 0xB",
+           "display": "WORD"
+       },
+    "Group2,GroupStart": {
+
+       "Assembly_8,Main":{
+
+           "GroupcharacteristicUUID": "fc247c96-0969-4ff2-8307-d5645084c7e5",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "IP ADDRESS,par": { 
+           "characteristicUUID": "2a0adaef-8d28-4593-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 3,
+           "total_length": "0-4",
+           "type": "UINT8",
+           "defaultValue": [168,192,173,171],
+           "range":[],
+           "enum":[],
+           "description": "Device IP Adress:\nMin: 0\nMax: 255\nDefault: 168.192.173.171",
+           "display": "IPV4"
+       },
+    "Group 3,GroupStart": {
+
+       "Assembly_9,Main":{
+
+           "GroupcharacteristicUUID": "96315e6f-6d75-4058-a3c9-51afef2c592e",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting E,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4528-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 5,
+           "total_length": "0-2",
+           "type": "UINT16",
+           "defaultValue": 5,
+           "range":[0,20],
+           "enum":[],
+           "description": "Enter Slider value:\nMin: 0\nMax: 20\nDefault: 5",
+           "display": "SLIDER"
+       },
+    "Group 4,GroupStart": {
+
+       "Assembly_10,Main":{
+
+           "GroupcharacteristicUUID": "2017f363-d7a4-4231-81e3-83d43a65f340",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting F,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4593-917b-21d1c3c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "0-1",
+           "type": "UINT8",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["OPTION1",
+                   "OPTION2",
+                   "OPTION3",
+                   "OPTION4",
+           ],
+           "description": "Enter UNIT8:\nMin: Option 1\nMax: Option 4\nDefault: Option 1",
+           "display": "OPTION"
+       },
+    "Group 5,GroupStart": {
+
+       "Assembly_11,Main":{
+
+           "GroupcharacteristicUUID": "92459057-6fce-4065-8170-4951f48f957c",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Reading 1,par": { 
+           "characteristicUUID": "2a0adaef-8d66-1005-917b-21d1c3c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 32,
+           "total_length": "0-32",
+           "type": "STRING",
+           "defaultValue": "TEST STRING",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 0\nMax: 32\nDefault: TEST STRING",
+           "display": "STRING"
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+    "Category 2,CategorySecStart": {
+       "Reading 2,par": { 
+           "characteristicUUID": "769c508c-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 7,
+           "total_length": "7-11",
+           "type": "FLOAT",
+           "defaultValue": 500.00,
+           "range":[500.00,5423564.00],
+           "enum":[],
+           "description": "Enter Float:\nMin: 500\nMax: 54235645\nDefault: 500.0",
+           "display": "FLOAT"
+       },
+       },
+    "Category 3,CategorySecStart": {
+       },
+    "Category 4,CategorySecStart": {
+       "Log Array,par": { 
+           "characteristicUUID": "769c7168-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "3",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 130,
+           "total_length": "11-141",
+           "type": "UINT8",
+           "defaultValue": ,
+           "range":[],
+           "enum":[],
+           "description": "Log Data",
+           "display": "STRING"
+       },
+       "Log Index,par": { 
+           "characteristicUUID": "769c8168-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "4",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 4,
+           "total_length": "141-145",
+           "type": "UINT32",
+           "defaultValue": 0,
+           "range":[],
+           "enum":[],
+           "description": "Log Index",
+           "display": "DECIMAL"
+       },
+       },
+    "Category 5,CategorySecStart": {
+       "Present Status,par": { 
+           "characteristicUUID": "2a0adaef-8d66-1012-917b-21d1c3c132bb",
+           "characteristicNo": "5",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 5,
+           "total_length": "145-147",
+           "type": "UINT16",
+           "defaultValue": 500,
+           "range":[500,65535],
+           "enum":[],
+           "description": "Enter UINT16:\nMin: 500\nMax: 65535\nDefault: 35000",
+           "display": "DECIMAL"
+       },
+       "Device Time,par": { 
+           "characteristicUUID": "2a0adaef-8d66-459c-917b-21d5c7c132bb",
+           "characteristicNo": "6",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 10,
+           "total_length": "147-151",
+           "type": "UINT32",
+           "defaultValue": 1514955660,
+           "range":[],
+           "enum":[],
+           "description": "Enter device time:\nDefault: 1/03/2018 - 10.13 AM",
+           "display": "DATE"
+       },
+       },
+    },
+    },
+"Admin": {
+
+       "Assembly_3,Main":{
+
+           "GroupcharacteristicUUID": "ddec704e-7364-42a9-9afc-3c1d94112462",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    "Category1,CategorySecStart": {
+    "User Management 1,GroupStart": {
+
+       "Assembly_4,Main":{
+
+           "GroupcharacteristicUUID": "e043fe2e-f738-44d5-83c1-ad8627b4357c",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "User1 Name,par": { 
+           "characteristicUUID": "6a0cb5ee-4f8a-455d-8bca-675c6bd0f03f",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 32,
+           "total_length": "0-32",
+           "type": "STRING",
+           "defaultValue": "Observer",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 5\nMax: 32\nDefault: Observer",
+           "display": "STRING"
+       },
+       "User1 password,par": { 
+           "characteristicUUID": "ae02b756-ab1c-40af-b682-def18b05e1db",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 32,
+           "total_length": "32-60",
+           "type": "STRING",
+           "defaultValue": "observer",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 6\nMax: 32\nDefault: Observer",
+           "display": "STRING"
+       },
+       "User1 role,par": { 
+           "characteristicUUID": "ae03b756-ab1c-40af-b682-def18b05e1db",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "60-61",
+           "type": "UINT8",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["OBSERVER_ROLE",
+                   "OPERATOR_ROLE",
+                   "ENGINEER_ROLE",
+                   "ADMIN_ROLE",
+           ],
+           "description": "User 1 Role",
+           "display": "OPTION"
+       },
+       "User2 Name,par": { 
+           "characteristicUUID": "5c0d82b5-97e8-4498-a3ab-25049877f537",
+           "characteristicNo": "3",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 32,
+           "total_length": "61-93",
+           "type": "STRING",
+           "defaultValue": "Operator",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 5\nMax: 32\nDefault: Operator",
+           "display": "STRING"
+       },
+       "User2 password,par": { 
+           "characteristicUUID": "ce9bb213-6305-4425-8bd3-93a4c94bb90d",
+           "characteristicNo": "4",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 32,
+           "total_length": "93-121",
+           "type": "STRING",
+           "defaultValue": "operator",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 6\nMax: 32\nDefault: Operator",
+           "display": "STRING"
+       },
+       "User2 role,par": { 
+           "characteristicUUID": "ce9bb228-6305-4425-8bd3-93a4c94bb90d",
+           "characteristicNo": "5",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "121-122",
+           "type": "UINT8",
+           "defaultValue": 1,
+           "range":[],
+           "enum":["OBSERVER_ROLE",
+                   "OPERATOR_ROLE",
+                   "ENGINEER_ROLE",
+                   "ADMIN_ROLE",
+           ],
+           "description": "User 2 Role",
+           "display": "OPTION"
+       },
+       },
+       },
+       },
+    "User Management 2,GroupStart": {
+
+       "Assembly_5,Main":{
+
+           "GroupcharacteristicUUID": "e043fe2e-f738-44d5-83c1-ad8627b1012c",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "User3 Name,par": { 
+           "characteristicUUID": "95a2036a-92ba-4b6f-87db-61a66f960d67",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 32,
+           "total_length": "0-32",
+           "type": "STRING",
+           "defaultValue": "Engineer",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 5\nMax: 32\nDefault: Engineer",
+           "display": "STRING"
+       },
+       "User3 role,par": { 
+           "characteristicUUID": "bec98fc8-3e8e-4778-857d-f5ac697b34fe",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "32-33",
+           "type": "UINT8",
+           "defaultValue": 2,
+           "range":[],
+           "enum":["OBSERVER_ROLE",
+                   "OPERATOR_ROLE",
+                   "ENGINEER_ROLE",
+                   "ADMIN_ROLE",
+           ],
+           "description": "User 3 Role",
+           "display": "OPTION"
+       },
+       "User4 Name,par": { 
+           "characteristicUUID": "e1f261c2-9781-4326-a2c8-81228ba3afb3",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 32,
+           "total_length": "33-65",
+           "type": "STRING",
+           "defaultValue": "Administrator",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 5\nMax: 32\nDefault: Admin",
+           "display": "STRING"
+       },
+       "User4 role,par": { 
+           "characteristicUUID": "51be063a-cc0c-47b6-a318-a4af287f28ba",
+           "characteristicNo": "3",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "65-66",
+           "type": "UINT8",
+           "defaultValue": 3,
+           "range":[],
+           "enum":["OBSERVER_ROLE",
+                   "OPERATOR_ROLE",
+                   "ENGINEER_ROLE",
+                   "ADMIN_ROLE",
+           ],
+           "description": "User 4 Role",
+           "display": "OPTION"
+       },
+       },
+       },
+       },
+       "Setting 1,par": { 
+           "characteristicUUID": "2a0adaef-8d66-459c-917b-21d4c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "0-1",
+           "type": "BYTE",
+           "defaultValue": 69,
+           "range":[],
+           "enum":["BIT0",
+                   "BIT1",
+                   "BIT2",
+                   "BIT3",
+                   "BIT4",
+                   "BIT5",
+                   "BIT6",
+                   "BIT7",
+           ],
+           "description": "Enter hex:\nMin: 0\nMax: F\nDefault: 0xA",
+           "display": "BYTE"
+       },
+       "Setting 2,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4543-917b-21d5c7c132bb",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 4,
+           "total_length": "1-2",
+           "type": "SINT8",
+           "defaultValue": -15,
+           "range":[-128,127],
+           "enum":[],
+           "description": "Enter UINT16:\nMin: -128\nMax: 127\nDefault: -15",
+           "display": "DECIMAL"
+       },
+       "MAC ADDRESS,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4593-917b-21d1c0c122bb",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 2,
+           "total_length": "2-8",
+           "type": "UINT8",
+           "defaultValue": [168,192,173,171,237,59],
+           "range":[],
+           "enum":[],
+           "description": "The device Ethernet mac address:\nMin: 0\nMax: FF\nDefault: AB:C0:AD:AB:ED:3B",
+           "display": "MACADDRESS"
+       },
+    "Sample App,GroupStart": {
+
+       "Assembly_6,Main":{
+
+           "GroupcharacteristicUUID": "17bfe00b-74fa-42dc-b220-ec1cbaad568d",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "LED OUTPUT,par": { 
+           "characteristicUUID": "769c5280-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "0-2",
+           "type": "WORD",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["LED 1","LED 2","LED 3","LED 4"],
+           "description": "Switch to Control LED",
+           "display": "BOOL"
+       },
+       "SWITCH STATUS,par": { 
+           "characteristicUUID": "769c5430-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "1",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 1,
+           "total_length": "2-4",
+           "type": "WORD",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["SWITCH 1","SWITCH 2","SWITCH 3","SWITCH 4"],
+           "description": "Switches to display the LED status",
+           "display": "SAMPLE_READ"
+       },
+       "Test Counter,par": { 
+           "characteristicUUID": "b24801da-f817-11ea-adc1-0242ac120002",
+           "characteristicNo": "2",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 2,
+           "total_length": "4-6",
+           "type": "UINT16",
+           "defaultValue": 0,
+           "range":[],
+           "enum":[],
+           "description": "Counter",
+           "display": "DECIMAL"
+       },
+       },
+       },
+       },
+    "Group1,GroupStart": {
+
+       "Assembly_7,Main":{
+
+           "GroupcharacteristicUUID": "1d887465-59f1-4899-a7a3-06a732765c6b",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting A,par": { 
+           "characteristicUUID": "2a0adaef-8d76-459c-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 4,
+           "total_length": "0-2",
+           "type": "WORD",
+           "defaultValue": 22068,
+           "range":[],
+           "enum":["BIT0",
+                   "BIT1",
+                   "BIT2",
+                   "BIT3",
+                   "BIT4",
+                   "BIT5",
+                   "BIT6",
+                   "BIT7",
+                   "BIT8",
+                   "BIT9",
+                   "BIT10",
+                   "BIT11",
+                   "BIT12",
+                   "BIT13",
+                   "BIT14",
+                   "BIT15",
+           ],
+           "description": "Enter hex:\nMin: 0\nMax: FFFF\nDefault: 0xB",
+           "display": "WORD"
+       },
+    "Group2,GroupStart": {
+
+       "Assembly_8,Main":{
+
+           "GroupcharacteristicUUID": "fc247c96-0969-4ff2-8307-d5645084c7e5",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "IP ADDRESS,par": { 
+           "characteristicUUID": "2a0adaef-8d28-4593-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 3,
+           "total_length": "0-4",
+           "type": "UINT8",
+           "defaultValue": [168,192,173,171],
+           "range":[],
+           "enum":[],
+           "description": "Device IP Adress:\nMin: 0\nMax: 255\nDefault: 168.192.173.171",
+           "display": "IPV4"
+       },
+    "Group 3,GroupStart": {
+
+       "Assembly_9,Main":{
+
+           "GroupcharacteristicUUID": "96315e6f-6d75-4058-a3c9-51afef2c592e",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting E,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4528-917b-21d5c7c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 5,
+           "total_length": "0-2",
+           "type": "UINT16",
+           "defaultValue": 5,
+           "range":[0,20],
+           "enum":[],
+           "description": "Enter Slider value:\nMin: 0\nMax: 20\nDefault: 5",
+           "display": "SLIDER"
+       },
+    "Group 4,GroupStart": {
+
+       "Assembly_10,Main":{
+
+           "GroupcharacteristicUUID": "2017f363-d7a4-4231-81e3-83d43a65f340",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting F,par": { 
+           "characteristicUUID": "2a0adaef-8d66-4593-917b-21d1c3c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 1,
+           "total_length": "0-1",
+           "type": "UINT8",
+           "defaultValue": 0,
+           "range":[],
+           "enum":["OPTION1",
+                   "OPTION2",
+                   "OPTION3",
+                   "OPTION4",
+           ],
+           "description": "Enter UNIT8:\nMin: Option 1\nMax: Option 4\nDefault: Option 1",
+           "display": "OPTION"
+       },
+    "Group 5,GroupStart": {
+
+       "Assembly_11,Main":{
+
+           "GroupcharacteristicUUID": "92459057-6fce-4065-8170-4951f48f957c",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Reading 1,par": { 
+           "characteristicUUID": "2a0adaef-8d66-1005-917b-21d1c3c132bb",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 32,
+           "total_length": "0-32",
+           "type": "STRING",
+           "defaultValue": "TEST STRING",
+           "range":[],
+           "enum":[],
+           "description": "Enter String:\nMin: 0\nMax: 32\nDefault: TEST STRING",
+           "display": "STRING"
+       },
+    "Group 6,GroupStart": {
+
+       "Assembly_12,Main":{
+
+           "GroupcharacteristicUUID": "3802b63e-3936-431a-afac-796e9a1f5ae6",
+           "GroupserviceUUID": "5004",
+           "Groupproperties": ["read", "write"],
+           "Groupteam": "User",
+
+    ",CategorySecStart": {
+       "Setting 4,par": { 
+           "characteristicUUID": "769c4c36-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "0",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 5,
+           "total_length": "0-1",
+           "type": "BOOL",
+           "defaultValue": "FALSE",
+           "range":[],
+           "enum":[],
+           "description": "Switches to control bool data type",
+           "display": "BOOL"
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+       },
+    "Category 2,CategorySecStart": {
+       "Reading 2,par": { 
+           "characteristicUUID": "769c508c-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "3",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 7,
+           "total_length": "8-12",
+           "type": "FLOAT",
+           "defaultValue": 500.00,
+           "range":[500.00,5423564.00],
+           "enum":[],
+           "description": "Enter Float:\nMin: 500\nMax: 54235645\nDefault: 500.0",
+           "display": "FLOAT"
+       },
+       },
+    "Category 3,CategorySecStart": {
+       },
+    "Category 4,CategorySecStart": {
+       "Log Array,par": { 
+           "characteristicUUID": "769c7168-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "4",
+           "ServiceUUID": "5002",
+           "properties": ["read"],
+           "length": 130,
+           "total_length": "12-142",
+           "type": "UINT8",
+           "defaultValue": ,
+           "range":[],
+           "enum":[],
+           "description": "Log Data",
+           "display": "STRING"
+       },
+       "Log Index,par": { 
+           "characteristicUUID": "769c8168-cdea-11e7-abc4-cec278b6b50a",
+           "characteristicNo": "5",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 4,
+           "total_length": "142-146",
+           "type": "UINT32",
+           "defaultValue": 0,
+           "range":[],
+           "enum":[],
+           "description": "Log Index",
+           "display": "DECIMAL"
+       },
+       },
+    "Category 5,CategorySecStart": {
+       "Present Status,par": { 
+           "characteristicUUID": "2a0adaef-8d66-1012-917b-21d1c3c132bb",
+           "characteristicNo": "6",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 5,
+           "total_length": "146-148",
+           "type": "UINT16",
+           "defaultValue": 500,
+           "range":[500,65535],
+           "enum":[],
+           "description": "Enter UINT16:\nMin: 500\nMax: 65535\nDefault: 35000",
+           "display": "DECIMAL"
+       },
+       "Device Time,par": { 
+           "characteristicUUID": "2a0adaef-8d66-459c-917b-21d5c7c132bb",
+           "characteristicNo": "7",
+           "ServiceUUID": "5002",
+           "properties": ["read","write"],
+           "length": 10,
+           "total_length": "148-152",
+           "type": "UINT32",
+           "defaultValue": 1514955660,
+           "range":[],
+           "enum":[],
+           "description": "Enter device time:\nDefault: 1/03/2018 - 10.13 AM",
+           "display": "DATE"
+       },
+       },
+    },
+    },
+    },
+"LED CONTROL": {
+"5005": {
+
+    "Assembly_13,Main":{
+
+        "GroupcharacteristicUUID": "3802b63e-3936-431a-afac-796e9a1f5aea",
+        "GroupserviceUUID": "5004",
+        "Groupproperties": ["read", "write"],
+        "Groupteam": "LED Control",
+
+       ",CategorySecStart": {
+    "Target Device": { 
+        "characteristicUUID": "769c5430-cdea-11e7-abc4-cec278b6b50f",
+        "characteristicNo": "0",
+        "serviceUUID": "5005",
+        "length": 1,
+        "total_length": "0-2",
+        "type": "UINT16",
+        "properties": ["read","write"],
+        "defaultValue": 0,
+        "range":[],
+        "enum":[],
+        "display": "BOOL",
+        "description": "Finding the target Device",
+        "Role_name": "Target Device"
+       },
+    "Unique Name": { 
+        "characteristicUUID": "534ab828-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "1",
+        "serviceUUID": "5005",
+        "length": 17,
+        "total_length": "2-19",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "BLE_DEMO_PROFILE",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Unique id of the device profile",
+        "Role_name": "other_display"
+       },
+    "Device_Bonding": { 
+        "characteristicUUID": "534acbd8-cf4b-13e7-abc4-cec278b6b50a",
+        "characteristicNo": "2",
+        "serviceUUID": "5005",
+        "length": 2,
+        "total_length": "19-21",
+        "type": "UINT16",
+        "properties": ["read","write"],
+        "defaultValue": 0,
+        "range":[],
+        "enum":[],
+        "display": "Integer",
+        "description": "Device Bonding Info",
+        "Role_name": "Device_Bonding"
+       },
+    "DCI_BLE_ACTIVE_ACCESS_LEVEL": { 
+        "characteristicUUID": "9f203df7-0a1b-4d53-b626-cb37620d65af",
+        "characteristicNo": "3",
+        "serviceUUID": "5005",
+        "length": 1,
+        "total_length": "21-22",
+        "type": "UINT8",
+        "properties": ["read"],
+        "defaultValue": 7,
+        "range":[],
+        "enum":[],
+        "display": "DECIMAL",
+        "description": "Indicate the Active Access Level",
+        "Role_name": "Active Access level"
+       },
+    },
+    },
+    },
+    },
+"Device Details_1": {
+"5003": {
+
+    "Assembly_0,Main":{
+
+        "GroupcharacteristicUUID": "e043fe2e-f738-44d5-83c1-ad8627b4357d",
+        "GroupserviceUUID": "5004",
+        "Groupproperties": ["read", "write"],
+        "Groupteam": "Device Details",
+
+       ",CategorySecStart": {
+    "Product Code": { 
+        "characteristicUUID": "534abada-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "0",
+        "serviceUUID": "5003",
+        "length": 13,
+        "total_length": "0-13",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "SILICON_LABS",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "vendor detail of the device",
+        "Role_name": "other_display"
+       },
+    "DEVICE FAMILY": { 
+        "characteristicUUID": "534abbde-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "1",
+        "serviceUUID": "5003",
+        "length": 7,
+        "total_length": "13-20",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "BGM111",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "family of the device",
+        "Role_name": "other"
+       },
+    "DEVICE ROLE": { 
+        "characteristicUUID": "534ac002-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "2",
+        "serviceUUID": "5003",
+        "length": 11,
+        "total_length": "20-31",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "PERIPHERAL",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "role of the device",
+        "Role_name": "other"
+       },
+    "DEVICE MODEL": { 
+        "characteristicUUID": "534ac0fc-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "3",
+        "serviceUUID": "5003",
+        "length": 8,
+        "total_length": "31-39",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "BLE_4_2",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "model of the device",
+        "Role_name": "other_display"
+       },
+    "Device Name": { 
+        "characteristicUUID": "534ac28c-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "4",
+        "serviceUUID": "5003",
+        "length": 18,
+        "total_length": "39-57",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "EATON CORPORATION",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "model long name of the device",
+        "Role_name": "other_display"
+       },
+    "HW VER": { 
+        "characteristicUUID": "534ac354-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "5",
+        "serviceUUID": "5003",
+        "length": 8,
+        "total_length": "57-65",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "REV_A03",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "hardware configuration of the device",
+        "Role_name": "other_display"
+       },
+    "SW VER": { 
+        "characteristicUUID": "534ac412-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "6",
+        "serviceUUID": "5003",
+        "length": 10,
+        "total_length": "65-75",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "SDK_2_4_2",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "software configuration of the device",
+        "Role_name": "other_display"
+       },
+    "DEVICE AUTO LOGIN SELECT": { 
+        "characteristicUUID": "534ac4d0-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "7",
+        "serviceUUID": "5003",
+        "length": 1,
+        "total_length": "75-76",
+        "type": "BOOL",
+        "properties": ["read"],
+           "defaultValue": "FALSE",
+        "range":[],
+        "enum":[],
+        "display": "BOOL",
+        "description": "Automatic Login",
+        "Role_name": "other"
+       },
+    "DEVICE MANUFACTURER NAME": { 
+        "characteristicUUID": "534ac93a-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "8",
+        "serviceUUID": "5003",
+        "length": 11,
+        "total_length": "76-87",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "BLUE GECKO",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Manufacturer name string",
+        "Role_name": "other"
+       },
+    "SERIAL NO": { 
+        "characteristicUUID": "534ac9f8-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "9",
+        "serviceUUID": "5003",
+        "length": 10,
+        "total_length": "87-97",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "172230625",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Serial number string",
+        "Role_name": "other_display"
+       },
+    "DEVICE IMAGE URL": { 
+        "characteristicUUID": "534acbd8-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "10",
+        "serviceUUID": "5003",
+        "length": 8,
+        "total_length": "97-105",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "Desktop",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Device Image URL",
+        "Role_name": "other"
+       },
+    "DEVICE MIN VAL CONN INTERVAL": { 
+        "characteristicUUID": "534acbd8-cf4b-13e7-abc4-cec288b6b50a",
+        "characteristicNo": "11",
+        "serviceUUID": "5003",
+        "length": 2,
+        "total_length": "105-107",
+        "type": "UINT16",
+        "properties": ["read"],
+        "defaultValue": 16,
+        "range":[6,3200],
+        "enum":[],
+        "display": "STRING",
+        "description": "Ble Minimum value for the connection event interval",
+        "Role_name": "other"
+       },
+    "DEVICE MAX VAL CONN INTERVAL": { 
+        "characteristicUUID": "534acbd8-cf4b-13e7-abc4-cec298b6b50a",
+        "characteristicNo": "12",
+        "serviceUUID": "5003",
+        "length": 2,
+        "total_length": "107-109",
+        "type": "UINT16",
+        "properties": ["read"],
+        "defaultValue": 32,
+        "range":[6,3200],
+        "enum":[],
+        "display": "STRING",
+        "description": "Ble Maximum value for the connection event interval",
+        "Role_name": "other"
+       },
+    "DEVICE BLE SLAVE LATENCY": { 
+        "characteristicUUID": "534acbd8-cf4b-13e7-abc4-cec248b6b50a",
+        "characteristicNo": "13",
+        "serviceUUID": "5003",
+        "length": 2,
+        "total_length": "109-111",
+        "type": "UINT16",
+        "properties": ["read"],
+        "defaultValue": 4,
+        "range":[0,500],
+        "enum":[],
+        "display": "STRING",
+        "description": "Slave Latency of the peripheral",
+        "Role_name": "other"
+       },
+    "DEVICE BLE SUPERVISION TIMEOUT": { 
+        "characteristicUUID": "534acbd8-cf4b-13e7-abc4-cec258b6b50a",
+        "characteristicNo": "14",
+        "serviceUUID": "5003",
+        "length": 2,
+        "total_length": "111-113",
+        "type": "UINT16",
+        "properties": ["read"],
+        "defaultValue": 200,
+        "range":[10,3200],
+        "enum":[],
+        "display": "STRING",
+        "description": "Supervison Timeout of the peripheral",
+        "Role_name": "other"
+       },
+       },
+       },
+
+    "Assembly_1,Main":{
+
+        "GroupcharacteristicUUID": "e043fe2e-f738-44d5-83c1-cd8627b4357d",
+        "GroupserviceUUID": "5004",
+        "Groupproperties": ["read", "write"],
+        "Groupteam": "Device Details",
+
+       ",CategorySecStart": {
+    "Administrator Password": { 
+        "characteristicUUID": "e954508d-c445-4af9-b047-dc1b4a9fa65f",
+        "characteristicNo": "0",
+        "serviceUUID": "5003",
+        "length": 32,
+        "total_length": "0-32",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "ADMINISTRATOR",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Enter Default value String in Main sheet :\nMin: 6\nMax: 32",
+        "Role_name": "Admin"
+       },
+    "Observer password": { 
+        "characteristicUUID": "f5c892d7-dd27-4c06-afdc-6c8cee15093d",
+        "characteristicNo": "1",
+        "serviceUUID": "5003",
+        "length": 32,
+        "total_length": "32-64",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "OBSERVER",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Enter Default value String in Main sheet :\nMin: 6\nMax: 32",
+        "Role_name": "Observer"
+       },
+    "Operator password": { 
+        "characteristicUUID": "3e64f2f2-8979-4402-94ad-2b30705ff954",
+        "characteristicNo": "2",
+        "serviceUUID": "5003",
+        "length": 32,
+        "total_length": "64-96",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "OPERATOR",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Enter Default value String in Main sheet :\nMin: 6\nMax: 32",
+        "Role_name": "Operator"
+       },
+    "Engineer Password": { 
+        "characteristicUUID": "636b8af5-38bb-4653-a4d2-2f97eebce5d5",
+        "characteristicNo": "3",
+        "serviceUUID": "5003",
+        "length": 32,
+        "total_length": "96-128",
+        "type": "STRING",
+        "properties": ["read"],
+        "defaultValue": "ENGINEER",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Enter Default value String in Main sheet :\nMin: 6\nMax: 32",
+        "Role_name": "Engineer"
+       },
+       },
+       },
+
+    "Assembly_2,Main":{
+
+        "GroupcharacteristicUUID": "e043fe2e-f738-44d5-83c1-cd86c7b4357d",
+        "GroupserviceUUID": "5004",
+        "Groupproperties": ["read", "write"],
+        "Groupteam": "Device Details",
+
+       ",CategorySecStart": {
+    "User name": { 
+        "characteristicUUID": "534ac796-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "0",
+        "serviceUUID": "5003",
+        "length": 32,
+        "total_length": "",
+        "type": "STRING",
+        "properties": ["read","write"],
+        "defaultValue": "ADMINISTRATOR",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Enter String:\nMin: 5\nMax: 32",
+        "Role_name": "other"
+       },
+    "Password": { 
+        "characteristicUUID": "534ac872-cf4b-11e7-abc4-cec278b6b50a",
+        "characteristicNo": "1",
+        "serviceUUID": "5003",
+        "length": 32,
+        "total_length": "0-32",
+        "type": "STRING",
+        "properties": ["read","write"],
+        "defaultValue": "ADMINISTRATOR",
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Enter String:\nMin: 6\nMax: 32",
+        "Role_name": "other"
+       },
+    "Advertisement Data": { 
+        "characteristicUUID": "636b8af5-38bb-4653-a4d2-2f28eebce5d6",
+        "characteristicNo": "2",
+        "serviceUUID": "5003",
+        "length": 18,
+        "total_length": "32-50",
+        "type": "UINT8",
+        "properties": ["read","write"],
+        "defaultValue": [3,69,97,116,111,110,7,33],
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "Advertisement Data",
+        "Role_name": "other"
+       },
+    "iBeacon Major Number": { 
+        "characteristicUUID": "636b8af5-38bb-4653-a4f2-2f28eebce5d7",
+        "characteristicNo": "3",
+        "serviceUUID": "5003",
+        "length": 20,
+        "total_length": "50-52",
+        "type": "UINT8",
+        "properties": ["read","write"],
+        "defaultValue": [17,34],
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "iBeacon Major Number",
+        "Role_name": "other"
+       },
+    "iBeacon Minor Number": { 
+        "characteristicUUID": "636b8af5-38bb-4653-a4f6-2f28eebce5d7",
+        "characteristicNo": "4",
+        "serviceUUID": "5003",
+        "length": 20,
+        "total_length": "52-54",
+        "type": "UINT8",
+        "properties": ["read","write"],
+        "defaultValue": [51,68],
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "iBeacon Minor Number",
+        "Role_name": "other"
+       },
+    "iBeacon UUID": { 
+        "characteristicUUID": "636b8af5-38bb-4666-a4f6-2f28eebce5d8",
+        "characteristicNo": "5",
+        "serviceUUID": "5003",
+        "length": 16,
+        "total_length": "54-70",
+        "type": "UINT8",
+        "properties": ["read","write"],
+        "defaultValue": [247,130,109,166,79,162,78,152,128,36,188,91,113,224,137,62],
+        "range":[],
+        "enum":[],
+        "display": "STRING",
+        "description": "iBeacon UUID",
+        "Role_name": "other"
+       },
+       },
+       },
+    },
+    },
+}

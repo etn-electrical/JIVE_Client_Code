@@ -1,0 +1,481 @@
+;************** GSD 10/29/2018  LO TOOLKIT COMMUNICATION CARD ************************
+;*****************************************************************************************
+;*       Vendor:    Eaton Corp.                                                          *
+;*                  Industrial Control Division                                          *
+;*                  W126, N7250 Flint Dr                                                 *
+;*                  Menomonee Falls, WI, United States                                   *
+;*                  Customer Support:00 1 440-523-4400                                   *
+;*                                                                                       *
+;*                  Copyright © Eaton Corporation. All Rights Reserved.                  *
+;*                                                                                       *
+;*****************************************************************************************
+;*                                                                                       *
+;*      Function: LO TOOLKIT Communication Adapter                                       *
+;*                                                                                       *
+;*****************************************************************************************
+;*                                                                                       *
+;*                                                                                       *
+;*                                                                                       *
+;*                                                                                       *
+;*****************************************************************************************
+;*****************************************************************************************
+
+
+#Profibus_DP
+
+
+;*****************************************************************************************
+;************  General DP Keywords  ******************************************************
+;*****************************************************************************************
+GSD_Revision = 5
+Vendor_Name = "Eaton Corp"
+Model_Name = "LO TOOLKIT PROFIBUS CARD"
+Revision = "1.0"
+Ident_Number = 0xFFFF
+Protocol_Ident = 0
+Station_Type = 0
+FMS_supp = 0
+Hardware_Release = "1.00"
+Software_Release = "1.16.09.0"
+Redundancy = 0
+Repeater_Ctrl_Sig = 2
+24V_Pins = 0
+Implementation_Type = "VPC3+S"
+
+
+;*****************************************************************************************
+;************  Supported Baud Rates  *****************************************************
+;*****************************************************************************************
+9.6_supp = 1
+MaxTsdr_9.6 = 15
+19.2_supp = 1
+MaxTsdr_19.2 = 15
+45.45_supp = 1
+MaxTsdr_45.45 = 15
+93.75_supp = 1
+MaxTsdr_93.75 = 15
+187.5_supp = 1
+MaxTsdr_187.5 = 15
+500_supp = 1
+MaxTsdr_500 = 15
+1.5M_supp = 1
+MaxTsdr_1.5M = 20
+3M_supp = 1
+MaxTsdr_3M = 35
+6M_supp = 1
+MaxTsdr_6M = 50
+12M_supp = 1
+MaxTsdr_12M = 95
+
+
+;*****************************************************************************************
+;************  Slave Specific Values  ****************************************************
+;*****************************************************************************************
+Freeze_Mode_supp = 1
+Sync_Mode_supp = 1
+Auto_Baud_supp = 1
+Set_Slave_Add_supp = 0
+Min_Slave_Intervall = 6
+Modular_Station = 1
+Max_Module = 2
+Fail_Safe = 1
+Max_Diag_Data_Len = 48
+Modul_Offset = 1
+Slave_Family = 2@Eaton@LO TK PROFIBUS CARD
+Info_Text = "TK Card,Slave Card on DPV1"     
+Max_Input_Len = 14
+Max_Output_Len = 14
+Max_Data_Len = 28
+
+
+;*****************************************************************************************
+;************  Prm-Text-Def_List  ********************************************************
+;*****************************************************************************************
+PrmText = 1
+Text(0) = "IP BIT NOT CONNECTED"
+Text(1) = "under voltage"
+Text(2) = "over voltage"
+Text(3) = "high resistance GF"
+Text(4) = "residual GF"
+Text(5) = "current phase loss"
+Text(6) = "current unbalance"
+Text(7) = "instantaneous over current"
+Text(8) = "jam"
+Text(9) = "PF deviation"
+Text(10) = "voltage phase loss"
+Text(11) = "voltage unbalance"
+Text(12) = "freq deviation fast"
+Text(13) = "freq deviation slow"
+Text(14) = "under current"
+Text(15) = "high power"
+Text(16) = "low power"
+Text(17) = "overload"
+Text(18) = "stall"
+Text(19) = "phase rotation"
+Text(20) = "exceeds starts limit"
+Text(21) = "initialization fault"
+Text(22) = "NV memory fault"
+Text(23) = "comm loss"
+Text(24) = "comm msg error"
+Text(25) = "LED Status On"
+Text(26) = "LED Status OFF"
+Text(27) = "LED Status Toggle"
+Text(28) = "LED Status Undefined"
+EndPrmText
+PrmText = 2
+Text(0) = "IP WORD NOT CONNECTED"
+Text(1) = "Profibus Application Input Word"
+Text(2) = "Simple Input word"
+EndPrmText
+PrmText = 3
+Text(0) = "IP DWORD NOT CONNECTED"
+Text(1) = "Profibus Application Input DWord"
+EndPrmText
+PrmText = 4
+Text(0) = "OP BIT NOT CONNECTED"
+Text(1) = "Cyclic Module 2 Bit0"
+Text(2) = "Cyclic Module 2 Bit1"
+Text(3) = "Cyclic Module 2 Bit2"
+Text(4) = "Cyclic Module 2 Bit3"
+Text(5) = "Cyclic Module 2 Bit4"
+Text(6) = "Cyclic Module 2 Bit5"
+Text(7) = "Cyclic Module 2 Bit6"
+Text(8) = "Cyclic Module 2 Bit7"
+Text(9) = "Cyclic Module 3 Bit0"
+Text(10) = "Cyclic Module 3 Bit1"
+Text(11) = "Cyclic Module 3 Bit2"
+Text(12) = "Cyclic Module 3 Bit3"
+Text(13) = "Cyclic Module 3 Bit4"
+Text(14) = "Cyclic Module 3 Bit5"
+Text(15) = "Cyclic Module 3 Bit6"
+Text(16) = "Cyclic Module 3 Bit7"
+EndPrmText
+PrmText = 5
+Text(0) = "OP WORD NOT CONNECTED"
+Text(1) = "Cyclic Module 2 WORD0"
+Text(2) = "Cyclic Module 3 WORD0"
+EndPrmText
+PrmText = 6
+Text(0) = "OP DWORD NOT CONNECTED"
+Text(1) = "Cyclic Module 2 DWORD0"
+Text(2) = "Cyclic Module 3 DWORD0"
+EndPrmText
+PrmText = 7
+Text(0) =  "Disable"
+Text(1) =  "Enable"
+EndPrmText
+
+
+;*****************************************************************************************
+;************  User-Prm-Data-Def_List  ***************************************************
+;*****************************************************************************************
+ExtUserPrmData = 1 "Parameterization Download Enable"
+Unsigned8 1 0 - 1
+Prm_Text_Ref = 7
+EndExtUserPrmData
+ExtUserPrmData = 2 "Profibus Sample App Parameter"
+Unsigned8 1 0 - 240
+EndExtUserPrmData
+ExtUserPrmData = 3 "LED Control Turn On"
+Unsigned8 0 0 - 16
+Prm_Text_Ref = 4
+EndExtUserPrmData
+ExtUserPrmData = 4 "LED Control Turn OFF"
+Unsigned8 0 0 - 16
+Prm_Text_Ref = 4
+EndExtUserPrmData
+ExtUserPrmData = 5 "LED Control Turn Toggle"
+Unsigned8 0 0 - 16
+Prm_Text_Ref = 4
+EndExtUserPrmData
+ExtUserPrmData = 6 "LED Control Turn Undefined"
+Unsigned8 0 0 - 16
+Prm_Text_Ref = 4
+EndExtUserPrmData
+ExtUserPrmData = 7 "Profibus Sample App Output word"
+Unsigned8 0 0 - 2
+Prm_Text_Ref = 5
+EndExtUserPrmData
+ExtUserPrmData = 8 "Profibus Sample App Output Dword"
+Unsigned8 0 0 - 2
+Prm_Text_Ref = 6
+EndExtUserPrmData
+ExtUserPrmData = 9 "Input Bit 0"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 10 "Input Bit 1"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 11 "Input Bit 2"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 12 "Input Bit 3"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 13 "Input Bit 4"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 14 "Input Bit 5"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 15 "Input Bit 6"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 16 "Input Bit 7"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 17 "Input Word 0"
+Unsigned8 0 0 - 2
+Prm_Text_Ref = 2
+EndExtUserPrmData
+ExtUserPrmData = 18 "Input DWord 0"
+Unsigned8 0 0 - 1
+Prm_Text_Ref = 3
+EndExtUserPrmData
+ExtUserPrmData = 19 "Input Bit 0"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 20 "Input Bit 1"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 21 "Input Bit 2"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 22 "Input Bit 3"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 23 "Input Bit 4"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 24 "Input Bit 5"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 25 "Input Bit 6"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 26 "Input Bit 7"
+Unsigned8 0 0 - 28
+Prm_Text_Ref = 1
+EndExtUserPrmData
+ExtUserPrmData = 27 "Input Word 0"
+Unsigned8 0 0 - 2
+Prm_Text_Ref = 2
+EndExtUserPrmData
+ExtUserPrmData = 28 "Input DWord 0"
+Unsigned8 0 0 - 1
+Prm_Text_Ref = 3
+EndExtUserPrmData
+
+
+;*****************************************************************************************
+;************  User-Prm_Data  ************************************************************
+;*****************************************************************************************
+Max_User_Prm_Data_Len = 34
+Ext_User_Prm_Data_Const(0) = 0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
+Ext_User_Prm_Data_Ref(3) = 1
+Ext_User_Prm_Data_Ref(4) = 2
+Ext_User_Prm_Data_Ref(5) = 3
+Ext_User_Prm_Data_Ref(6) = 4
+Ext_User_Prm_Data_Ref(7) = 5
+Ext_User_Prm_Data_Ref(8) = 6
+Ext_User_Prm_Data_Ref(9) = 7
+Ext_User_Prm_Data_Ref(10) = 8
+
+
+;*****************************************************************************************
+;************  Diagnostic Data  **********************************************************
+;*****************************************************************************************
+UnitDiagType = 129
+X_Unit_Diag_Area = 24 - 39
+X_Value(0) = "No Faults"
+X_Value(1) = "Undervoltage"
+X_Value(2) = "Overvoltage"
+X_Value(3) = "External Ground Fault"
+X_Value(4) = "Residual Ground Fault"
+X_Value(5) = "Current phase loss"
+X_Value(6) = "Current unbalance"
+X_Value(7) = "Instantaneous over current"
+X_Value(8) = "Jam"
+X_Value(9) = "PF deviation"
+X_Value(10) = "Voltage phase loss"
+X_Value(11) = "Voltage unbalance"
+X_Value(12) = "Freq deviation fast"
+X_Value(13) = "Freq deviation slow"
+X_Value(14) = "Under current"
+X_Value(15) = "High power"
+X_Value(16) = "Low power"
+X_Value(17) = "Contactor failure"
+X_Value(18) = "Exceeds starts limit"
+X_Value(19) = "Overload"
+X_Value(20) = "Stall"
+X_Value(21) = "Phase rotation"
+X_Value(22) = "PTC Fault"
+X_Value(23) = "Under voltage restart"
+X_Value(24) = "MM Fault"
+X_Value(25) = "Fieldbus Com Loss"
+X_Value(26) = "MM Com Loss"
+X_Value(27) = "CUI Com Loss"
+X_Value(28) = "Test Trip"
+X_Value(29) = "Opt Card Com Loss"
+X_Value(30) = "RTC Board NV Memory Fail"
+X_Value(31) = "CUI Mismatch"
+X_Value(32) = "MM Mismatch"
+X_Value(33) = "Com Card Mismatch"
+X_Value(34) = "MM FW incompatible"
+X_Value(35) = "UI FW incompatible"
+X_Value(36) = "Eth Opt Card FW incompatible"
+X_Value(37) = "Profi Opt Card FW incompatible"
+X_Value(500) = "Com loss with PSB"
+X_Value(501) = "PSB not responding to SPI"
+X_Value(502) = "Read Checksum error in NV"
+X_Value(503) = "Write Checksum error in NV"
+X_Value(504) = "RTC Backup Mem Card Missing"
+X_Value(505) = "RTC Backup Mem Card not match"
+X_Value(506) = "RTC Backup Mem Card NV Faul"
+X_Value(507) = "Serial flash memory fault"
+X_Value(508) = "Logic mapping error"
+X_Value(509) = "UI NV memory error"
+X_Value(510) = "Option card NV memory error"
+X_Unit_Diag_Area_End
+EndUnitDiagType
+
+
+;*****************************************************************************************
+;************  Module-Definition-List  ***************************************************
+;*****************************************************************************************
+Module = "Cyclic Module 1" 0x42, 0x06, 0x00, 0x01
+1
+Ext_Module_Prm_Data_Len = 11
+Ext_User_Prm_Data_Const(0) = 0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00
+Ext_User_Prm_Data_Ref(1) = 9
+Ext_User_Prm_Data_Ref(2) = 10
+Ext_User_Prm_Data_Ref(3) = 11
+Ext_User_Prm_Data_Ref(4) = 12
+Ext_User_Prm_Data_Ref(5) = 13
+Ext_User_Prm_Data_Ref(6) = 14
+Ext_User_Prm_Data_Ref(7) = 15
+Ext_User_Prm_Data_Ref(8) = 16
+Ext_User_Prm_Data_Ref(9) = 17
+Ext_User_Prm_Data_Ref(10) = 18
+EndModule
+
+Module = "Cyclic Module 2" 0x82, 0x06, 0x00, 0x02
+2
+Ext_Module_Prm_Data_Len = 1
+Ext_User_Prm_Data_Const(0) = 0x02
+EndModule
+
+Module = "Cyclic Module 3" 0xC2, 0x06, 0x06, 0x00, 0x03
+3
+Ext_Module_Prm_Data_Len = 11
+Ext_User_Prm_Data_Const(0) = 0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00
+Ext_User_Prm_Data_Ref(1) = 19
+Ext_User_Prm_Data_Ref(2) = 20
+Ext_User_Prm_Data_Ref(3) = 21
+Ext_User_Prm_Data_Ref(4) = 22
+Ext_User_Prm_Data_Ref(5) = 23
+Ext_User_Prm_Data_Ref(6) = 24
+Ext_User_Prm_Data_Ref(7) = 25
+Ext_User_Prm_Data_Ref(8) = 26
+Ext_User_Prm_Data_Ref(9) = 27
+Ext_User_Prm_Data_Ref(10) = 28
+EndModule
+
+
+
+;*****************************************************************************************
+;************  Modulstatus  **************************************************************
+;*****************************************************************************************
+
+
+;*****************************************************************************************
+;************  DP extensions *************************************************************
+;*****************************************************************************************
+DPV1_Slave = 1
+C1_Read_Write_supp = 1
+C1_Max_Data_Len = 240
+C1_Response_Timeout = 300
+Extra_Alarm_Sap_supp = 0
+Diagnostic_Alarm_supp = 0
+Process_Alarm_supp = 0
+Alarm_Type_Mode_supp = 1
+WD_Base_1ms_supp = 1
+Publisher_supp = 1
+C2_Read_Write_supp = 1
+C2_Max_Data_Len = 240
+C2_Response_Timeout = 300
+C2_Max_Count_Channels = 3
+Max_Initiate_PDU_Length = 52
+DPV1_Data_Types = 0
+Ident_Maintenance_supp = 1
+
+
+;*****************************************************************************************
+;************  Slot Definations **********************************************************
+;*****************************************************************************************
+
+; Start of SlotIndex Definitions
+; Total Parameters for Acyclic Data Exchange = 6
+
+
+; SLOT = 0  INDEX = 0
+; Total Parameters in slot 0  INDEX  0 = 1
+; Total Bytes in slot 0  INDEX  0 = 4
+; BYTE LOCATIONWISE PARAMETER LIST - 
+; Byte Location - 0 TO 3 Parameter = Profibus Sample Acyclic Parameter 1 
+
+; SLOT = 1  INDEX = 0
+; Total Parameters in slot 1  INDEX  0 = 1
+; Total Bytes in slot 1  INDEX  0 = 2
+; BYTE LOCATIONWISE PARAMETER LIST - 
+; Byte Location - 0 TO 1 Parameter = Profibus Sample Acyclic Parameter 2 
+
+; SLOT = 0  INDEX = 1
+; Total Parameters in slot 0  INDEX  1 = 1
+; Total Bytes in slot 0  INDEX  1 = 1
+; BYTE LOCATIONWISE PARAMETER LIST - 
+; Byte Location - 0 TO 0 Parameter = Profibus Sample Acyclic  Parameter 3 
+
+; SLOT = 1  INDEX = 1
+; Total Parameters in slot 1  INDEX  1 = 1
+; Total Bytes in slot 1  INDEX  1 = 1
+; BYTE LOCATIONWISE PARAMETER LIST - 
+; Byte Location - 0 TO 0 Parameter = Profibus Sample Acyclic Parameter 4 
+
+; SLOT = 1  INDEX = 7
+; Total Parameters in slot 1  INDEX  7 = 1
+; Total Bytes in slot 1  INDEX  7 = 4
+; BYTE LOCATIONWISE PARAMETER LIST - 
+; Byte Location - 0 TO 3 Parameter = Profibus Sample Acyclic  Parameter 5 
+
+; SLOT = 1  INDEX = 2
+; Total Parameters in slot 1  INDEX  2 = 1
+; Total Bytes in slot 1  INDEX  2 = 2
+; BYTE LOCATIONWISE PARAMETER LIST - 
+; Byte Location - 0 TO 1 Parameter = Profibus Sample Acyclic  Parameter 6 
+
+; End of Slot Index Definitions
+;*****************************************************************************************
+;************  End of GSD File ***********************************************************
+;*****************************************************************************************
+
+

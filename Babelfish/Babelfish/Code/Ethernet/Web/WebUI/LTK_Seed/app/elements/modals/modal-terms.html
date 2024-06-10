@@ -1,0 +1,53 @@
+<dom-module id="modal-terms">
+    <template>
+        <style>
+            :host /deep/ .content {  
+                transform: translateX(-50%) translateY(-50%);
+                -webkit-transform: translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px)) !important;
+                width: 60%;
+            }
+        </style>
+        <px-modal class="visible" overlay>
+            <px-actionbar dark>
+                <px-title maintitle="[[data.title]]"></px-title>
+            </px-actionbar>
+            
+            <px-content>
+                <legal-terms></legal-terms>
+                <px-row id="scrollableRow" bucket scrollable style="display: block; max-height:400px; position: relative; overflow: auto; border: 1px solid grey;  background-color: #FCFCFC">
+                    <legal-eula></legal-eula>
+                </px-row>
+            </px-content>
+
+            <px-actionbar bottom>
+                <span class="flex"></span>
+                <template is="dom-repeat" items="{{data.options}}">
+                    <px-button on-click="click" primary$="{{isPrimary(item)}}">{{item}}</px-button>
+                </template>
+            </px-actionbar>
+        </px-modal>
+    </template>
+    <script>
+        Polymer({
+            is: 'modal-terms',
+            properties: {
+                tab: {
+                    type: Object,
+                    notify: true
+                },
+                data: {
+                    type: Object,
+                    notify: true
+                }           
+            },
+
+            isPrimary: function (item) {
+                return this.data.options.length - 1 === this.data.options.indexOf(item);
+            },
+
+            click: function (e) {
+                this.tab.promise.resolve(e.model.index);
+            }
+        });
+    </script>
+</dom-module>

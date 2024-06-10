@@ -1,0 +1,81 @@
+<dom-module id="section-iot">
+	<template>
+		<style>
+            iron-icon {
+                margin: 0px 5px;    
+            }
+        </style>
+        <template is="dom-if" if="{{iotEnabled}}">
+            <template is="dom-if" if="{{cloudConnected}}">
+                <iron-icon icon="px-icons:cloud-connected" title="[[iotStatusReason]]"></iron-icon>
+            </template>
+            <template is="dom-if" if="{{!cloudConnected}}">
+                <iron-icon icon="px-icons:cloud-disconnected" title="[[iotStatusReason]]"></iron-icon>
+            </template>
+        </template>        
+	</template>
+	<script>
+	Polymer({
+		is: "section-iot",
+		behaviors: [
+            PB.behaviors.navElem
+		],
+		properties: {
+			iotEnabled: {
+				type: Boolean,
+                value: false,
+                notify : true
+            },
+            cloudConnected: {
+                type:Boolean,
+                value: false,
+                notify:true
+            },
+            iotStatusReason:{
+              type:String
+            }
+        },
+        attached: function(){
+            var self = this;
+            paramIOTConnect = PB.DCI.get("DCI_IOT_CONNECT");    
+            paramIOTStatus = PB.DCI.get("DCI_IOT_STATUS");
+            paramIOTStatusReason = PB.DCI.get("DCI_IOT_CONN_STAT_REASON");
+            setInterval(function () {
+                if (paramIOTConnect) {
+                    PB.JQhttp('GET', "/rs/param/" + paramIOTConnect.pid + "/value",'', 0, 0).then(function (data) {
+                        var json = PB.parseXML(data);
+                        if (json.Value.value == 1) {
+                            self.iotEnabled = true;
+                        } else {
+                            self.iotEnabled = false;
+                        }
+                    });
+                } else {
+                    console.warn("DCI_IOT_CONNECT parameter is undefined");
+                }
+                if (paramIOTStatus) {
+                    PB.JQhttp('GET', "/rs/param/" + paramIOTStatus.pid + "/value", '', 0, 0).then(function (data) {
+                        var json = PB.parseXML(data);
+                        if (json.Value.value == 1) {
+                            self.cloudConnected = true;
+                        } else {
+                            self.cloudConnected = false;
+                        }
+                    });
+                } else {
+                    console.warn("DCI_IOT_STATUS parameter is undefined");
+                }
+                if(paramIOTStatusReason){
+                    PB.JQhttp('GET', "/rs/param/" + paramIOTStatusReason.pid + "/value", '', 0, 0).then(function (data) {
+                        var json = PB.parseXML(data);
+                        self.iotStatusReason = paramIOTStatusReason.enum_desc[json.Value.value];
+                    });
+                }
+                else {
+                    console.warn("DCI_IOT_CONN_STAT_REASON parameter is undefined");
+                }
+            }, 10000);
+        },
+	});
+	</script>
+</dom-module>

@@ -1,0 +1,25 @@
+Test files for CSR tools.
+
+myp256key.der
+A P-256 EC key pair in ECPrivateKey / DER format
+
+myp384key.pem
+A P-384 EC key pair in ECPrivateKey / DER format
+
+myp256key.p8
+myp256key.p8.pem
+Same as myp256key.der, but converted to an unencrypted PKCS #8 file.
+
+myp384key.p8
+myp384key.p8.pem
+Same as myp384key.der, but converted to an unencrypted PKCS #8 file.
+
+myp256key.p8.password.pbes1.pem
+Same as myp256key.der, but converted to an encrypted PKCS #8 file
+using a PBES1 algorithm (default options to openssl pkcs8).
+Password: "pass"
+
+myp384key.p8.password.pbes2.pem
+Same as myp256key.der, but converted to an encrypted PKCS #8 file
+using a PBES2 algorithm ("-v2 des3" option to openssl pkcs8).
+Password: "pass"

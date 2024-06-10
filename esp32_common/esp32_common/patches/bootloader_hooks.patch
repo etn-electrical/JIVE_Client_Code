@@ -1,0 +1,4292 @@
+From 9c8decf9c00723768c71b63b333077278a2b6066 Mon Sep 17 00:00:00 2001
+From: "Verma, Vimal Kumar" <vimalkumarverma@eaton.com>
+Date: Fri, 28 Jan 2022 12:18:38 +0530
+Subject: [PATCH 1/3] Updated the Bootloader RVK logic as per PX-Green
+
+---
+ .../Bootloader_Hooks/Bootloader_Hooks.c       |   9 +-
+ .../Bootloader_Hooks/CMakeLists.txt           |  19 -
+ .../Bootloader_Hooks/Crypt_API/PKI_Common.h   |  46 ++
+ .../Bootloader_Hooks/Lib/CRC16.cpp            | 192 ++++++
+ .../Bootloader_Hooks/Lib/CRC16.h              |  81 +++
+ .../Bootloader_Hooks/Lib/StdLib_MV.cpp        |  95 +++
+ .../Bootloader_Hooks/Lib/StdLib_MV.h          |  70 ++
+ .../MiscCode_FUS/Cert_Store.h                 |  92 +++
+ .../MiscCode_FUS/Cert_Store_NV.cpp            | 503 ++++++++++++++
+ .../MiscCode_FUS/Cert_Store_NV.h              | 170 +++++
+ .../Bootloader_Hooks/NV/NV_Ctrl.h             |  71 ++
+ .../Bootloader_Hooks/Prod_Spec_Code_Sign.cpp  |  92 +++
+ .../Bootloader_Hooks/Prod_Spec_Code_Sign.h    |  34 +
+ .../Bootloader_Hooks/Ub_Product_Ctrl.cpp      |  40 ++
+ .../Bootloader_Hooks/Ub_Product_Ctrl.h        |  24 +
+ .../Bootloader_Hooks/Update_RVK_Key.c         | 643 ------------------
+ .../Bootloader_Hooks/Update_RVK_Key.h         | 249 -------
+ .../Bootloader_Hooks/component.mk             |   1 -
+ .../Bootloader_Hooks/uC/Etn_Types.h           |  30 +
+ .../Bootloader_Hooks/uC/uC_Flash.cpp          | 288 ++++++++
+ .../Bootloader_Hooks/uC/uC_Flash.h            | 203 ++++++
+ .../bootloader/subproject/main/CMakeLists.txt |  26 +-
+ 22 files changed, 2054 insertions(+), 924 deletions(-)
+ delete mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/CMakeLists.txt
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Crypt_API/PKI_Common.h
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.h
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.h
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store.h
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.h
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/NV/NV_Ctrl.h
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.h
+ delete mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Update_RVK_Key.c
+ delete mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Update_RVK_Key.h
+ delete mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/component.mk
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/Etn_Types.h
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.h
+
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
+index c7ebb186..9076c80f 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
+@@ -4,13 +4,13 @@
+  *  @brief      This file has implementation of the hooks to execute on boot, either before or after bootloader_init().
+  *	@details    This file should provide the interface to integrate bootloader hooks with
+  *				ESP32 Bootloader.
+- *	@copyright  2021 Eaton Corporation. All Rights Reserved.
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  **************************************************************************************************
+  */
+ 
+ #include "esp_log.h"
+-#include "Update_RVK_Key.h"
+-
++#include "Ub_Product_Ctrl.h"
++#include "PKI_Config.h"
+ /*
+  *****************************************************************************************
+  * @brief       This function used to tell linker to include this file with all its symbols
+@@ -46,8 +46,7 @@ void Bootloader_Before_Init( void )
+ void Bootloader_RVK_Update( void )
+ {
+ #ifdef CODE_SIGN
+-	Cert_Store_NV_Init();
+-	Update_RVK_Key();
++	Uberloader_Product_Ctrl();
+ #else
+ 	ESP_LOGE( "HOOK", "Code Sign is disabled" );
+ #endif
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/CMakeLists.txt b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/CMakeLists.txt
+deleted file mode 100644
+index 14414ee4..00000000
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/CMakeLists.txt
++++ /dev/null
+@@ -1,19 +0,0 @@
+-set( srcs "Bootloader_Hooks.c"
+-		  "Local_Sign_RVK.c"
+-		  "Server_Sign_RVK.c"
+-		  "Update_RVK_Key.c"
+-		)
+-
+-#Set include directories
+-set( include_dirs   "."
+-					)
+-
+-idf_component_register(SRCS "${srcs}"
+-					INCLUDE_DIRS "${include_dirs}" )
+-
+-# We need to force GCC to integrate this static library into the
+-# bootloader link. Indeed, by default, as the hooks in the bootloader are weak,
+-# the linker would just ignore the symbols in the extra. (i.e. not strictly
+-# required)
+-# To do so, we need to define the symbol (function) `bootloader_hooks_include`
+-# within hooks.c source file.
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Crypt_API/PKI_Common.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Crypt_API/PKI_Common.h
+new file mode 100644
+index 00000000..d9b824d2
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Crypt_API/PKI_Common.h
+@@ -0,0 +1,46 @@
++/**
++ **************************************************************************************************
++ *  @file	PKI_Common.h
++ *	@brief 	This file provides the base structure required for the certificate class.
++ *
++ *	@details PKI_Common contains the necessary enums, structures and Key masks as the certificate
++ *	generation attributes to be passed to the certificate class constructors.
++ *
++ *	@copyright 2022 Eaton Corporation. All Rights Reserved.
++ *
++ **************************************************************************************************
++ */
++#ifndef PKI_COMMON_H
++#define PKI_COMMON_H
++
++#include "NV_Ctrl.h"
++
++class PKI_Common
++{
++	public:
++
++		/**
++		 * @brief Return Status for crypt/certificate operations.
++		 */
++		enum pki_status_t
++		{
++			SUCCESS,
++			DATA_ERROR,
++			BUSY_ERROR,
++			OPERATION_NOT_SUPPORTED,
++			PENDING_CALL_BACK,
++			FAILURE = -1
++		};
++
++		/**
++		 * @brief Certificate storage NV address.
++		 */
++		struct nv_chip_config_t
++		{
++			NV_CTRL_ADDRESS_TD start_address;
++			NV_CTRL_LENGTH_TD length;
++		};
++
++};
++
++#endif	// PKI_COMMON_H
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp
+new file mode 100644
+index 00000000..25167dbd
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp
+@@ -0,0 +1,192 @@
++/**
++ *****************************************************************************************
++ *	@file		CRC16.cpp
++ *	@details 	See header file for module overview.
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++
++#include "Includes.h"
++#include "CRC16.h"
++
++#if CRC16_VERSION == TABLE_CRC_VERSION_8BIT
++
++const uint8_t CRC16::table_hi[256] =
++{
++	0x00U, 0x11U, 0x23U, 0x32U, 0x46U, 0x57U, 0x65U, 0x74U,
++	0x8cU, 0x9dU, 0xafU, 0xbeU, 0xcaU, 0xdbU, 0xe9U, 0xf8U,
++	0x10U, 0x01U, 0x33U, 0x22U, 0x56U, 0x47U, 0x75U, 0x64U,
++	0x9cU, 0x8dU, 0xbfU, 0xaeU, 0xdaU, 0xcbU, 0xf9U, 0xe8U,
++	0x21U, 0x30U, 0x02U, 0x13U, 0x67U, 0x76U, 0x44U, 0x55U,
++	0xadU, 0xbcU, 0x8eU, 0x9fU, 0xebU, 0xfaU, 0xc8U, 0xd9U,
++	0x31U, 0x20U, 0x12U, 0x03U, 0x77U, 0x66U, 0x54U, 0x45U,
++	0xbdU, 0xacU, 0x9eU, 0x8fU, 0xfbU, 0xeaU, 0xd8U, 0xc9U,
++	0x42U, 0x53U, 0x61U, 0x70U, 0x04U, 0x15U, 0x27U, 0x36U,
++	0xceU, 0xdfU, 0xedU, 0xfcU, 0x88U, 0x99U, 0xabU, 0xbaU,
++	0x52U, 0x43U, 0x71U, 0x60U, 0x14U, 0x05U, 0x37U, 0x26U,
++	0xdeU, 0xcfU, 0xfdU, 0xecU, 0x98U, 0x89U, 0xbbU, 0xaaU,
++	0x63U, 0x72U, 0x40U, 0x51U, 0x25U, 0x34U, 0x06U, 0x17U,
++	0xefU, 0xfeU, 0xccU, 0xddU, 0xa9U, 0xb8U, 0x8aU, 0x9bU,
++	0x73U, 0x62U, 0x50U, 0x41U, 0x35U, 0x24U, 0x16U, 0x07U,
++	0xffU, 0xeeU, 0xdcU, 0xcdU, 0xb9U, 0xa8U, 0x9aU, 0x8bU,
++	0x84U, 0x95U, 0xa7U, 0xb6U, 0xc2U, 0xd3U, 0xe1U, 0xf0U,
++	0x08U, 0x19U, 0x2bU, 0x3aU, 0x4eU, 0x5fU, 0x6dU, 0x7cU,
++	0x94U, 0x85U, 0xb7U, 0xa6U, 0xd2U, 0xc3U, 0xf1U, 0xe0U,
++	0x18U, 0x09U, 0x3bU, 0x2aU, 0x5eU, 0x4fU, 0x7dU, 0x6cU,
++	0xa5U, 0xb4U, 0x86U, 0x97U, 0xe3U, 0xf2U, 0xc0U, 0xd1U,
++	0x29U, 0x38U, 0x0aU, 0x1bU, 0x6fU, 0x7eU, 0x4cU, 0x5dU,
++	0xb5U, 0xa4U, 0x96U, 0x87U, 0xf3U, 0xe2U, 0xd0U, 0xc1U,
++	0x39U, 0x28U, 0x1aU, 0x0bU, 0x7fU, 0x6eU, 0x5cU, 0x4dU,
++	0xc6U, 0xd7U, 0xe5U, 0xf4U, 0x80U, 0x91U, 0xa3U, 0xb2U,
++	0x4aU, 0x5bU, 0x69U, 0x78U, 0x0cU, 0x1dU, 0x2fU, 0x3eU,
++	0xd6U, 0xc7U, 0xf5U, 0xe4U, 0x90U, 0x81U, 0xb3U, 0xa2U,
++	0x5aU, 0x4bU, 0x79U, 0x68U, 0x1cU, 0x0dU, 0x3fU, 0x2eU,
++	0xe7U, 0xf6U, 0xc4U, 0xd5U, 0xa1U, 0xb0U, 0x82U, 0x93U,
++	0x6bU, 0x7aU, 0x48U, 0x59U, 0x2dU, 0x3cU, 0x0eU, 0x1fU,
++	0xf7U, 0xe6U, 0xd4U, 0xc5U, 0xb1U, 0xa0U, 0x92U, 0x83U,
++	0x7bU, 0x6aU, 0x58U, 0x49U, 0x3dU, 0x2cU, 0x1eU, 0x0fU
++};
++
++flash uint8_t CRC16::table_lo[256] =
++{
++	0x00U, 0x89U, 0x12U, 0x9bU, 0x24U, 0xadU, 0x36U, 0xbfU,
++	0x48U, 0xc1U, 0x5aU, 0xd3U, 0x6cU, 0xe5U, 0x7eU, 0xf7U,
++	0x81U, 0x08U, 0x93U, 0x1aU, 0xa5U, 0x2cU, 0xb7U, 0x3eU,
++	0xc9U, 0x40U, 0xdbU, 0x52U, 0xedU, 0x64U, 0xffU, 0x76U,
++	0x02U, 0x8bU, 0x10U, 0x99U, 0x26U, 0xafU, 0x34U, 0xbdU,
++	0x4aU, 0xc3U, 0x58U, 0xd1U, 0x6eU, 0xe7U, 0x7cU, 0xf5U,
++	0x83U, 0x0aU, 0x91U, 0x18U, 0xa7U, 0x2eU, 0xb5U, 0x3cU,
++	0xcbU, 0x42U, 0xd9U, 0x50U, 0xefU, 0x66U, 0xfdU, 0x74U,
++	0x04U, 0x8dU, 0x16U, 0x9fU, 0x20U, 0xa9U, 0x32U, 0xbbU,
++	0x4cU, 0xc5U, 0x5eU, 0xd7U, 0x68U, 0xe1U, 0x7aU, 0xf3U,
++	0x85U, 0x0cU, 0x97U, 0x1eU, 0xa1U, 0x28U, 0xb3U, 0x3aU,
++	0xcdU, 0x44U, 0xdfU, 0x56U, 0xe9U, 0x60U, 0xfbU, 0x72U,
++	0x06U, 0x8fU, 0x14U, 0x9dU, 0x22U, 0xabU, 0x30U, 0xb9U,
++	0x4eU, 0xc7U, 0x5cU, 0xd5U, 0x6aU, 0xe3U, 0x78U, 0xf1U,
++	0x87U, 0x0eU, 0x95U, 0x1cU, 0xa3U, 0x2aU, 0xb1U, 0x38U,
++	0xcfU, 0x46U, 0xddU, 0x54U, 0xebU, 0x62U, 0xf9U, 0x70U,
++	0x08U, 0x81U, 0x1aU, 0x93U, 0x2cU, 0xa5U, 0x3eU, 0xb7U,
++	0x40U, 0xc9U, 0x52U, 0xdbU, 0x64U, 0xedU, 0x76U, 0xffU,
++	0x89U, 0x00U, 0x9bU, 0x12U, 0xadU, 0x24U, 0xbfU, 0x36U,
++	0xc1U, 0x48U, 0xd3U, 0x5aU, 0xe5U, 0x6cU, 0xf7U, 0x7eU,
++	0x0aU, 0x83U, 0x18U, 0x91U, 0x2eU, 0xa7U, 0x3cU, 0xb5U,
++	0x42U, 0xcbU, 0x50U, 0xd9U, 0x66U, 0xefU, 0x74U, 0xfdU,
++	0x8bU, 0x02U, 0x99U, 0x10U, 0xafU, 0x26U, 0xbdU, 0x34U,
++	0xc3U, 0x4aU, 0xd1U, 0x58U, 0xe7U, 0x6eU, 0xf5U, 0x7cU,
++	0x0cU, 0x85U, 0x1eU, 0x97U, 0x28U, 0xa1U, 0x3aU, 0xb3U,
++	0x44U, 0xcdU, 0x56U, 0xdfU, 0x60U, 0xe9U, 0x72U, 0xfbU,
++	0x8dU, 0x04U, 0x9fU, 0x16U, 0xa9U, 0x20U, 0xbbU, 0x32U,
++	0xc5U, 0x4cU, 0xd7U, 0x5eU, 0xe1U, 0x68U, 0xf3U, 0x7aU,
++	0x0eU, 0x87U, 0x1cU, 0x95U, 0x2aU, 0xa3U, 0x38U, 0xb1U,
++	0x46U, 0xcfU, 0x54U, 0xddU, 0x62U, 0xebU, 0x70U, 0xf9U,
++	0x8fU, 0x06U, 0x9dU, 0x14U, 0xabU, 0x22U, 0xb9U, 0x30U,
++	0xc7U, 0x4eU, 0xd5U, 0x5cU, 0xe3U, 0x6aU, 0xf1U, 0x78U
++};
++
++#elif CRC16_VERSION == TABLE_CRC_VERSION_16BIT
++
++const uint16_t CRC16::table[256] =
++{
++	0x0000U, 0x1189U, 0x2312U, 0x329bU, 0x4624U, 0x57adU, 0x6536U, 0x74bfU,
++	0x8c48U, 0x9dc1U, 0xaf5aU, 0xbed3U, 0xca6cU, 0xdbe5U, 0xe97eU, 0xf8f7U,
++	0x1081U, 0x0108U, 0x3393U, 0x221aU, 0x56a5U, 0x472cU, 0x75b7U, 0x643eU,
++	0x9cc9U, 0x8d40U, 0xbfdbU, 0xae52U, 0xdaedU, 0xcb64U, 0xf9ffU, 0xe876U,
++	0x2102U, 0x308bU, 0x0210U, 0x1399U, 0x6726U, 0x76afU, 0x4434U, 0x55bdU,
++	0xad4aU, 0xbcc3U, 0x8e58U, 0x9fd1U, 0xeb6eU, 0xfae7U, 0xc87cU, 0xd9f5U,
++	0x3183U, 0x200aU, 0x1291U, 0x0318U, 0x77a7U, 0x662eU, 0x54b5U, 0x453cU,
++	0xbdcbU, 0xac42U, 0x9ed9U, 0x8f50U, 0xfbefU, 0xea66U, 0xd8fdU, 0xc974U,
++	0x4204U, 0x538dU, 0x6116U, 0x709fU, 0x0420U, 0x15a9U, 0x2732U, 0x36bbU,
++	0xce4cU, 0xdfc5U, 0xed5eU, 0xfcd7U, 0x8868U, 0x99e1U, 0xab7aU, 0xbaf3U,
++	0x5285U, 0x430cU, 0x7197U, 0x601eU, 0x14a1U, 0x0528U, 0x37b3U, 0x263aU,
++	0xdecdU, 0xcf44U, 0xfddfU, 0xec56U, 0x98e9U, 0x8960U, 0xbbfbU, 0xaa72U,
++	0x6306U, 0x728fU, 0x4014U, 0x519dU, 0x2522U, 0x34abU, 0x0630U, 0x17b9U,
++	0xef4eU, 0xfec7U, 0xcc5cU, 0xddd5U, 0xa96aU, 0xb8e3U, 0x8a78U, 0x9bf1U,
++	0x7387U, 0x620eU, 0x5095U, 0x411cU, 0x35a3U, 0x242aU, 0x16b1U, 0x0738U,
++	0xffcfU, 0xee46U, 0xdcddU, 0xcd54U, 0xb9ebU, 0xa862U, 0x9af9U, 0x8b70U,
++	0x8408U, 0x9581U, 0xa71aU, 0xb693U, 0xc22cU, 0xd3a5U, 0xe13eU, 0xf0b7U,
++	0x0840U, 0x19c9U, 0x2b52U, 0x3adbU, 0x4e64U, 0x5fedU, 0x6d76U, 0x7cffU,
++	0x9489U, 0x8500U, 0xb79bU, 0xa612U, 0xd2adU, 0xc324U, 0xf1bfU, 0xe036U,
++	0x18c1U, 0x0948U, 0x3bd3U, 0x2a5aU, 0x5ee5U, 0x4f6cU, 0x7df7U, 0x6c7eU,
++	0xa50aU, 0xb483U, 0x8618U, 0x9791U, 0xe32eU, 0xf2a7U, 0xc03cU, 0xd1b5U,
++	0x2942U, 0x38cbU, 0x0a50U, 0x1bd9U, 0x6f66U, 0x7eefU, 0x4c74U, 0x5dfdU,
++	0xb58bU, 0xa402U, 0x9699U, 0x8710U, 0xf3afU, 0xe226U, 0xd0bdU, 0xc134U,
++	0x39c3U, 0x284aU, 0x1ad1U, 0x0b58U, 0x7fe7U, 0x6e6eU, 0x5cf5U, 0x4d7cU,
++	0xc60cU, 0xd785U, 0xe51eU, 0xf497U, 0x8028U, 0x91a1U, 0xa33aU, 0xb2b3U,
++	0x4a44U, 0x5bcdU, 0x6956U, 0x78dfU, 0x0c60U, 0x1de9U, 0x2f72U, 0x3efbU,
++	0xd68dU, 0xc704U, 0xf59fU, 0xe416U, 0x90a9U, 0x8120U, 0xb3bbU, 0xa232U,
++	0x5ac5U, 0x4b4cU, 0x79d7U, 0x685eU, 0x1ce1U, 0x0d68U, 0x3ff3U, 0x2e7aU,
++	0xe70eU, 0xf687U, 0xc41cU, 0xd595U, 0xa12aU, 0xb0a3U, 0x8238U, 0x93b1U,
++	0x6b46U, 0x7acfU, 0x4854U, 0x59ddU, 0x2d62U, 0x3cebU, 0x0e70U, 0x1ff9U,
++	0xf78fU, 0xe606U, 0xd49dU, 0xc514U, 0xb1abU, 0xa022U, 0x92b9U, 0x8330U,
++	0x7bc7U, 0x6a4eU, 0x58d5U, 0x495cU, 0x3de3U, 0x2c6aU, 0x1ef1U, 0x0f78U
++};
++
++#endif
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++uint16_t CRC16::Calc_On_String( uint8_t const* data, uint32_t length, uint16_t init_crc )
++{
++#if CRC16_VERSION == SHIFT_CRC_VERSION
++
++	uint8_t temp;
++	uint16_t temp_crc;
++	uint8_t* temp_crc_ptr = reinterpret_cast<uint8_t*>( &temp_crc );
++
++	temp_crc = init_crc;
++
++	while ( length > 0U )
++	{
++		length--;
++		temp = *data ^ temp_crc_ptr[0];
++		data++;
++		temp ^= static_cast<uint8_t>( temp << 4U );
++		temp_crc_ptr[0] = temp_crc_ptr[1] ^ static_cast<uint8_t>( temp << 3U ) ^ ( temp >> 4U );
++		temp_crc_ptr[1] = temp ^ ( temp >> 5U );
++	}
++
++	return ( temp_crc );
++
++#elif CRC16_VERSION == TABLE_CRC_VERSION_8BIT
++
++	uint16_t temp_crc;
++	uint8_t* temp_crc_ptr = reinterpret_cast<uint8_t*>( &temp_crc );
++	uint_fast8_t index;
++
++	temp_crc = init_crc;
++
++	while ( length > 0U )
++	{
++		length--;
++		index = temp_crc_ptr[0] ^ *data;
++		data++;
++		temp_crc_ptr[0] = temp_crc_ptr[1] ^ table_lo[index];
++		temp_crc_ptr[1] = table_hi[index];
++	}
++
++	return ( temp_crc );
++
++#elif CRC16_VERSION == TABLE_CRC_VERSION_16BIT
++
++	uint16_t temp_crc;
++
++	temp_crc = init_crc;
++
++	while ( length > 0U )
++	{
++		length--;
++		temp_crc = ( ( temp_crc >> 8 ) ^
++					 table[( static_cast<uint8_t>( temp_crc ) ^ *data ) & 0xFFU] );
++		data++;
++		// temp_crc = ( temp_crc_ptr[1] ^ table[ ( temp_crc_ptr[0] ^ *data ) & 0xFF ] );
++		// data++;
++	}
++
++	return ( temp_crc );
++
++#endif
++}
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.h
+new file mode 100644
+index 00000000..8c657c8f
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.h
+@@ -0,0 +1,81 @@
++/**
++ *****************************************************************************************
++ *	@file	CRC16.h
++ *
++ *	@brief 	Contains the CRC Class. This module implements the 16bit CRC-CCITT
++ *	algorithm (0x11021).
++ *
++ *	@details The algorithm used for this implementation is quite fast on an embedded
++ *	system in the non-table format.  The table format may be a little quicker but this
++ *	should be tested if speed is crucial.
++ *
++ *	@copyright 2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#ifndef CRC16_H
++#define CRC16_H
++
++/*
++ *****************************************************************************************
++ *		Constants for internal switching between different CRC calc methods.
++ *****************************************************************************************
++ */
++/**
++ * @brief For the CRC16_VERSION it is possible to change the method of calculating the CRC.
++ * If it is desired to use an alternate CRC method based on speed this can be defined in
++ * Device_Config.h.  For example if the table version is quicker and more space is available
++ * it may be better to choose that version instead.
++ */
++#ifndef CRC16_VERSION
++	#define        TABLE_CRC_VERSION_8BIT                      0U
++	#define        SHIFT_CRC_VERSION                           1U
++	#define        TABLE_CRC_VERSION_16BIT                     2U
++	#define        CRC16_VERSION                               TABLE_CRC_VERSION_16BIT
++#endif
++
++/**
++ ****************************************************************************************
++ * @brief This is the CRC16 class used for the implementation of the 16bit CRC-CCITT.
++ * @details The CRC16 class provides the functionalities to calculate the CRC
++ * on string and from byte.
++ * @n @b Usage: Calculations of CRCs.
++ ****************************************************************************************
++ */
++class CRC16
++{
++	public:
++
++		/// The default CRC value.
++		static const uint16_t DEFAULT_INIT = 0xffffU;
++
++		/**
++		 * @brief Calculates a CRC on a string.
++		 * @param[in] data: The pointer to the data.
++		 * @param[in] length: The length of data to check.
++		 * @param[in] init_crc: The initial CRC value.
++		 * @return The new CRC value.
++		 */
++		static uint16_t Calc_On_String( uint8_t const* data, uint32_t length,
++										uint16_t init_crc = DEFAULT_INIT );
++
++	private:
++		/**
++		 * Destructor, Copy Constructor and Copy Assignment Operator definitions
++		 * to disallow usage.
++		 */
++		CRC16( const CRC16& rhs );
++		CRC16 & operator =( const CRC16& object );
++
++		CRC16( void );
++		~CRC16( void );
++
++#if CRC16_VERSION == TABLE_CRC_VERSION_8BIT
++		static const uint8_t table_hi[256];
++		static const uint8_t table_lo[256];
++#elif CRC16_VERSION == TABLE_CRC_VERSION_16BIT
++		static const uint16_t table[256];
++#endif
++};
++
++#endif	/* CRC16_H */
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
+new file mode 100644
+index 00000000..e66fe611
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
+@@ -0,0 +1,95 @@
++/**
++ *****************************************************************************************
++ *	@file		StdLib_MV.cpp
++ *	@details 	See header file for module overview.
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#ifdef __cplusplus
++extern "C"
++{
++#endif
++#include "Etn_Types.h"
++#include "Includes.h"
++#include "CRC16.h"
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++void Copy_String( uint8_t* dest, uint8_t const* source, uint32_t length )
++{
++	while ( length > 0U )
++	{
++		*dest = *source;
++		dest++;
++		source++;
++		length--;
++	}
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++void Copy_Const_String( uint8_t* dest, uint8_t const* source, uint32_t length )
++{
++	while ( length > 0U )
++	{
++		*dest = *source;
++		dest++;
++		source++;
++		length--;
++	}
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++
++bool_t Compare_Data( uint8_t const* dest, uint8_t const* source, uint32_t length )
++{
++	bool_t same = true;
++	uint_fast32_t i = length;
++
++//	Push_TGINT();
++	while ( ( i > 0U ) && ( same == true ) )
++	{
++		i--;
++		if ( *dest != *source )
++		{
++			same = false;
++		}
++		dest++;
++		source++;
++	}
++//	Pop_TGINT();
++	return ( same );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++bool_t Copy_Data( uint8_t* dst, uint16_t dst_buf_size, const uint8_t* src, uint16_t src_len )
++{
++	bool_t status = false;
++
++	if ( dst_buf_size >= src_len )
++	{
++		Copy_Const_String( dst, src, src_len );
++		status = true;
++	}
++
++	return ( status );
++}
++
++#ifdef __cplusplus
++}
++#endif
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.h
+new file mode 100644
+index 00000000..0081eb7d
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.h
+@@ -0,0 +1,70 @@
++/**
++ *****************************************************************************************
++ *	@file	StdLib_MV.h
++ *
++ *	@brief This Module contains functionalities to copy the string considering the
++ *	different possibilities.
++ *
++ *	@details The string could be constant, null, constant null, the checksum return could
++ *	be expected, string comparison such different scenarios over strings considers and
++ *	implemented in this module.
++ *
++ *  @n @b Usage: Operations using strings - copy, compare, align, copy null string, copy
++ *  constant string, copy single value across, copy with CRC return.
++ *
++ *	@copyright 2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#ifndef STDLIB_MV_H
++#define STDLIB_MV_H
++
++/*
++ *****************************************************************************************
++ *		Functions
++ *****************************************************************************************
++ */
++
++/**
++ *  @brief A standard uint8_t copy string.
++ *  @details A simple standard to copy the source into the destination string.
++ *  @param[in] dest: The pointer to the destination string.
++ *  @param[in] source: The pointer to the source string.
++ *  @param[in] length: The length to be copied.
++ *  @return None
++ */
++void Copy_String( uint8_t* dest, uint8_t const* source, uint32_t length );
++
++/**
++ *  @brief Copy string with a constant source.
++ *  @details A simple standard to copy the constant source into the destination string.
++ *  @param[in] dest: The pointer to the destination string.
++ *  @param[in] source: The pointer to the source string.
++ *  @param[in] length: The length to be copied.
++ *  @return None
++ */
++void Copy_Const_String( uint8_t* dest, uint8_t const* source, uint32_t length );
++
++/**
++ * @brief
++ * @details Copy a single value across an entire string without a 16bit addition type
++ * checksum returned.
++ * @param[in] dest: The pointer to the destination string.
++ * @param[in] value: The pointer to the source string.
++ * @param[in] length: The length to be Compared.
++ * @return None
++ */
++bool_t Compare_Data( uint8_t const* dest, uint8_t const* source, uint32_t length );
++
++/**
++ * @brief
++ * @details Copy data from source string to destination string performing bound checking
++ * @param[in] src: The pointer to the source string.
++ * @param[in] src_len: length of source string .
++ * @param[in] dst: The pointer to the destination string.
++ * @param[in] dst_buf_size: size of the destination string .
++ * @return status of successful or failure on copy of data
++ */
++bool_t Copy_Data( uint8_t* dst, uint16_t dst_buf_size, const uint8_t* src, uint16_t src_len );
++
++#endif	/* STDLIB_MV_H*/
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store.h
+new file mode 100644
+index 00000000..03be4fd8
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store.h
+@@ -0,0 +1,92 @@
++/**
++ **************************************************************************************************
++ *  @file		Cert_Store.h
++ *
++ *	@details 	Fw_Store.h provides base class and APIs to access firmware and code
++ * 				sign information block
++ *
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ **************************************************************************************************
++ */
++#ifndef CERT_STORE_H
++#define CERT_STORE_H
++
++#include "Etn_Types.h"
++#include "PKI_Config.h"
++
++class Cert_Store
++{
++	public:
++
++		/**
++		 * @brief enum for certificate store components
++		 */
++		enum cert_store_enum_t
++		{
++			CERT_STORE_HEADER_ID,
++			CERT_STORE_CRC,
++			RVK_KEY_LEN,
++			RVK_KEY,
++			IVK_CERT_LEN,
++			IVK_CERT,
++			FVK_CERT_LEN,
++			FVK_CERT,
++			FVK_KEY_LEN,
++			FVK_KEY,
++#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
++			CA_PRIV_KEY_LEN,
++			CA_PRIV_KEY,
++			CA_CERT_LEN,
++			CA_CERT,
++			DEVICE_KEY_LEN,
++			DEVICE_KEY
++#endif
++		};
++
++		/**
++		 * @brief Structure to define certificate store components
++		 * @details cert store holds CA cerificate, private key certificates( key + signature )
++		 * used for communication certificates and public key certificates( key + signature ) which
++		 * are used as a backup. public key certs in Code sign info block are compared with these
++		 * key
++		 * certs to identify whether FVK/IVK/RVK is new or corrupted
++		 */
++		struct cert_store_struct_t
++		{
++			uint16_t header_id;	///< cert store ID
++
++			uint16_t crc;		///< crc to validate cert store components, crc is
++			///< calculated and updated when any of the cert store
++			///< component is updated.
++
++			uint16_t rvk_key_len;				///< Length of root verification key
++			uint8_t rvk_key[RVK_KEY_MAX_SIZE];	///< root verification key used to verify IVK
++
++			uint16_t ivk_cert_len;				///< Length of intermediate verification key cert
++			uint8_t ivk_cert[IVK_CERT_MAX_SIZE];///< Intermediate verification key certificate
++												///< backup
++
++			uint16_t fvk_cert_len;				///< Length of firmware verification key cert
++			uint8_t fvk_cert[FVK_CERT_MAX_SIZE];///< Firmware verification key certificate backup
++
++			uint16_t fvk_key_len;				///< Length of firmware verification key
++			uint8_t fvk_key[FVK_KEY_MAX_SIZE];	///< Firmware verification key backup
++
++#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
++			uint16_t ca_priv_key_len;			///< Length of CA private key certificate
++			uint8_t ca_priv_key[CA_KEY_MAX_SIZE];///< CA key used to sign CA certificate
++
++			uint16_t ca_cert_len;				///< Length of CA cerificate
++			uint8_t ca_cert[CA_CERT_MAX_SIZE];	///< CA cerificate used to generate device
++												///< certificate for https
++			uint16_t device_key_len;			///< Length of device private key certificate
++			uint8_t device_key[DEV_KEY_MAX_SIZE];///< Device private key used to sign device
++												///< certificate, device certificate is generated
++												///< everytime on power up
++#endif
++		};
++
++};
++
++#endif	// CERT_STORE_H
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp
+new file mode 100644
+index 00000000..8a16a414
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp
+@@ -0,0 +1,503 @@
++/**
++ *****************************************************************************************
++ *	@file		Cert_Store_NV.cpp
++ *	@details 	See header file for module overview.
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#ifdef __cplusplus
++extern "C"
++{
++#endif
++
++#include "string.h"
++#include "Cert_Store_NV.h"
++#include "Etn_Types.h"
++#include "StdLib_MV.h"
++#include "CRC16.h"
++#include "esp_log.h"
++
++
++/**
++ * @brief Bootloader cert store hooks tag for ESP_LOG
++ */
++#define BOOT_TAG "BOOT_CERTSTORE"
++
++/**
++ * @brief Macro to alignment length variable while read/write with bootloader API's
++ * 		  Bootloader API's accept data length only aligned with 4Bytes in bootloader.
++ */
++#define BYTES_ALIGNMENT 2
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++Cert_Store_NV::Cert_Store_NV( uC_Flash* nv_ctrl,
++							  const PKI_Common::nv_chip_config_t* mem_config )
++{
++	m_cert_store_ptr = ( reinterpret_cast<Cert_Store::cert_store_struct_t*>( mem_config->start_address ) );
++	m_cert_store_len = mem_config->length;
++	m_nv_ctrl = nv_ctrl;
++	m_cert_store_ram_ptr = nullptr;
++	m_fvk_cert_len = 0U;
++	m_ivk_cert_len = 0U;
++	m_rvk_key_len = 0U;
++	m_fvk_key_len = 0U;
++#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
++	m_ca_priv_key_len = 0U;
++	m_ca_cert_len = 0U;
++	m_device_key_len = 0U;
++#endif
++	m_cert_store_exists = false;
++
++	if ( m_nv_ctrl != nullptr )
++	{
++		if ( Cert_Store_Integrity_Check() == PKI_Common::SUCCESS )
++		{
++			m_cert_store_exists = true;
++
++			if ( Get_Cert_Store_Elements() == PKI_Common::FAILURE )
++			{
++				ESP_LOGE( BOOT_TAG, "Cert Store Memory Read Operation Failed" );
++				assert( false );
++			}
++		}
++	}
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++PKI_Common::pki_status_t Cert_Store_NV::Get_Cert_Store_Elements( void )
++{
++	PKI_Common::pki_status_t ret = PKI_Common::SUCCESS;
++	uint8_t data_len[CERT_LEN_MAX_BYTES] = { };
++
++	if ( m_nv_ctrl->Read( data_len,
++						  reinterpret_cast<uint32_t>( &m_cert_store_ptr->fvk_cert_len ),
++						  CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
++						  false ) == NV_Ctrl::SUCCESS )
++	{
++		m_fvk_cert_len = ( data_len[1] << 8 ) | data_len[0];
++	}
++	else
++	{
++		ret = PKI_Common::FAILURE;
++	}
++
++	if ( m_nv_ctrl->Read( data_len,
++						  reinterpret_cast<uint32_t>( &m_cert_store_ptr->ivk_cert_len ),
++						  CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
++						  false ) == NV_Ctrl::SUCCESS )
++	{
++		m_ivk_cert_len = ( data_len[1] << 8 ) | data_len[0];
++	}
++	else
++	{
++		ret = PKI_Common::FAILURE;
++	}
++
++	if ( m_nv_ctrl->Read( data_len,
++						  reinterpret_cast<uint32_t>( &m_cert_store_ptr->rvk_key_len ),
++						  KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
++						  false ) == NV_Ctrl::SUCCESS )
++	{
++		m_rvk_key_len = ( data_len[1] << 8 ) | data_len[0];
++	}
++	else
++	{
++		ret = PKI_Common::FAILURE;
++	}
++
++	if ( m_nv_ctrl->Read( data_len,
++						  reinterpret_cast<uint32_t>( &m_cert_store_ptr->fvk_key_len ),
++						  KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
++						  false ) == NV_Ctrl::SUCCESS )
++	{
++		m_fvk_key_len = ( data_len[1] << 8 ) | data_len[0];
++	}
++	else
++	{
++		ret = PKI_Common::FAILURE;
++	}
++
++#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
++	if ( m_nv_ctrl->Read( data_len,
++						  reinterpret_cast<uint32_t>( &m_cert_store_ptr->ca_priv_key_len ),
++						  KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
++						  false ) == NV_Ctrl::SUCCESS )
++	{
++		m_ca_priv_key_len = ( data_len[1] << 8 ) | data_len[0];
++	}
++	else
++	{
++		ret = PKI_Common::FAILURE;
++	}
++
++	if ( m_nv_ctrl->Read( data_len,
++						  reinterpret_cast<uint32_t>( &m_cert_store_ptr->ca_cert_len ),
++						  CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
++						  false ) == NV_Ctrl::SUCCESS )
++	{
++		m_ca_cert_len = ( data_len[1] << 8 ) | data_len[0];
++	}
++	else
++	{
++		ret = PKI_Common::FAILURE;
++	}
++
++	if ( m_nv_ctrl->Read( data_len,
++						  reinterpret_cast<uint32_t>( &m_cert_store_ptr->device_key_len ),
++						  KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
++						  false ) == NV_Ctrl::SUCCESS )
++	{
++		m_device_key_len = ( data_len[1] << 8 ) | data_len[0];
++	}
++	else
++	{
++		ret = PKI_Common::FAILURE;
++	}
++#endif
++
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++PKI_Common::pki_status_t Cert_Store_NV::Cert_Store_Integrity_Check( void )
++{
++	PKI_Common::pki_status_t ret = PKI_Common::FAILURE;
++	bool header_verified = false;
++
++	/* Verify header ID */
++	/* Reading header_id and crc. Since boot-loader reading with size alignment of 4-Bytes */
++	uint32_t header_id_and_crc = 0U;
++
++	if ( NV_Ctrl::SUCCESS ==
++		 m_nv_ctrl->Read( reinterpret_cast<uint8_t*>( &header_id_and_crc ),
++				 	 	  reinterpret_cast<uint32_t>( m_cert_store_ptr ),
++						  sizeof( m_cert_store_ptr->header_id ) + BYTES_ALIGNMENT,
++						  false ) )
++	{
++		uint16_t header_id = static_cast<uint16_t>( header_id_and_crc );
++		if ( header_id == CERT_STORE_HEADER_IDENTIFIER )
++		{
++			header_verified = true;
++		}
++	}
++
++	if ( header_verified == true )
++	{
++		/* extract cert store crc from header_id_and_crc data */
++		uint16_t cert_store_crc = static_cast<uint16_t>( header_id_and_crc >> 16 );
++
++		/* Calculate the crc of cert store data and compare with read crc */
++		uint16_t data_len = sizeof( Cert_Store::cert_store_struct_t ) -
++			sizeof( m_cert_store_ptr->header_id ) - sizeof( m_cert_store_ptr->crc );
++		uint16_t calc_crc = 0U;
++		if ( data_len > 0U )
++		{
++			uint16_t read_len = 0U;
++			uint16_t init_crc = 0U;
++
++			if ( data_len < MAX_ALLOCATE_BYTES )
++			{
++				read_len = data_len;
++			}
++			else
++			{
++				read_len = MAX_ALLOCATE_BYTES;
++			}
++
++			uint8_t data[read_len] = {};
++
++			if ( data != nullptr )
++			{
++				uint32_t data_addr =
++					reinterpret_cast<uint32_t>( &m_cert_store_ptr->rvk_key_len );
++				uint16_t data_offset = 0U;
++				uint16_t max_data_len = data_len;
++				while ( data_offset < max_data_len )
++				{
++					if ( NV_Ctrl::SUCCESS ==
++						 m_nv_ctrl->Read( data,
++										  reinterpret_cast<uint32_t>( data_addr +
++																	  data_offset ),
++										  read_len, false ) )
++					{
++						calc_crc = CRC16::Calc_On_String( data, read_len, init_crc );
++						init_crc = calc_crc;
++					}
++					else
++					{
++						assert( false );
++					}
++					data_offset += read_len;
++					data_len -= read_len;
++					if ( data_len < MAX_ALLOCATE_BYTES )
++					{
++						read_len = data_len;
++					}
++					else
++					{
++						read_len = MAX_ALLOCATE_BYTES;
++					}
++				}
++				if ( cert_store_crc == calc_crc )
++				{
++					ret = PKI_Common::SUCCESS;
++					ESP_LOGI( BOOT_TAG, "Cert store CRC Verified" );
++					ESP_LOGI( BOOT_TAG, "Cert store CRC: %d", cert_store_crc );
++				}
++				else
++				{
++					ESP_LOGE( BOOT_TAG, "Cert store CRC Verification failed" );
++				}
++			}
++		}
++	}
++	else
++	{
++		ESP_LOGE( BOOT_TAG, "Cert store header verification Failed" );
++	}
++	if ( ret != PKI_Common::SUCCESS )
++	{
++		ESP_LOGE( BOOT_TAG, "Cert store integrity check Failed" );
++	}
++
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++PKI_Common::pki_status_t Cert_Store_NV::Get_CRC_Buf( uint16_t* crc_out )
++{
++	PKI_Common::pki_status_t ret = PKI_Common::FAILURE;
++
++	Cert_Store::cert_store_struct_t* cert_info = Get_Cert_Store_Ram_Ptr();
++
++	if ( cert_info != nullptr )
++	{
++
++		uint16_t calculated_crc = 0U;
++
++		calculated_crc =
++			CRC16::Calc_On_String( reinterpret_cast<uint8_t*>( &cert_info->rvk_key_len ),
++								   ( sizeof( Cert_Store::cert_store_struct_t ) -
++									 sizeof( cert_info->crc ) -
++									 sizeof( cert_info->header_id ) ), 0U );
++		*crc_out = calculated_crc;
++		ESP_LOGI( BOOT_TAG, "CRC to be updated in Cert Store : %d", *crc_out );
++		ret = PKI_Common::SUCCESS;
++	}
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++Cert_Store::cert_store_struct_t* Cert_Store_NV::Get_Cert_Store_Ram_Ptr( void )
++{
++	static Cert_Store::cert_store_struct_t cert_store_ram_var = { };
++	/* ram is allocated only when need to update cert store */
++	if ( m_cert_store_ram_ptr == nullptr )
++	{
++		m_cert_store_ram_ptr = &cert_store_ram_var;
++
++		if ( m_cert_store_ram_ptr != nullptr )
++		{
++			if ( m_cert_store_exists == true )
++			{
++				if ( m_nv_ctrl->Read( reinterpret_cast<uint8_t*>( m_cert_store_ram_ptr ),
++									  reinterpret_cast<uint32_t>( m_cert_store_ptr ),
++									  sizeof( Cert_Store::cert_store_struct_t ),
++									  false ) != NV_Ctrl::SUCCESS )
++				{
++					ESP_LOGE( BOOT_TAG, "Read of Cert Store Memory location Failed" );
++					assert(false);
++				}
++			}
++		}
++		else
++		{
++			ESP_LOGE( BOOT_TAG, "Cert Store Memory Allocation Failed" );
++		}
++	}
++	return ( m_cert_store_ram_ptr );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++PKI_Common::pki_status_t Cert_Store_NV::Update_Header_ID( void )
++{
++	Cert_Store::cert_store_struct_t* cert_info = nullptr;
++
++	PKI_Common::pki_status_t ret = PKI_Common::FAILURE;
++
++	cert_info = Get_Cert_Store_Ram_Ptr();
++	if ( cert_info != nullptr )
++	{
++		cert_info->header_id = CERT_STORE_HEADER_IDENTIFIER;
++		ret = PKI_Common::SUCCESS;
++	}
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++PKI_Common::pki_status_t Cert_Store_NV::Update_CRC_Buf( void )
++{
++
++	uint16_t calculated_crc = 0U;
++	Cert_Store::cert_store_struct_t* cert_info = nullptr;
++
++	PKI_Common::pki_status_t ret = PKI_Common::FAILURE;
++
++	/* update crc in ram buffer */
++
++	if ( Get_CRC_Buf( &calculated_crc ) == PKI_Common::SUCCESS )
++	{
++		cert_info = Get_Cert_Store_Ram_Ptr();
++		if ( cert_info != nullptr )
++		{
++			cert_info->crc = calculated_crc;
++			ret = PKI_Common::SUCCESS;
++		}
++	}
++
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++PKI_Common::pki_status_t Cert_Store_NV::Cert_Store_Write( void )
++{
++	PKI_Common::pki_status_t ret = PKI_Common::FAILURE;
++
++	if ( Update_Header_ID() == PKI_Common::SUCCESS )
++	{
++		/* Update_CRC_Buf() will return failure if m_cert_store_ram_ptr is nullptr */
++		if ( Update_CRC_Buf() == PKI_Common::SUCCESS )
++		{
++			if ( m_nv_ctrl != nullptr )
++			{
++				m_cert_store_exists = false;
++				if ( NV_Ctrl::SUCCESS ==
++					 m_nv_ctrl->Erase( reinterpret_cast<uint32_t>( m_cert_store_ptr ),
++									   m_cert_store_len ) )
++				{
++					if ( m_nv_ctrl->Write( reinterpret_cast<uint8_t*>( m_cert_store_ram_ptr ),
++										   reinterpret_cast<uint32_t>( m_cert_store_ptr ),
++										   sizeof( Cert_Store::cert_store_struct_t ),
++										   false ) == NV_Ctrl::SUCCESS )
++					{
++						m_cert_store_exists = true;
++						m_cert_store_ram_ptr = nullptr;
++						ret = PKI_Common::SUCCESS;
++						if ( Get_Cert_Store_Elements() == PKI_Common::FAILURE )
++						{
++							ESP_LOGE( BOOT_TAG, "Cert Store Memory Read Operation Failed" );
++							assert( false );
++						}
++					}
++				}
++				else
++				{
++					ESP_LOGE( BOOT_TAG, "Cert Store Memory Erase Operation Failed" );
++				}
++			}
++		}
++	}
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++bool Cert_Store_NV::Is_RVK_Key_Available( void )
++{
++	bool ret = false;
++
++	if ( m_cert_store_exists == true )
++	{
++		if ( ( m_rvk_key_len != FLASH_MEMORY_DEFAULT_VALUE_U16 ) &&
++			 ( m_rvk_key_len != FLASH_MEMORY_ZERO_VALUE_U16 ) )
++		{
++			ret = true;
++			ESP_LOGI( BOOT_TAG, "RVK Key Available" );
++		}
++		else
++		{
++			ESP_LOGE( BOOT_TAG, "RVK Key Not Available" );
++		}
++	}
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++PKI_Common::pki_status_t Cert_Store_NV::Update_RVK_Key_Buf( uint8_t* key_mem,
++															uint16_t key_mem_len )
++{
++	PKI_Common::pki_status_t ret = PKI_Common::FAILURE;
++
++	if ( key_mem_len <= RVK_KEY_MAX_SIZE )
++	{
++		Cert_Store::cert_store_struct_t* cert_info = Get_Cert_Store_Ram_Ptr();
++
++		if ( cert_info != nullptr )
++		{
++			memset( &cert_info->rvk_key_len, 0U, ( sizeof( cert_info->rvk_key_len ) ) );
++			memset( &cert_info->rvk_key, 0U, ( sizeof( cert_info->rvk_key ) ) );
++
++			if ( Copy_Data( cert_info->rvk_key, key_mem_len,
++							key_mem, key_mem_len ) == true )
++			{
++				cert_info->rvk_key_len = key_mem_len;
++				ret = PKI_Common::SUCCESS;
++				ESP_LOGI( BOOT_TAG, "RVK key updated in local cert store buffer" );
++			}
++		}
++	}
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++Cert_Store_NV::~Cert_Store_NV( void )
++{}
++
++
++#ifdef __cplusplus
++}
++#endif
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.h
+new file mode 100644
+index 00000000..434d20f5
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.h
+@@ -0,0 +1,170 @@
++/**
++ **************************************************************************************************
++ *  @file		Cert_Store_NV.h
++ *  @brief 		This file provides APIs to access certificate storage area located in external memory
++ *
++ *	@details 	This file has cert_store_struct_t structure and APIs to access this structure and
++ * 				manage the certificate storage area located in external memory
++ *
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ **************************************************************************************************
++ */
++#ifndef CERT_STORE_NV_H
++#define CERT_STORE_NV_H
++
++#include "Cert_Store.h"
++#include "PKI_Config.h"
++#include "PKI_Common.h"
++#include "uC_Flash.h"
++
++class Cert_Store_NV
++{
++	public:
++		/**
++		 * @brief Constructor.
++		 * @param[in] nv_ctrl : NV control to read/write certificate storage area located external
++		 * flash
++		 * @param[in] mem_config->start_address : Pointer to start address of the certificate store
++		 * block (sector/page) in external memory
++		 * mem_config->length : size of the sector/page where certificate store is
++		 * located
++		 * @return None.
++		 */
++		Cert_Store_NV( uC_Flash* nv_ctrl,
++					   const PKI_Common::nv_chip_config_t* mem_config );
++
++		/**
++		 * @brief Write cert store from local buffer to cert store in flash
++		 * @details To update cert store components, read the cert store into local buffer, update
++		 * individual components then write local buffer into cert store in flash
++		 * @return status of requested operation
++		 */
++		PKI_Common::pki_status_t Cert_Store_Write( void );
++
++		/**
++		 * @brief deallocate the memory allocated while reading rvk key
++		 * @return status of requested operation
++		 */
++		PKI_Common::pki_status_t Free_RVK_Key( void );
++
++		/**
++		 * @brief Function to check whether RVK Available in cert Store
++		 * @return status of requested operation
++		 */
++		bool Is_RVK_Key_Available( void );
++
++		/**
++		 * @brief Update RVK key  in local cert store buffer
++		 * @param[in] key_mem: Pointer to RVK key.
++		 * @param[in] key_mem_len: Length of the RVK key.
++		 * @return status of requested operation
++		 */
++		PKI_Common::pki_status_t Update_RVK_Key_Buf( uint8_t* key_mem, uint16_t key_mem_len );
++
++		/**
++		 *  @brief Destructor.
++		 *  @details It will get called when object of Pub_Key_ECC_Matrix goes out of scope or
++		 * deleted.
++		 *  @return None.
++		 */
++		~Cert_Store_NV( void );
++
++	private:
++
++		/**
++		 * @brief Validate the certificate storage block
++		 * @param None
++		 * @return status of requested operation
++		 */
++		PKI_Common::pki_status_t Cert_Store_Integrity_Check( void );
++
++		/**
++		 * @brief Read length of the cert and keys in class member variables
++		 * @param None
++		 * @return status of requested operation
++		 */
++		PKI_Common::pki_status_t Get_Cert_Store_Elements( void );
++
++		/**
++		 * @brief Get pointer to the crc of local cert store buffer
++		 * @details Provides crc to be updated in cert store in flash
++		 * @param[out] crc_out: pointer to calculated crc.
++		 * @return status of requested operation
++		 */
++		PKI_Common::pki_status_t Get_CRC_Buf( uint16_t* crc_out );
++
++		/**
++		 * @brief Update CRC in local cert store buffer
++		 * @details This function calculates the crc of local buffer and updates the same in local
++		 * buffer, this function should be called after updating all required cert store comonents
++		 * in local buffer
++		 * @param None
++		 * @return status of requested operation
++		 */
++		PKI_Common::pki_status_t Update_CRC_Buf( void );
++
++		/**
++		 * @brief Update Header ID
++		 * @details This function updates header ID in local buffer
++		 * @param None
++		 * @return status of requested operation
++		 */
++		PKI_Common::pki_status_t Update_Header_ID( void );
++
++		/**
++		 * @brief Header Identifier for Cert Store, initial value will be 0xE201,
++		 * If Header structure changes, Header ID should be increased
++		 */
++		static const uint16_t CERT_STORE_HEADER_IDENTIFIER = 0xE201;
++
++		/**
++		 * @brief Allocate a memory to get certificate store in local buffer
++		 * @return pointer to local RAM buffer
++		 */
++		Cert_Store::cert_store_struct_t* Get_Cert_Store_Ram_Ptr( void );
++
++		/**
++		 * @brief pointer to code signing information structure
++		 */
++		Cert_Store::cert_store_struct_t* m_cert_store_ptr;
++
++		/**
++		 * @brief minimum required erasable page/sector size
++		 */
++		uint32_t m_cert_store_len;
++
++		/**
++		 * @brief NV control to access cert store in external memory
++		 */
++		uC_Flash* m_nv_ctrl;
++
++		/**
++		 * @brief pointer to local buffer in which certificate store is copied
++		 */
++		Cert_Store::cert_store_struct_t* m_cert_store_ram_ptr;
++
++		/**
++		 * @brief Flag to indicate whether cert store components are valid or not
++		 */
++		bool m_cert_store_exists;
++
++		/**
++		 * @brief variables to store length of certificates and keys read from external
++		 * memory
++		 */
++		uint16_t m_fvk_cert_len;
++		uint16_t m_ivk_cert_len;
++		uint16_t m_rvk_key_len;
++		uint16_t m_fvk_key_len;
++
++#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
++		uint16_t m_ca_priv_key_len;
++		uint16_t m_ca_cert_len;
++		uint16_t m_device_key_len;
++#endif
++
++};
++
++
++#endif	// CERT_STORE_NV_H
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/NV/NV_Ctrl.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/NV/NV_Ctrl.h
+new file mode 100644
+index 00000000..088b1b99
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/NV/NV_Ctrl.h
+@@ -0,0 +1,71 @@
++/**
++ *****************************************************************************************
++ *	@file 	NV_Ctrl.h
++ *
++ *	@brief 	Base class for NV memories
++ *
++ *	@details Defines the interface for performing operations with NV memories
++ *
++ *	@copyright 2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#ifndef NV_CTRL_H
++#define NV_CTRL_H
++
++/*
++ *****************************************************************************************
++ *		Constants
++ *****************************************************************************************
++ */
++typedef uint32_t NV_CTRL_ADDRESS_TD;
++typedef uint32_t NV_CTRL_LENGTH_TD;
++
++/**
++ ****************************************************************************************
++ * @brief The NV_Ctrl class contains implementations required for the access of the NV memory.
++ *
++ * @details It provides functionalities to read, write, erase the NV memory.
++ *
++ ****************************************************************************************
++ */
++class NV_Ctrl
++{
++	public:
++		/**
++		 * @brief Return Status for NV_Ctrl operations
++		 */
++		enum nv_status_t
++		{
++			SUCCESS,
++			DATA_ERROR,
++			BUSY_ERROR,
++			WRITE_PROTECTED,
++			INVALID_ADDRESS,
++			OPERATION_NOT_SUPPORTED,
++			PENDING_CALL_BACK
++		};
++
++		enum nv_state_t
++		{
++			IDLE,
++			ERASE,
++			WRITE,
++			READ,
++			COMPLETE,
++			ERROR
++		};
++
++		/**
++		 * @brief Structure used to define the base attributes of the NV memory.
++		 */
++		struct mem_range_info_t
++		{
++			uint32_t start_address;
++			uint32_t mirror_start_address;
++			uint32_t end_address;
++		};
++
++};
++
++#endif
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
+new file mode 100644
+index 00000000..a6d9a841
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
+@@ -0,0 +1,92 @@
++/**
++ *****************************************************************************************
++ *	@file		Prod_Spec_Code_Sign.cpp
++ *	@details 	See header file for module overview.
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#include "Etn_types.h"
++#include "PKI_Config.h"
++#include "esp_log.h"
++#ifdef CODE_SIGN
++#include "Prod_Spec_Code_Sign.h"
++#include "NV_Ctrl.h"
++
++#ifdef SERVER_SIGN
++#include "server_sign_rvk.c"
++#endif
++#ifdef LOCAL_SIGN
++#include "local_sign_rvk.c"
++#endif
++
++/**
++ * @brief Bootloader prod spec hooks tag for ESP_LOG
++ */
++#define BOOT_PROD_TAG "Boot_Prod_Spec"
++/*
++ *****************************************************************************************
++ *		Global Variables
++ *****************************************************************************************
++ */
++const PKI_Common::nv_chip_config_t DEVICE_CERT_NV_CONFIG =
++{
++	 0x310000,
++	 0x2000
++};
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++void Update_RVK_Key( Cert_Store_NV* cert_store_if )
++{
++	if ( cert_store_if != nullptr )
++	{
++		/* check if RVK is in cert store area */
++		if ( cert_store_if->Is_RVK_Key_Available() == false )
++		{
++			/* Copy RVK from Bootloader backup*/
++			uint8_t* rvk_key_ptr = nullptr;
++			uint16_t keylen = 0;
++#ifdef SERVER_SIGN
++			rvk_key_ptr = const_cast<uint8_t*>( server_sign_rvk_der );
++			keylen = server_sign_rvk_der_len;
++#endif
++#ifdef LOCAL_SIGN
++			rvk_key_ptr = const_cast<uint8_t*>( local_sign_rvk_der );
++			keylen = local_sign_rvk_der_len;
++#endif
++			if ( cert_store_if->Update_RVK_Key_Buf( rvk_key_ptr, keylen ) == PKI_Common::SUCCESS )
++			{
++				/* Write updated local buffer back to cert store */
++				if ( cert_store_if->Cert_Store_Write() == PKI_Common::SUCCESS )
++				{
++					/* need to decide what to do */
++					ESP_LOGI( BOOT_PROD_TAG, "Cert Store updated with RVK Key" );
++				}
++			}
++		}
++	}
++	else
++	{
++		ESP_LOGE( BOOT_PROD_TAG, "Cert Store is not initialized" );
++	}
++}
++
++/*
++ *****************************************************************************************
++ *		Function definitions
++ *****************************************************************************************
++ */
++void Init_Cert_Store( uC_Flash* cert_store_flash_ctrl )
++{
++	/* If cert store is located in external memory then call Cert_Store_NV() else call Cert_Store_Flash() */
++	Cert_Store_NV cert_store_if( cert_store_flash_ctrl, &DEVICE_CERT_NV_CONFIG );
++
++	/* Update the RVK Key if it is not available */
++	Update_RVK_Key( &cert_store_if );
++}
++
++#endif ///< CODE_SIGN
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
+new file mode 100644
+index 00000000..ee3e74fe
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
+@@ -0,0 +1,34 @@
++/**
++ **************************************************************************************************
++ *  @file		Prod_Spec_Code_Sign.h
++ *	@brief 		This file provides APIs that calls code sigining and certificate generation APIs
++ *
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ **************************************************************************************************
++ */
++#ifndef PROD_SPEC_CODE_SIGN_H_
++#define PROD_SPEC_CODE_SIGN_H_
++
++#include "PKI_Common.h"
++#include "uC_Flash.h"
++#include "Cert_Store_NV.h"
++
++static const uint16_t PKI_TIMER_PERIOD_250_MS = 250U;
++
++/**
++ * @brief 		initialize cert store
++ * @param[in] 	cert_store_flash_ctrl : Control to the Flash memory where cert store is located.
++ * @return 		None.
++ */
++void Init_Cert_Store( uC_Flash* cert_store_flash_ctrl );
++
++/**
++ * @brief 	update RVK key in cert store
++ * @details Check if RVK key is available or not in cert store and update the same if not available
++ * @param[in] cert_store_if : Cert store NV static object to update the RVK Key
++ * @return 	None.
++ */
++void Update_RVK_Key( Cert_Store_NV* cert_store_if );
++
++#endif	// PROD_SPEC_CODE_SIGN_H_
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp
+new file mode 100644
+index 00000000..54bb31b4
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp
+@@ -0,0 +1,40 @@
++/**
++ *****************************************************************************************
++ *	@file		Ub_Product_Ctrl.cpp
++ *	@details 	See header file for module overview.
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#include "uC_Flash.h"
++#include "Prod_Spec_Code_Sign.h"
++
++#ifdef CODE_SIGN
++/*
++ * Cert Store flash memory configuration
++ */
++const uC_FLASH_CHIP_CONFIG_TD Cert_Store_Flash_Config_Structure =
++{
++	0x310000,
++	0x311FFF,
++	0x311FFF
++};
++#endif
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++extern "C" void Uberloader_Product_Ctrl( void )
++{
++#ifdef CODE_SIGN
++	/* uC_Flash static object creation */
++	uC_Flash cert_store_flash_ctrl( &Cert_Store_Flash_Config_Structure, nullptr );
++
++	/* Initialize cert store and update RVK key if its not available in cert store */
++	Init_Cert_Store( &cert_store_flash_ctrl );
++
++#endif	// CODE_SIGN
++
++}
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.h
+new file mode 100644
+index 00000000..50faa225
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.h
+@@ -0,0 +1,24 @@
++/**
++ **************************************************************************************************
++ *  @file		Ub_Product_Ctrl.h
++ *  @brief 		This file provides APIs to access uberloader cert store update API for ESP32 bootloader
++ *
++ *	@details 	This file has uses as Integration for Cert store located in external memory with
++ *				ESP32 Bootloader hook
++ *
++ *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *
++ **************************************************************************************************
++ */
++#ifndef PRODUCT_CTRL_H
++	#define PRODUCT_CTRL_H
++
++/**
++ *  @brief 		ESP32 Bootloader hook product control for RVK update.
++ *  @details 	This is getting used as integration for RVK update control to ESP32 bootloader hook
++ *  @param		None
++ *  @return 	None
++ */
++void Uberloader_Product_Ctrl( void );
++
++#endif
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Update_RVK_Key.c b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Update_RVK_Key.c
+deleted file mode 100644
+index 96e57b2e..00000000
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Update_RVK_Key.c
++++ /dev/null
+@@ -1,643 +0,0 @@
+-/**
+- *****************************************************************************************
+- *	@file		Update_RVK_Key.c
+- *	@details    See header file for module overview.
+- *	@copyright  2021 Eaton Corporation. All Rights Reserved.
+- *
+- *****************************************************************************************
+- */
+-#include <stdbool.h>
+-#include <string.h>
+-#include "Update_RVK_Key.h"
+-#include "esp_log.h"
+-#include <bootloader_flash.h>
+-#ifdef SERVER_SIGN
+-#include "Server_Sign_RVK.c"
+-#endif
+-#ifdef LOCAL_SIGN
+-#include "Local_Sign_RVK.c"
+-#endif
+-
+-
+-/*
+- *****************************************************************************************
+- *              Constants
+- *****************************************************************************************
+- */
+-
+-/**
+- * @brief Bootloader hooks tag for ESP_LOG
+- */
+-#define BOOT_TAG "BOOT_HOOK"
+-
+-/**
+- * @brief Macro to alignment length variable while read/write with bootloader API's
+- * 		  Bootloader API's accept data length only aligned with 4Bytes in bootloader.
+- */
+-#define BYTES_ALIGNMENT 2
+-
+-/**
+- * @brief CRC16 table( Babelfish ) to calculate the CRC value while storing the RVK Key
+- */
+-const uint16_t table[256] =
+-{
+-	0x0000U, 0x1189U, 0x2312U, 0x329bU, 0x4624U, 0x57adU, 0x6536U, 0x74bfU,
+-	0x8c48U, 0x9dc1U, 0xaf5aU, 0xbed3U, 0xca6cU, 0xdbe5U, 0xe97eU, 0xf8f7U,
+-	0x1081U, 0x0108U, 0x3393U, 0x221aU, 0x56a5U, 0x472cU, 0x75b7U, 0x643eU,
+-	0x9cc9U, 0x8d40U, 0xbfdbU, 0xae52U, 0xdaedU, 0xcb64U, 0xf9ffU, 0xe876U,
+-	0x2102U, 0x308bU, 0x0210U, 0x1399U, 0x6726U, 0x76afU, 0x4434U, 0x55bdU,
+-	0xad4aU, 0xbcc3U, 0x8e58U, 0x9fd1U, 0xeb6eU, 0xfae7U, 0xc87cU, 0xd9f5U,
+-	0x3183U, 0x200aU, 0x1291U, 0x0318U, 0x77a7U, 0x662eU, 0x54b5U, 0x453cU,
+-	0xbdcbU, 0xac42U, 0x9ed9U, 0x8f50U, 0xfbefU, 0xea66U, 0xd8fdU, 0xc974U,
+-	0x4204U, 0x538dU, 0x6116U, 0x709fU, 0x0420U, 0x15a9U, 0x2732U, 0x36bbU,
+-	0xce4cU, 0xdfc5U, 0xed5eU, 0xfcd7U, 0x8868U, 0x99e1U, 0xab7aU, 0xbaf3U,
+-	0x5285U, 0x430cU, 0x7197U, 0x601eU, 0x14a1U, 0x0528U, 0x37b3U, 0x263aU,
+-	0xdecdU, 0xcf44U, 0xfddfU, 0xec56U, 0x98e9U, 0x8960U, 0xbbfbU, 0xaa72U,
+-	0x6306U, 0x728fU, 0x4014U, 0x519dU, 0x2522U, 0x34abU, 0x0630U, 0x17b9U,
+-	0xef4eU, 0xfec7U, 0xcc5cU, 0xddd5U, 0xa96aU, 0xb8e3U, 0x8a78U, 0x9bf1U,
+-	0x7387U, 0x620eU, 0x5095U, 0x411cU, 0x35a3U, 0x242aU, 0x16b1U, 0x0738U,
+-	0xffcfU, 0xee46U, 0xdcddU, 0xcd54U, 0xb9ebU, 0xa862U, 0x9af9U, 0x8b70U,
+-	0x8408U, 0x9581U, 0xa71aU, 0xb693U, 0xc22cU, 0xd3a5U, 0xe13eU, 0xf0b7U,
+-	0x0840U, 0x19c9U, 0x2b52U, 0x3adbU, 0x4e64U, 0x5fedU, 0x6d76U, 0x7cffU,
+-	0x9489U, 0x8500U, 0xb79bU, 0xa612U, 0xd2adU, 0xc324U, 0xf1bfU, 0xe036U,
+-	0x18c1U, 0x0948U, 0x3bd3U, 0x2a5aU, 0x5ee5U, 0x4f6cU, 0x7df7U, 0x6c7eU,
+-	0xa50aU, 0xb483U, 0x8618U, 0x9791U, 0xe32eU, 0xf2a7U, 0xc03cU, 0xd1b5U,
+-	0x2942U, 0x38cbU, 0x0a50U, 0x1bd9U, 0x6f66U, 0x7eefU, 0x4c74U, 0x5dfdU,
+-	0xb58bU, 0xa402U, 0x9699U, 0x8710U, 0xf3afU, 0xe226U, 0xd0bdU, 0xc134U,
+-	0x39c3U, 0x284aU, 0x1ad1U, 0x0b58U, 0x7fe7U, 0x6e6eU, 0x5cf5U, 0x4d7cU,
+-	0xc60cU, 0xd785U, 0xe51eU, 0xf497U, 0x8028U, 0x91a1U, 0xa33aU, 0xb2b3U,
+-	0x4a44U, 0x5bcdU, 0x6956U, 0x78dfU, 0x0c60U, 0x1de9U, 0x2f72U, 0x3efbU,
+-	0xd68dU, 0xc704U, 0xf59fU, 0xe416U, 0x90a9U, 0x8120U, 0xb3bbU, 0xa232U,
+-	0x5ac5U, 0x4b4cU, 0x79d7U, 0x685eU, 0x1ce1U, 0x0d68U, 0x3ff3U, 0x2e7aU,
+-	0xe70eU, 0xf687U, 0xc41cU, 0xd595U, 0xa12aU, 0xb0a3U, 0x8238U, 0x93b1U,
+-	0x6b46U, 0x7acfU, 0x4854U, 0x59ddU, 0x2d62U, 0x3cebU, 0x0e70U, 0x1ff9U,
+-	0xf78fU, 0xe606U, 0xd49dU, 0xc514U, 0xb1abU, 0xa022U, 0x92b9U, 0x8330U,
+-	0x7bc7U, 0x6a4eU, 0x58d5U, 0x495cU, 0x3de3U, 0x2c6aU, 0x1ef1U, 0x0f78U
+-};
+-
+-/**
+- * @brief pointer to local buffer in which certificate store is copied
+- */
+-cert_store_struct_t* m_cert_store_ram_ptr = NULL;
+-
+-/**
+- * @brief pointer to code signing information structure
+- */
+-cert_store_struct_t* m_cert_store_ptr = ( cert_store_struct_t* )( 0x310000 );
+-
+-/**
+- * @brief minimum required erasable page/sector size
+- */
+-uint32_t m_cert_store_len = ( uint32_t )( 0x2000 );
+-
+-/**
+- * @brief Flag to indicate whether cert store components are valid or not
+- */
+-bool m_cert_store_exists = false;
+-
+-
+-/*
+- *****************************************************************************************
+- *              Function Definitions
+- *****************************************************************************************
+- */
+-
+-/*
+- *****************************************************************************************
+- * @brief       Function used to tell the linker to include this file with all its symbols
+- * @ param[in]  void(None)
+- * @ return     None
+- *****************************************************************************************
+- */
+-void Bootloader_RVK_Include( void ){}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-void Cert_Store_NV_Init( void )
+-{
+-	if ( Cert_Store_Integrity_Check() == ESP_OK )
+-	{
+-		m_cert_store_exists = true;
+-
+-		if ( Get_Cert_Store_Elements() == ESP_FAIL )
+-		{
+-			ESP_LOGE( BOOT_TAG, "Cert Store Memory Read Operation Failed" );
+-			assert( false );
+-		}
+-	}
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-esp_err_t Cert_Store_Integrity_Check( void )
+-{
+-	esp_err_t ret = ESP_OK;
+-	uint8_t data_len[CERT_LEN_MAX_BYTES] = { };
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->fvk_cert_len ),
+-								data_len,
+-								CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_fvk_cert_len = ( ( data_len[1] ) << 8 ) | ( data_len[0] );
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->ivk_cert_len ),
+-								data_len,
+-								CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_ivk_cert_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->rvk_key_len ),
+-								data_len,
+-								KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_rvk_key_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->fvk_key_len ),
+-								data_len,
+-								KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_fvk_key_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->ca_priv_key_len ),
+-								data_len,
+-								KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_ca_priv_key_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->ca_cert_len ),
+-								data_len,
+-								CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_ca_cert_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->device_key_len ),
+-								data_len,
+-								KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_device_key_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-#endif
+-
+-	return ( ret );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-esp_err_t Get_Cert_Store_Elements( void )
+-{
+-	esp_err_t ret = ESP_OK;
+-	uint8_t data_len[CERT_LEN_MAX_BYTES] = {0};
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->fvk_cert_len ),
+-								data_len,
+-								CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_fvk_cert_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->ivk_cert_len ),
+-								data_len,
+-								CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_ivk_cert_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->rvk_key_len ),
+-								data_len,
+-								KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_rvk_key_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->fvk_key_len ),
+-								data_len,
+-								KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_fvk_key_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->ca_priv_key_len ),
+-								data_len,
+-								KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_ca_priv_key_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->ca_cert_len ),
+-								data_len,
+-								CERT_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_ca_cert_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-
+-	if ( bootloader_flash_read( ( uint32_t )( &m_cert_store_ptr->device_key_len ),
+-								data_len,
+-								KEY_LEN_MAX_BYTES + BYTES_ALIGNMENT,
+-								false ) == ESP_OK )
+-	{
+-		m_device_key_len = ( data_len[1] << 8 ) | data_len[0];
+-	}
+-	else
+-	{
+-		ret = ESP_FAIL;
+-	}
+-#endif
+-
+-	return ( ret );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-void Update_RVK_Key( void )
+-{
+-	/* check if RVK is in cert store area */
+-	if ( Is_RVK_Key_Available() == false )
+-	{
+-		/* Copy RVK from Bootloader backup*/
+-		uint8_t* rvk_key_ptr = NULL;
+-		uint16_t keylen = 0;
+-#ifdef SERVER_SIGN
+-		rvk_key_ptr = ( uint8_t* )( server_sign_rvk_der );
+-		keylen = server_sign_rvk_der_len;
+-#endif
+-#ifdef LOCAL_SIGN
+-		rvk_key_ptr = ( uint8_t* )( local_sign_rvk_der );
+-		keylen = local_sign_rvk_der_len;
+-#endif
+-		if ( Update_RVK_Key_Buf( rvk_key_ptr, keylen ) == ESP_OK )
+-		{
+-			/* Write updated local buffer back to cert store */
+-			if ( Cert_Store_Write() == ESP_OK )
+-			{
+-				/* need to decide what to do */
+-				ESP_LOGI( BOOT_TAG, "Cert Store updated with RVK Key" );
+-			}
+-		}
+-	}
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-bool Is_RVK_Key_Available( void )
+-{
+-	bool ret = false;
+-
+-	if ( m_cert_store_exists == true )
+-	{
+-		if ( ( m_rvk_key_len != FLASH_MEMORY_DEFAULT_VALUE_U16 ) &&
+-			 ( m_rvk_key_len != FLASH_MEMORY_ZERO_VALUE_U16 ) )
+-		{
+-			ret = true;
+-			ESP_LOGI( BOOT_TAG, "RVK Key Available" );
+-		}
+-		else
+-		{
+-			ESP_LOGE( BOOT_TAG, "RVK Key Not Available" );
+-		}
+-	}
+-	return ( ret );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-cert_store_struct_t* Get_Cert_Store_Ram_Ptr( void )
+-{
+-	static cert_store_struct_t cert_store_ram_var = { };
+-
+-	/* ram is allocated only when need to update cert store */
+-	if ( m_cert_store_ram_ptr == NULL )
+-	{
+-		/* Note:- in ESP32 bootloader, Heap memory is not getting initialized, So we can's use
+-		 * dynamic memory allocation and de-allocation in bootloader. Due to this we was getting
+-		 * "/xtensa-esp32-elf/lib/no-rtti\libnosys.a(sbrk.o):(.literal+0x4):
+-		 * undefined reference to `end'" error.
+-		 */
+-		// m_cert_store_ram_ptr = ( cert_store_struct_t* )malloc( sizeof( cert_store_struct_t ) );
+-		m_cert_store_ram_ptr = &cert_store_ram_var;
+-
+-		if ( m_cert_store_ram_ptr != NULL )
+-		{
+-			if ( m_cert_store_exists == true )
+-			{
+-				if ( bootloader_flash_read( ( uint32_t )( m_cert_store_ptr ),
+-											( uint8_t* )( m_cert_store_ram_ptr ),
+-											sizeof( cert_store_struct_t ),
+-											false ) != ESP_OK )
+-				{
+-					ESP_LOGE( BOOT_TAG, "Read of Cert Store Memory location Failed" );
+-					assert( false );
+-				}
+-			}
+-		}
+-		else
+-		{
+-			ESP_LOGE( BOOT_TAG, "Cert Store Memory Allocation Failed" );
+-		}
+-	}
+-	return ( m_cert_store_ram_ptr );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-esp_err_t Update_RVK_Key_Buf( uint8_t* key_mem, uint16_t key_mem_len )
+-{
+-	esp_err_t ret = ESP_FAIL;
+-
+-	if ( key_mem_len <= RVK_KEY_MAX_SIZE )
+-	{
+-		cert_store_struct_t* cert_info = Get_Cert_Store_Ram_Ptr();
+-
+-		if ( cert_info != NULL )
+-		{
+-			memset( &cert_info->rvk_key_len, 0U, ( sizeof( cert_info->rvk_key_len ) ) );
+-			memset( &cert_info->rvk_key, 0U, ( sizeof( cert_info->rvk_key ) ) );
+-
+-			if ( Copy_Data( cert_info->rvk_key, key_mem_len,
+-							key_mem, key_mem_len ) == true )
+-			{
+-				cert_info->rvk_key_len = key_mem_len;
+-				ret = ESP_OK;
+-				ESP_LOGI( BOOT_TAG, "RVK key updated in local cert store buffer" );
+-			}
+-		}
+-	}
+-	return ( ret );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-esp_err_t Get_CRC_Buf( uint16_t* crc_out )
+-{
+-	esp_err_t ret = ESP_FAIL;
+-
+-	cert_store_struct_t* cert_info = Get_Cert_Store_Ram_Ptr();
+-
+-	if ( cert_info != NULL )
+-	{
+-
+-		uint16_t calculated_crc = 0U;
+-
+-		calculated_crc =
+-			Calc_On_String( ( uint8_t* )( &cert_info->rvk_key_len ),
+-							( sizeof( cert_store_struct_t ) -
+-							  sizeof( cert_info->crc ) -
+-							  sizeof( cert_info->header_id ) ), 0U );
+-		*crc_out = calculated_crc;
+-		ESP_LOGI( BOOT_TAG, "CRC to be updated in Cert Store : %d", *crc_out );
+-		ret = ESP_OK;
+-	}
+-	return ( ret );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-esp_err_t Update_Header_ID( void )
+-{
+-	cert_store_struct_t* cert_info = NULL;
+-
+-	esp_err_t ret = ESP_FAIL;
+-
+-	cert_info = Get_Cert_Store_Ram_Ptr();
+-	if ( cert_info != NULL )
+-	{
+-		cert_info->header_id = CERT_STORE_HEADER_IDENTIFIER;
+-		ret = ESP_OK;
+-	}
+-	return ( ret );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-esp_err_t Update_CRC_Buf( void )
+-{
+-
+-	uint16_t calculated_crc = 0U;
+-	cert_store_struct_t* cert_info = NULL;
+-
+-	esp_err_t ret = ESP_FAIL;
+-
+-	/* update crc in ram buffer */
+-
+-	if ( Get_CRC_Buf( &calculated_crc ) == ESP_OK )
+-	{
+-		cert_info = Get_Cert_Store_Ram_Ptr();
+-		if ( cert_info != NULL )
+-		{
+-			cert_info->crc = calculated_crc;
+-			ret = ESP_OK;
+-		}
+-	}
+-
+-	return ( ret );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-esp_err_t Cert_Store_Write( void )
+-{
+-	esp_err_t ret = ESP_FAIL;
+-
+-	if ( Update_Header_ID() == ESP_OK )
+-	{
+-		/* Update_CRC_Buf() will return failure if m_cert_store_ram_ptr  is nullptr */
+-		if ( Update_CRC_Buf() == ESP_OK )
+-		{
+-			m_cert_store_exists = false;
+-			if ( ESP_OK ==
+-				 bootloader_flash_erase_range( ( uint32_t )( m_cert_store_ptr ),
+-											   m_cert_store_len ) )
+-			{
+-				if ( bootloader_flash_write( ( uint32_t )( m_cert_store_ptr ),
+-											 ( uint8_t* )( m_cert_store_ram_ptr ),
+-											 sizeof( cert_store_struct_t ),
+-											 false ) == ESP_OK )
+-				{
+-					m_cert_store_exists = true;
+-					/* Note:- In ESP32 bootloader, Heap memory is not getting initialized, So we can's use
+-					 * dynamic memory allocation and de-allocation in bootloader. Due to this we was getting
+-					 * "/xtensa-esp32-elf/lib/no-rtti\libnosys.a(sbrk.o):(.literal+0x4):
+-					 * undefined reference to `end'" error.
+-					 */
+-					// free(m_cert_store_ram_ptr);
+-					m_cert_store_ram_ptr = NULL;
+-					ret = ESP_OK;
+-					if ( Get_Cert_Store_Elements() == ESP_FAIL )
+-					{
+-						ESP_LOGE( BOOT_TAG,
+-								  "Cert Store Memory Read Operation Failed" );
+-						assert( false );
+-					}
+-				}
+-			}
+-			else
+-			{
+-				ESP_LOGE( BOOT_TAG, "Cert Store Memory Erase Operation Failed" );
+-			}
+-		}
+-	}
+-	return ( ret );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-void Copy_Const_String( uint8_t* dest, uint8_t const* source, uint32_t length )
+-{
+-	while ( length > 0U )
+-	{
+-		*dest = *source;
+-		dest++;
+-		source++;
+-		length--;
+-	}
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-bool Copy_Data( uint8_t* dst, uint16_t dst_buf_size, const uint8_t* src, uint16_t src_len )
+-{
+-	bool status = false;
+-
+-	if ( dst_buf_size >= src_len )
+-	{
+-		Copy_Const_String( dst, src, src_len );
+-		status = true;
+-	}
+-
+-	return ( status );
+-}
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-uint16_t Calc_On_String( uint8_t const* data, uint32_t length, uint16_t init_crc )
+-{
+-	uint16_t temp_crc;
+-
+-	temp_crc = init_crc;
+-
+-	while ( length > 0U )
+-	{
+-		length--;
+-		temp_crc = ( ( temp_crc >> 8 ) ^
+-					 table[( ( uint8_t )( temp_crc ) ^ *data ) & 0xFFU] );
+-		data++;
+-		// temp_crc = ( temp_crc_ptr[1] ^ table[ ( temp_crc_ptr[0] ^ *data ) & 0xFF ] );
+-		// data++;
+-	}
+-
+-	return ( temp_crc );
+-}
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Update_RVK_Key.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Update_RVK_Key.h
+deleted file mode 100644
+index b7c7f6f6..00000000
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Update_RVK_Key.h
++++ /dev/null
+@@ -1,249 +0,0 @@
+-/**
+- **************************************************************************************************
+- *  @file		Update_RVK_Key.h
+- *  @brief      This file provides APIs to access certificate storage area located in external memory
+- *	@details    This file has cert_store_struct_t structure and APIs to access this structure and
+- *              manage the certificate storage area located in external memory
+- *	@copyright  2021 Eaton Corporation. All Rights Reserved.
+- **************************************************************************************************
+- */
+-
+-#ifndef _UPDATE_RVK_KEY_H_
+-#define _UPDATE_RVK_KEY_H_
+-
+-#include "esp_err.h"
+-#include "App_IO_Config_ESP32.h"
+-#include "PKI_Config.h"
+-
+-
+-/*
+- *****************************************************************************************
+- *              Constants and Macro's
+- *****************************************************************************************
+- */
+-#define FLASH_MEMORY_DEFAULT_VALUE_U16  0xFFFF
+-#define FLASH_MEMORY_ZERO_VALUE_U16     0x0000
+-
+-#define FVK_CERT_MAX_SIZE 1022	///< Maximum size ( in bytes ) of FVK certificate (FVK key + FVK signature)
+-#define IVK_CERT_MAX_SIZE 1534	///< Maximum size of IVK certificate (IVK key + IVK signature)
+-
+-#define FVK_KEY_MAX_SIZE 162	/// FVK key maximum size in bytes
+-#define RVK_KEY_MAX_SIZE 162	/// RVK key maximum size in bytes
+-
+-#define CERT_LEN_MAX_BYTES 2		///< Maximum bytes of cert len
+-#define KEY_LEN_MAX_BYTES 2			///< Maximum bytes of key len
+-
+-#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
+-#define CA_CERT_MAX_SIZE 766
+-#define CA_KEY_MAX_SIZE 254
+-#define DEV_KEY_MAX_SIZE 254
+-#endif
+-/**
+- * @brief Header Identifier for Cert Store, initial value will be 0xE201,
+- * If Header structure changes, Header ID should be increased
+- */
+-static const uint16_t CERT_STORE_HEADER_IDENTIFIER = 0xE201;
+-
+-/**
+- * @brief variables to store length of certificates and keys read from external
+- * memory
+- */
+-uint16_t m_fvk_cert_len;
+-uint16_t m_ivk_cert_len;
+-uint16_t m_rvk_key_len;
+-uint16_t m_fvk_key_len;
+-
+-#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
+-uint16_t m_ca_priv_key_len;
+-uint16_t m_ca_cert_len;
+-uint16_t m_device_key_len;
+-#endif
+-
+-/**
+- * @brief Structure to define certificate store components
+- * @details cert store holds CA cerificate, private key certificates( key + signature )
+- * used for communication certificates and public key certificates( key + signature ) which
+- * are used as a backup. public key certs in Code sign info block are compared with these
+- * key
+- * certs to identify whether FVK/IVK/RVK is new or corrupted
+- */
+-typedef struct cert_store_struct_t
+-{
+-	uint16_t header_id;	///< cert store ID
+-
+-	uint16_t crc;		///< crc to validate cert store components, crc is calculated and updated when any of the cert
+-	///< store component is updated.
+-
+-	uint16_t rvk_key_len;				///< Length of root verification key
+-	uint8_t rvk_key[RVK_KEY_MAX_SIZE];	///< root verification key used to verify IVK
+-
+-	uint16_t ivk_cert_len;				///< Length of intermediate verification key cert
+-	uint8_t ivk_cert[IVK_CERT_MAX_SIZE];	///< Intermediate verification key certificate backup
+-
+-	uint16_t fvk_cert_len;				///< Length of firmware verification key cert
+-	uint8_t fvk_cert[FVK_CERT_MAX_SIZE];///< Firmware verification key certificate backup
+-
+-	uint16_t fvk_key_len;				///< Length of firmware verification key
+-	uint8_t fvk_key[FVK_KEY_MAX_SIZE];	///< Firmware verification key backup
+-
+-#ifndef DISABLE_PKI_CERT_GEN_SUPPORT
+-	uint16_t ca_priv_key_len;			///< Length of CA private key certificate
+-	uint8_t ca_priv_key[CA_KEY_MAX_SIZE];///< CA key used to sign CA certificate
+-
+-	uint16_t ca_cert_len;				///< Length of CA cerificate
+-	uint8_t ca_cert[CA_CERT_MAX_SIZE];	///< CA cerificate used to generate device certificate for https
+-	uint16_t device_key_len;			///< Length of device private key certificate
+-	uint8_t device_key[DEV_KEY_MAX_SIZE];	///< Device private key used to sign device certificate, device certificate
+-	///< is generated everytime on power up
+-#endif
+-} cert_store_struct_t;
+-
+-/*
+- *****************************************************************************************
+- *              Functions Declaration
+- *****************************************************************************************
+- */
+-/*
+- *****************************************************************************************
+- * @brief       Init the cert store to update the RVK Key if not present. It checks
+- *              necessary and updating the RVK Key.
+- * @ param[in]  void(None)
+- * @ return     None
+- *****************************************************************************************
+- */
+-void Cert_Store_NV_Init( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Validate the certificate storage block
+- * @ param[in]  void(None)
+- * @ return     status of requested operation
+- *****************************************************************************************
+- */
+-esp_err_t Cert_Store_Integrity_Check( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Read length of the cert and keys in class member variables
+- * @ param[in]  void(None)
+- * @ return     status of requested operation
+- *****************************************************************************************
+- */
+-esp_err_t Get_Cert_Store_Elements( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Update RVK Key if not present in cert store
+- * @ param[in]  void(None)
+- * @ return     None
+- *****************************************************************************************
+- */
+-void Update_RVK_Key( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Function to check whether RVK Available in cert Store
+- * @ param[in]  void(None)
+- * @ return     status of requested operation
+- *****************************************************************************************
+- */
+-bool Is_RVK_Key_Available( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Allocate a memory to get certificate store in local buffer
+- * @ param[in]  void(None)
+- * @ return     status of requested operation
+- *****************************************************************************************
+- */
+-cert_store_struct_t* Get_Cert_Store_Ram_Ptr( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Update RVK key  in local cert store buffer
+- * @param[in] key_mem: Pointer to RVK key.
+- * @param[in] key_mem_len: Length of the RVK key.
+- * @return      status of requested operation
+- *****************************************************************************************
+- */
+-esp_err_t Update_RVK_Key_Buf( uint8_t* key_mem, uint16_t key_mem_len );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Get pointer to the crc of local cert store buffer
+- * @details     Provides crc to be updated in cert store in flash
+- * @param[out] crc_out: pointer to calculated crc.
+- * @return      status of requested operation
+- *****************************************************************************************
+- */
+-esp_err_t Get_CRC_Buf( uint16_t* crc_out );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Update Header ID
+- * @details     This function updates header ID in local buffer
+- * @param[in]   void(None)
+- * @return      status of requested operation
+- *****************************************************************************************
+- */
+-esp_err_t Update_Header_ID( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Update CRC in local cert store buffer
+- * @details     This function calculates the crc of local buffer and updates the same in
+- *              local buffer, this function should be called after updating all required
+- *              cert store comonents in local buffer
+- * @param[in]   void(None)
+- * @return      status of requested operation
+- *****************************************************************************************
+- */
+-esp_err_t Update_CRC_Buf( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Write cert store from local buffer to cert store in flash
+- * @details     To update cert store components, read the cert store into local buffer
+- *              update individual components then write local buffer into cert store in flash
+- * @param[in]   void(None)
+- * @return      status of requested operation
+- *****************************************************************************************
+- */
+-esp_err_t Cert_Store_Write( void );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Copy Data from source to destination location
+- * @param[in] dest: destination pointer
+- * @param[in] source: source pointer
+- * @param[in] length: legth to copy
+- * @return      None
+- *****************************************************************************************
+- */
+-void Copy_Const_String( uint8_t* dest, uint8_t const* source, uint32_t length );
+-
+-/*
+- *****************************************************************************************
+- * @brief       Copy Data from source to destination location
+- * @param[in] dst: destination pointer
+- * @param[in] dst_buf_size: destination buffer size
+- * @param[in] src: source pointer
+- * @param[in] src_len: source buffer length
+- * @return      status of requested operation
+- *****************************************************************************************
+- */
+-bool Copy_Data( uint8_t* dst, uint16_t dst_buf_size, const uint8_t* src, uint16_t src_len );
+-
+-/*
+- *****************************************************************************************
+- * @brief               Calculates a CRC on a string.
+- * @param[in] data:     The pointer to the data.
+- * @param[in] length:   The length of data to check.
+- * @param[in] init_crc: The initial CRC value.
+- * @return              The new CRC value.
+- *****************************************************************************************
+- */
+-uint16_t Calc_On_String( uint8_t const* data, uint32_t length,
+-						 uint16_t init_crc );
+-
+-#endif	/* _UPDATE_RVK_KEY_H_ */
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/component.mk b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/component.mk
+deleted file mode 100644
+index 27ad11a7..00000000
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/component.mk
++++ /dev/null
+@@ -1 +0,0 @@
+-COMPONENT_ADD_INCLUDEDIRS := .
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/Etn_Types.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/Etn_Types.h
+new file mode 100644
+index 00000000..6010ac87
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/Etn_Types.h
+@@ -0,0 +1,30 @@
++/**
++ *****************************************************************************************
++ *	@file		Etn_Types.h
++ *
++ *	@brief		Provides some basic Eaton Typedefs which shall be outside the namespace.
++
++ *	@copyright	2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#ifndef ETN_TYPES_H
++   #define ETN_TYPES_H
++
++
++typedef float float32_t;
++typedef double float64_t;
++typedef bool bool_t;
++typedef char char_t;
++typedef unsigned char uint8_t;
++typedef signed char int8_t;
++typedef unsigned int uint32_t;
++typedef unsigned short uint16_t;
++typedef signed short int16_t;
++typedef signed int int32_t;
++typedef unsigned long long uint64_t;
++typedef signed long long int64_t;
++
++typedef signed char INT8;
++
++#endif
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp
+new file mode 100644
+index 00000000..c1ef6693
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp
+@@ -0,0 +1,288 @@
++/**
++ *****************************************************************************************
++ * @file		uC_Flash.cpp
++ * @details		See header file for module overview.
++ * @copyright	2019 Eaton Corporation All Rights Reserved.
++ *****************************************************************************************
++ */
++#ifdef __cplusplus
++extern "C"
++{
++#endif
++
++#include "uC_Flash.h"
++
++static const uint32_t DISABLE_VALUE = 0U;			///< Disable value.
++
++/*
++ *****************************************************************************************
++ *		Constants
++ *****************************************************************************************
++ */
++static const uint32_t SECTOR_SIZE = 4096U;								///< FLash Sector Size.
++static const uint32_t PAGE_SIZE = 256U;									///< Flash Page Size.
++static const uint8_t CHECKSUM_LENGTH = 2U;								///< Checksum data length.
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++uC_Flash::uC_Flash( uC_FLASH_CHIP_CONFIG_TD const* chip_config, FLASH_TypeDef* flash_ctrl, bool erase_on_boundary )
++{
++	m_chip_cfg = chip_config;
++	m_flash_ctrl = flash_ctrl;
++	m_erase_on_boundary = erase_on_boundary;
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++uC_Flash::~uC_Flash( void )
++{}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Read( uint8_t* data, uint32_t address, NV_CTRL_LENGTH_TD length,
++									 bool use_protection )
++{
++	NV_Ctrl::nv_status_t status = NV_Ctrl::INVALID_ADDRESS;
++
++	if ( Check_Range( address, length ) && ( length != 0U ) )
++	{
++		status = Read_Now( data, address, length );
++	}
++
++	return ( status );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Write( uint8_t* data, uint32_t address, NV_CTRL_LENGTH_TD length,
++									  bool use_protection )
++{
++	NV_Ctrl::nv_status_t status = NV_Ctrl::INVALID_ADDRESS;
++	uint32_t page_num = DISABLE_VALUE;
++
++	if ( Check_Range( address, length ) && ( length != 0U ) )
++	{
++		if ( m_erase_on_boundary == true )
++		{
++			page_num = ( address % SECTOR_SIZE ) / PAGE_SIZE;
++			Erase_Page( page_num + ENABLE_VAL );
++		}
++
++		status = Write_Now( data, address, length );
++	}
++
++	return ( status );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Read_Checksum( uint16_t* checksum_dest, NV_CTRL_ADDRESS_TD address,
++											  NV_CTRL_LENGTH_TD length )
++{
++	NV_Ctrl::nv_status_t status = NV_Ctrl::SUCCESS;
++
++	status = Read( ( uint8_t* )checksum_dest, address + length, CHECKSUM_LENGTH );
++
++	return ( status );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Erase( uint32_t address, NV_CTRL_LENGTH_TD length, uint8_t erase_data,
++									  bool protected_data )
++{
++	NV_Ctrl::nv_status_t status = NV_Ctrl::INVALID_ADDRESS;
++
++	if ( Check_Range( address, length ) && ( length != 0U ) )
++	{
++		status = Erase_Now( address, length );
++	}
++
++	return ( status );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++bool uC_Flash::Erase_Page( uint32_t address )
++{
++	bool ret = true;
++	esp_err_t status = ESP_OK;
++
++	status = bootloader_flash_erase_range( address * PAGE_SIZE, PAGE_SIZE );
++
++	if ( status != ESP_OK )
++	{
++		ret = false;
++	}
++	else
++	{
++		ret = true;
++	}
++
++	return ( ret );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Erase_All( void )
++{
++	uint32_t size = m_chip_cfg->end_address - m_chip_cfg->start_address + 1U;
++	NV_Ctrl::nv_status_t status;
++
++	status = Erase( m_chip_cfg->start_address, size, uC_FLASH_DEFAULT_ERASE_VAL, false );
++
++	return ( status );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++bool uC_Flash::Check_Range( NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length ) const
++{
++	bool result = false;
++	NV_CTRL_ADDRESS_TD end_address = m_chip_cfg->end_address;
++
++	if ( ( address >= m_chip_cfg->start_address ) && ( ( address + length ) <= ( end_address + 1U ) ) )
++	{
++		result = true;
++	}
++	return ( result );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Erase_Now( NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length )
++{
++	NV_Ctrl::nv_status_t result = NV_Ctrl::SUCCESS;
++	esp_err_t ret;
++	uint32_t erase_data_size = 0U;
++
++	/* Round up test data length size with multiply of sectors size (4096).
++	 * if ((n)x4096)  < test_data_length <= ((n+1)x4096) then erase_data_size = ((n+1)x4096).
++	 * if test_data_length = 1024 bytes then erase_data_size = 4096 x 1 = 4096 bytes.
++	 * if test_data_length = 8191 bytes then erase_data_size = 4096 x 2 = 8192 bytes.
++	 * if test_data_length = 8193 bytes then erase_data_size = 4096 x 3 = 12288 bytes.
++	 */
++	erase_data_size = ( ( length - 1 ) / SECTOR_SIZE + 1 ) * SECTOR_SIZE;
++
++	ret = bootloader_flash_erase_range( address, erase_data_size );
++
++	if ( ret != ESP_OK )
++	{
++		result = Interpret_SPI_Flash_Error( ret );
++	}
++
++	return ( result );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Write_Now( uint8_t* data, uint32_t address, NV_CTRL_LENGTH_TD length )
++{
++	NV_Ctrl::nv_status_t result = NV_Ctrl::SUCCESS;
++	esp_err_t ret;
++
++	ret = bootloader_flash_write( address, data, length, false );
++
++	if ( ret != ESP_OK )
++	{
++		result = Interpret_SPI_Flash_Error( ret );
++	}
++
++	return ( result );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Read_Now( uint8_t* data, NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length )
++{
++	NV_Ctrl::nv_status_t result = NV_Ctrl::SUCCESS;
++	esp_err_t ret;
++
++	ret = bootloader_flash_read( address, data, length, false );
++
++	if ( ret != ESP_OK )
++	{
++		result = Interpret_SPI_Flash_Error( ret );
++	}
++
++	return ( result );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++NV_Ctrl::nv_status_t uC_Flash::Interpret_SPI_Flash_Error( esp_err_t spi_flash_error )
++{
++	NV_Ctrl::nv_status_t return_nv_ctrl_status;
++
++	switch ( spi_flash_error )
++	{
++		case ESP_OK:
++			return_nv_ctrl_status = NV_Ctrl::SUCCESS;
++			break;
++
++		case ESP_ERR_TIMEOUT:
++			return_nv_ctrl_status = NV_Ctrl::BUSY_ERROR;
++			break;
++
++		case ESP_ERR_NO_MEM:
++		case ESP_ERR_INVALID_ARG:
++		case ESP_ERR_INVALID_SIZE:
++		case ESP_ERR_NOT_FOUND:
++			return_nv_ctrl_status = NV_Ctrl::INVALID_ADDRESS;
++			break;
++
++		case ESP_ERR_NOT_SUPPORTED:
++			return_nv_ctrl_status = NV_Ctrl::OPERATION_NOT_SUPPORTED;
++			break;
++
++		case ESP_FAIL:
++		default:
++			return_nv_ctrl_status = NV_Ctrl::DATA_ERROR;
++			break;
++	}
++
++	return ( return_nv_ctrl_status );
++}
++
++#ifdef __cplusplus
++}
++#endif
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.h
+new file mode 100644
+index 00000000..a934f80b
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.h
+@@ -0,0 +1,203 @@
++/**
++ *****************************************************************************************
++ * @file		uC_Flash.h
++ *
++ * @brief		This file provides the access to the flash memory for
++ * @n			Read, Write and Erase operations.
++ *
++ * @copyright	2019 Eaton Corporation All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++#ifndef UC_FLASH_H
++#define UC_FLASH_H
++
++#include "bootloader_flash.h"
++#include "NV_Ctrl.h"
++
++/*
++ *****************************************************************************************
++ *		Constants
++ *****************************************************************************************
++ */
++static const uint32_t uC_FLASH_DEFAULT_ERASE_VAL = 0xFFU;			///< Flash Erase Value.
++static const uint8_t ENABLE_VAL = 1U;								///< Enable Value.
++
++/**
++ * @brief								Structure used to define the start and end address of flash.
++ */
++struct uC_FLASH_CHIP_CONFIG_TD
++{
++	uint32_t start_address;					///< Start address of flash.
++	uint32_t mirror_start_address;			///< Mirror start address of flash details.
++	uint32_t end_address;					///< End address of flash.
++};
++
++/**
++ * @brief								Structure used to define the status of flash.
++ * @n									(Not used in ESP32)
++ */
++struct FLASH_TypeDef
++{};
++
++/**
++ ****************************************************************************************
++ * @brief								The uC_Flash class contains implementations required for the
++ * @n									access of the Flash memory.
++ * @details								It provides functionalities to read, write, erase the Flash memory.
++ ****************************************************************************************
++ */
++class uC_Flash
++{
++	public:
++		/**
++		 * @brief						Constructor to create instance of uC_Flash class.
++		 * @param[in] chip_config:		Structure pointer for configure Flash.
++		 * @param[in] flash_ctrl:		Structure pointer contains the flash register details.
++		 * @param[in] synchronus_erase:	synchronous erase.
++		 * @param[in] cback_func:		A pointer to the function to be called when the operation is
++		 * @n							complete.
++		 * @param[in] param:			A void pointer to an object passed as an argument to the cback
++		 * @n							function.
++		 * @param[in] erase_on_boundary:Flash erase on boundary.
++		 * @return Void					None
++		 */
++		uC_Flash( uC_FLASH_CHIP_CONFIG_TD const* chip_config = nullptr, FLASH_TypeDef* flash_ctrl = nullptr,
++				  bool erase_on_boundary = false );
++
++		/**
++		 * @brief						Destructor to delete an instance of uC_Flash class
++		 * @return Void					None.
++		 */
++		~uC_Flash( void );
++
++		/**
++		 * @brief						Reads a specified number of bytes from a given
++		 * @n							address into a buffer.
++		 * @param[in] data:				A pointer to the buffer used to receive the data from the read
++		 * @n							operation.
++		 * @param[in] address:			The address of the first byte to be read.
++		 * @param[in] length:			The number of bytes to be read.
++		 * @param[in] use_protection:	Use protection
++		 * @n							is true use flash encryption
++		 * @n							is false no encryption is required.
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Read( uint8_t* data, NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length, bool
++								   use_protection = false );
++
++		/**
++		 * @brief						Writes a specified number of bytes to a given address from a buffer.
++		 * @param[in] data:				A pointer to the buffer used to hold the data for the write
++		 * @n							operation.
++		 * @param[in] address:			The address of the first byte to be written.
++		 * @param[in] length:			The number of bytes to be written.
++		 * @param[in] use_protection:	Use protection
++		 * @n							is true use flash encryption
++		 * @n							is false no encryption is required.
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Write( uint8_t* data, NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length,
++									bool use_protection = false );
++
++		/**
++		 * @brief						Erases a block of memory in the NV_Ctrl device.
++		 * @n							This may involve arrange
++		 * @n							larger than specified in the address and length arguments as some
++		 * @n							devices have minimum block sizes that can be erased.
++		 * @param[in] address:			The address of the first byte to be erased.
++		 * @param[in] length:			The number of bytes to be erased.
++		 * @param[in] erase_data:		The default erase value.
++		 * @param[in] protected_data:	Data protected details.
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Erase( NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length,
++									uint8_t erase_data = uC_FLASH_DEFAULT_ERASE_VAL, bool protected_data = false );
++
++		/**
++		 * @brief						Erase the all the data in Flash.
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Erase_All( void );
++
++		/**
++		 * @brief						Read checksum value
++		 * @param[in] checksum_dest:		checksum pointer buffer used to receive the data from the read
++		 * operation.
++		 * @param[in] address:			The address of the first byte to be read.
++		 * @param[in] length:			The number of bytes to be read.
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Read_Checksum( uint16_t* checksum_dest, NV_CTRL_ADDRESS_TD address,
++											NV_CTRL_LENGTH_TD length );
++
++	private:
++		/**
++		 * @brief						Check the address range valid or not.
++		 * @param[in] address			The address of the Page to be erased.
++		 * @return bool					status of requested operation.
++		 */
++		bool Erase_Page( uint32_t address );
++
++		/**
++		 * @brief						Check the address range valid or not.
++		 * @param[in] address			The address of the first byte of the data.
++		 * @param[in] length			The number of bytes of  to be checked.
++		 * @return bool					status of requested operation.
++		 */
++		bool Check_Range( NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length ) const;
++
++		/**
++		 * @brief function to erase flash from the specified address location to given length.
++		 * @param[in] address			Start address
++		 * @param[in] length			length of data
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Erase_Now( NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length );
++
++		/**
++		 * @brief function to write specified data buffer into flash
++		 * @param[in] data				data buffer to be written into flash
++		 * @param[in] address			Start address
++		 * @param[in] length			length of data
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Write_Now( uint8_t* data, uint32_t address, NV_CTRL_LENGTH_TD length );
++
++		/**
++		 * @brief function to read given length of data from the specified address location
++		 * @param[out] data				read buffer to store the data read from the flash
++		 * @param[in] address			Start address
++		 * @param[in] length			length of data
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Read_Now( uint8_t* data, NV_CTRL_ADDRESS_TD address, NV_CTRL_LENGTH_TD length );
++
++		/**
++		 * @brief						Error conversion from ESP error type to NV_Ctrl status
++		 * @param[in] spi_flash_error	ESP error type.
++		 * @return nv_status_t			status of requested operation.
++		 */
++		NV_Ctrl::nv_status_t Interpret_SPI_Flash_Error( esp_err_t spi_flash_error );
++
++		/**
++		 * @brief						Private member variable of uc flash config structure.
++		 *@n details					Chip configuration structure pointer.
++		 */
++		uC_FLASH_CHIP_CONFIG_TD const* m_chip_cfg;
++
++		/**
++		 * @brief						Private member variable Flash typedef structure.
++		 * @n details					Flash control structure pointer.
++		 */
++		FLASH_TypeDef* m_flash_ctrl;
++
++		/**
++		 * @brief						Private member variable for a bool.
++		 *@n							Erase boundary information.
++		 */
++		bool m_erase_on_boundary;
++
++};
++
++#endif	// #ifndef UC_FLASH_H
+diff --git a/esp-idf/components/bootloader/subproject/main/CMakeLists.txt b/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
+index c76bd26c..87cdd3f4 100644
+--- a/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
++++ b/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
+@@ -1,22 +1,31 @@
+ #Set source files 
+ set( srcs "bootloader_start.c"
+ 		  "../bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c"
+-		  "../bootloader_components/Bootloader_Hooks/Update_RVK_Key.c"
+-			)
++		  "../bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp"
++		  "../bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp"
++		  "../bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp"
++		  "../bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp"
++		  "../bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp"
++		  "../bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp"
++		)
+ 		
+ #Set include directories
+ set( include_dirs   
+ 					"../../../../../../Code/Config"
++					"../../../../../../Code"		 
+ 					"../bootloader_components/Bootloader_Hooks"
++					"../bootloader_components/Bootloader_Hooks/Crypt_API"
++					"../bootloader_components/Bootloader_Hooks/MiscCode_FUS"
++					"../bootloader_components/Bootloader_Hooks/NV"
++					"../bootloader_components/Bootloader_Hooks/Lib"
++					"../bootloader_components/Bootloader_Hooks/uC"
++										
+ 					"../../../spi_flash/include"
+-					)
+-
+-#set(priv_requires pthread freertos )
++				)
+ 
+ idf_component_register( SRCS "${srcs}"
+                     REQUIRES bootloader bootloader_support
+                     INCLUDE_DIRS "${include_dirs}"
+-#                   PRIV_REQUIRES "${priv_requires}" 
+                     )
+ 
+ idf_build_get_property(target IDF_TARGET)
+@@ -26,4 +35,7 @@ set(scripts "ld/${target}/bootloader.ld"
+ target_linker_script(${COMPONENT_LIB} INTERFACE "${scripts}")
+ 
+ target_link_libraries(${COMPONENT_LIB} INTERFACE "-u Bootloader_Hooks_Include")
+-target_link_libraries(${COMPONENT_LIB} INTERFACE "-u Bootloader_RVK_Include")
+\ No newline at end of file
++target_link_libraries(${COMPONENT_LIB} INTERFACE "-u Bootloader_RVK_Include")
++
++#Adding Compiler option for this component to disable re-order warnings
++set_target_properties(${COMPONENT_LIB} PROPERTIES COMPILE_FLAGS "-Wno-reorder")
+\ No newline at end of file
+-- 
+2.31.1.windows.1
+
+
+From 85bd76dada5da0c4f4c3cb82a261f297af462c83 Mon Sep 17 00:00:00 2001
+From: "Verma, Vimal Kumar" <vimalkumarverma@eaton.com>
+Date: Sat, 5 Feb 2022 00:21:29 +0530
+Subject: [PATCH 2/3] Updated logic for fetching partition table Fixed review
+ comments
+
+---
+ .../Bootloader_Hooks/Bootloader_Hooks.c       | 64 +++++++++++++--
+ .../Bootloader_Hooks/Lib/StdLib_MV.cpp        |  7 +-
+ .../FUS}/Cert_Store.h                         | 14 ++--
+ .../FUS}/Cert_Store_NV.cpp                    | 15 ++--
+ .../FUS}/Cert_Store_NV.h                      |  8 +-
+ .../Bootloader_Hooks/Prod_Spec_Code_Sign.cpp  | 32 ++++----
+ .../Bootloader_Hooks/Prod_Spec_Code_Sign.h    | 18 ++---
+ .../Bootloader_Hooks/Product_Ctrl.cpp         | 79 +++++++++++++++++++
+ .../Bootloader_Hooks/Product_Ctrl.h           | 57 +++++++++++++
+ .../Bootloader_Hooks/Ub_Product_Ctrl.cpp      | 40 ----------
+ .../Bootloader_Hooks/Ub_Product_Ctrl.h        | 24 ------
+ .../bootloader/subproject/main/CMakeLists.txt |  7 +-
+ 12 files changed, 242 insertions(+), 123 deletions(-)
+ rename esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/{MiscCode_FUS => MiscCode/FUS}/Cert_Store.h (85%)
+ rename esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/{MiscCode_FUS => MiscCode/FUS}/Cert_Store_NV.cpp (97%)
+ rename esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/{MiscCode_FUS => MiscCode/FUS}/Cert_Store_NV.h (93%)
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp
+ create mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.h
+ delete mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp
+ delete mode 100644 esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.h
+
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
+index 9076c80f..6c93816a 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
+@@ -7,10 +7,14 @@
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  **************************************************************************************************
+  */
+-
+ #include "esp_log.h"
+-#include "Ub_Product_Ctrl.h"
+-#include "PKI_Config.h"
++#include "Product_Ctrl.h"
++#include "esp_partition.h"
++#include "bootloader_flash.h"
++
++/* Defining cert store subtype to fetch the cert store information from partition table */
++static const esp_partition_subtype_t CERT_STORE_PARTITION_SUBTYPE = ( esp_partition_subtype_t )0xFD;
++
+ /*
+  *****************************************************************************************
+  * @brief       This function used to tell linker to include this file with all its symbols
+@@ -45,9 +49,53 @@ void Bootloader_Before_Init( void )
+  */
+ void Bootloader_RVK_Update( void )
+ {
+-#ifdef CODE_SIGN
+-	Uberloader_Product_Ctrl();
+-#else
+-	ESP_LOGE( "HOOK", "Code Sign is disabled" );
+-#endif
++	Product_Ctrl();
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++esp_err_t Get_Partition_Info( esp_partition_pos_t* cert_store_part )
++{
++	const esp_partition_info_t* partitions;
++	esp_err_t err = ESP_FAIL;
++	int num_partitions;
++
++	partitions = bootloader_mmap( ESP_PARTITION_TABLE_OFFSET, ESP_PARTITION_TABLE_MAX_LEN );
++
++	if ( !partitions )
++	{
++		ESP_LOGE( "HOOK", "bootloader_mmap(0x%x, 0x%x) failed", ESP_PARTITION_TABLE_OFFSET,
++				  ESP_PARTITION_TABLE_MAX_LEN );
++	}
++	else
++	{
++		err = esp_partition_table_verify( partitions, true, &num_partitions );
++		if ( err != ESP_OK )
++		{
++			ESP_LOGE( "HOOK", "Failed to verify partition table" );
++		}
++		else
++		{
++			/* Setting err to Not found before fetching particular partition info */
++			err = ESP_ERR_NOT_FOUND;
++			for ( int index = 0; index < num_partitions; index++ )
++			{
++				const esp_partition_info_t* partition = &partitions[index];
++				/* valid partition table */
++				if ( ( PART_TYPE_DATA == partition->type ) && ( CERT_STORE_PARTITION_SUBTYPE == partition->subtype ) )
++				{
++					*cert_store_part = partition->pos;
++					err = ESP_OK;
++					break;
++				}
++			}
++		}
++	}
++
++	bootloader_munmap( partitions );
++
++	return ( err );
+ }
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
+index e66fe611..07173475 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
+@@ -1,8 +1,8 @@
+ /**
+  *****************************************************************************************
+  *	@file		StdLib_MV.cpp
+- *	@details 	See header file for module overview.
+- *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *	@details    See header file for module overview.
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+  */
+@@ -51,13 +51,11 @@ void Copy_Const_String( uint8_t* dest, uint8_t const* source, uint32_t length )
+  * See header file for function definition.
+  *****************************************************************************************
+  */
+-
+ bool_t Compare_Data( uint8_t const* dest, uint8_t const* source, uint32_t length )
+ {
+ 	bool_t same = true;
+ 	uint_fast32_t i = length;
+ 
+-//	Push_TGINT();
+ 	while ( ( i > 0U ) && ( same == true ) )
+ 	{
+ 		i--;
+@@ -68,7 +66,6 @@ bool_t Compare_Data( uint8_t const* dest, uint8_t const* source, uint32_t length
+ 		dest++;
+ 		source++;
+ 	}
+-//	Pop_TGINT();
+ 	return ( same );
+ }
+ 
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store.h
+similarity index 85%
+rename from esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store.h
+rename to esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store.h
+index 03be4fd8..0d3115de 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store.h
+@@ -2,10 +2,10 @@
+  **************************************************************************************************
+  *  @file		Cert_Store.h
+  *
+- *	@details 	Fw_Store.h provides base class and APIs to access firmware and code
+- * 				sign information block
++ *	@details    Fw_Store.h provides base class and APIs to access firmware and code
++ *              sign information block
+  *
+- *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  **************************************************************************************************
+  */
+@@ -65,7 +65,7 @@ class Cert_Store
+ 
+ 			uint16_t ivk_cert_len;				///< Length of intermediate verification key cert
+ 			uint8_t ivk_cert[IVK_CERT_MAX_SIZE];///< Intermediate verification key certificate
+-												///< backup
++			///< backup
+ 
+ 			uint16_t fvk_cert_len;				///< Length of firmware verification key cert
+ 			uint8_t fvk_cert[FVK_CERT_MAX_SIZE];///< Firmware verification key certificate backup
+@@ -79,11 +79,11 @@ class Cert_Store
+ 
+ 			uint16_t ca_cert_len;				///< Length of CA cerificate
+ 			uint8_t ca_cert[CA_CERT_MAX_SIZE];	///< CA cerificate used to generate device
+-												///< certificate for https
++			///< certificate for https
+ 			uint16_t device_key_len;			///< Length of device private key certificate
+ 			uint8_t device_key[DEV_KEY_MAX_SIZE];///< Device private key used to sign device
+-												///< certificate, device certificate is generated
+-												///< everytime on power up
++			///< certificate, device certificate is generated
++			///< everytime on power up
+ #endif
+ 		};
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.cpp
+similarity index 97%
+rename from esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp
+rename to esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.cpp
+index 8a16a414..5857008b 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.cpp
+@@ -1,8 +1,8 @@
+ /**
+  *****************************************************************************************
+  *	@file		Cert_Store_NV.cpp
+- *	@details 	See header file for module overview.
+- *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *	@details    See header file for module overview.
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+  */
+@@ -26,7 +26,7 @@ extern "C"
+ 
+ /**
+  * @brief Macro to alignment length variable while read/write with bootloader API's
+- * 		  Bootloader API's accept data length only aligned with 4Bytes in bootloader.
++ *        Bootloader API's accept data length only aligned with 4Bytes in bootloader.
+  */
+ #define BYTES_ALIGNMENT 2
+ 
+@@ -177,13 +177,13 @@ PKI_Common::pki_status_t Cert_Store_NV::Cert_Store_Integrity_Check( void )
+ 	PKI_Common::pki_status_t ret = PKI_Common::FAILURE;
+ 	bool header_verified = false;
+ 
+-	/* Verify header ID */
+-	/* Reading header_id and crc. Since boot-loader reading with size alignment of 4-Bytes */
++	/* Verify header ID
++	   Reading header_id and crc. Since boot-loader reading with size alignment of 4-Bytes*/
+ 	uint32_t header_id_and_crc = 0U;
+ 
+ 	if ( NV_Ctrl::SUCCESS ==
+ 		 m_nv_ctrl->Read( reinterpret_cast<uint8_t*>( &header_id_and_crc ),
+-				 	 	  reinterpret_cast<uint32_t>( m_cert_store_ptr ),
++						  reinterpret_cast<uint32_t>( m_cert_store_ptr ),
+ 						  sizeof( m_cert_store_ptr->header_id ) + BYTES_ALIGNMENT,
+ 						  false ) )
+ 	{
+@@ -312,6 +312,7 @@ PKI_Common::pki_status_t Cert_Store_NV::Get_CRC_Buf( uint16_t* crc_out )
+ Cert_Store::cert_store_struct_t* Cert_Store_NV::Get_Cert_Store_Ram_Ptr( void )
+ {
+ 	static Cert_Store::cert_store_struct_t cert_store_ram_var = { };
++
+ 	/* ram is allocated only when need to update cert store */
+ 	if ( m_cert_store_ram_ptr == nullptr )
+ 	{
+@@ -327,7 +328,7 @@ Cert_Store::cert_store_struct_t* Cert_Store_NV::Get_Cert_Store_Ram_Ptr( void )
+ 									  false ) != NV_Ctrl::SUCCESS )
+ 				{
+ 					ESP_LOGE( BOOT_TAG, "Read of Cert Store Memory location Failed" );
+-					assert(false);
++					assert( false );
+ 				}
+ 			}
+ 		}
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.h
+similarity index 93%
+rename from esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.h
+rename to esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.h
+index 434d20f5..1c5d7452 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.h
+@@ -1,12 +1,12 @@
+ /**
+  **************************************************************************************************
+  *  @file		Cert_Store_NV.h
+- *  @brief 		This file provides APIs to access certificate storage area located in external memory
++ *  @brief      This file provides APIs to access certificate storage area located in external memory
+  *
+- *	@details 	This file has cert_store_struct_t structure and APIs to access this structure and
+- * 				manage the certificate storage area located in external memory
++ *	@details    This file has cert_store_struct_t structure and APIs to access this structure and
++ *              manage the certificate storage area located in external memory
+  *
+- *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  **************************************************************************************************
+  */
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
+index a6d9a841..04814e2a 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
+@@ -1,8 +1,8 @@
+ /**
+  *****************************************************************************************
+  *	@file		Prod_Spec_Code_Sign.cpp
+- *	@details 	See header file for module overview.
+- *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *	@details    See header file for module overview.
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+  */
+@@ -11,8 +11,8 @@
+ #include "esp_log.h"
+ #ifdef CODE_SIGN
+ #include "Prod_Spec_Code_Sign.h"
++#include "Product_Ctrl.h"
+ #include "NV_Ctrl.h"
+-
+ #ifdef SERVER_SIGN
+ #include "server_sign_rvk.c"
+ #endif
+@@ -24,16 +24,6 @@
+  * @brief Bootloader prod spec hooks tag for ESP_LOG
+  */
+ #define BOOT_PROD_TAG "Boot_Prod_Spec"
+-/*
+- *****************************************************************************************
+- *		Global Variables
+- *****************************************************************************************
+- */
+-const PKI_Common::nv_chip_config_t DEVICE_CERT_NV_CONFIG =
+-{
+-	 0x310000,
+-	 0x2000
+-};
+ 
+ /*
+  *****************************************************************************************
+@@ -63,7 +53,6 @@ void Update_RVK_Key( Cert_Store_NV* cert_store_if )
+ 				/* Write updated local buffer back to cert store */
+ 				if ( cert_store_if->Cert_Store_Write() == PKI_Common::SUCCESS )
+ 				{
+-					/* need to decide what to do */
+ 					ESP_LOGI( BOOT_PROD_TAG, "Cert Store updated with RVK Key" );
+ 				}
+ 			}
+@@ -82,6 +71,19 @@ void Update_RVK_Key( Cert_Store_NV* cert_store_if )
+  */
+ void Init_Cert_Store( uC_Flash* cert_store_flash_ctrl )
+ {
++	/*
++	 * Cert Store flash memory configuration for Cert_Store_NV
++	 * Making it local. If we make this as global, then we will not get the partition details
++	 * Also, ESP32 Bootloader is not having static init guard so it is not supporting this structure as static.
++	 */
++	const PKI_Common::nv_chip_config_t DEVICE_CERT_NV_CONFIG =
++	{
++		reinterpret_cast<NV_CTRL_ADDRESS_TD>( Get_Device_Cert_Start_Address() ),
++		reinterpret_cast<NV_CTRL_LENGTH_TD>(
++			reinterpret_cast<uint32_t>( Get_Device_Cert_End_Address() ) -
++			reinterpret_cast<uint32_t>( Get_Device_Cert_Start_Address() ) + 1 )
++	};
++
+ 	/* If cert store is located in external memory then call Cert_Store_NV() else call Cert_Store_Flash() */
+ 	Cert_Store_NV cert_store_if( cert_store_flash_ctrl, &DEVICE_CERT_NV_CONFIG );
+ 
+@@ -89,4 +91,4 @@ void Init_Cert_Store( uC_Flash* cert_store_flash_ctrl )
+ 	Update_RVK_Key( &cert_store_if );
+ }
+ 
+-#endif ///< CODE_SIGN
++#endif	///< CODE_SIGN
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
+index ee3e74fe..1181f1e5 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
+@@ -1,9 +1,9 @@
+ /**
+  **************************************************************************************************
+  *  @file		Prod_Spec_Code_Sign.h
+- *	@brief 		This file provides APIs that calls code sigining and certificate generation APIs
++ *	@brief      This file provides APIs that calls code sigining and certificate generation APIs
+  *
+- *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  **************************************************************************************************
+  */
+@@ -17,17 +17,17 @@
+ static const uint16_t PKI_TIMER_PERIOD_250_MS = 250U;
+ 
+ /**
+- * @brief 		initialize cert store
+- * @param[in] 	cert_store_flash_ctrl : Control to the Flash memory where cert store is located.
+- * @return 		None.
++ * @brief       					Initialize cert store
++ * @param[in]cert_store_flash_ctrl	Control to the Flash memory where cert store is located.
++ * @return      					None
+  */
+ void Init_Cert_Store( uC_Flash* cert_store_flash_ctrl );
+ 
+ /**
+- * @brief 	update RVK key in cert store
+- * @details Check if RVK key is available or not in cert store and update the same if not available
+- * @param[in] cert_store_if : Cert store NV static object to update the RVK Key
+- * @return 	None.
++ * @brief   				Update RVK key in cert store. Check if RVK key is available or not
++ * 							in cert store and update the same if not available
++ * @param[in]cert_store_if  Cert store NV static object to update the RVK Key
++ * @return  				None
+  */
+ void Update_RVK_Key( Cert_Store_NV* cert_store_if );
+ 
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp
+new file mode 100644
+index 00000000..9ff39f61
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp
+@@ -0,0 +1,79 @@
++/**
++ *****************************************************************************************
++ *	@file		Product_Ctrl.cpp
++ *	@details    See header file for module overview.
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
++ *
++ *****************************************************************************************
++ */
++
++#include "esp_log.h"
++#include "Prod_Spec_Code_Sign.h"
++#include "esp_flash_partitions.h"
++#include "esp_partition.h"
++#include "uC_Flash.h"
++#include "Product_Ctrl.h"
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++void Product_Ctrl( void )
++{
++#ifdef CODE_SIGN
++	/*
++	 * Cert Store flash memory configuration
++	 * Making it local. If we make this as global, then we will not get the partition details
++	 * Also, ESP32 Bootloader is not having static init guard so it is not supporting this structure as static.
++	 */
++	const uC_FLASH_CHIP_CONFIG_TD Cert_Store_Flash_Config_Structure =
++	{
++		reinterpret_cast<uint32_t>( Get_Device_Cert_Start_Address() ),
++		reinterpret_cast<uint32_t>( Get_Device_Cert_End_Address() ),
++		reinterpret_cast<uint32_t>( Get_Device_Cert_End_Address() )
++	};
++
++	/* uC_Flash static object creation */
++	uC_Flash cert_store_flash_ctrl( &Cert_Store_Flash_Config_Structure, nullptr );
++
++	/* Initialize cert store and update RVK key if its not available in cert store */
++	Init_Cert_Store( &cert_store_flash_ctrl );
++#else
++	ESP_LOGE( "HOOK", "Code Signing is disabled" );
++#endif	// CODE_SIGN
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++uint8_t* Get_Device_Cert_Start_Address( void )
++{
++	esp_partition_pos_t cert_store = {};
++	esp_err_t err = Get_Partition_Info( &cert_store );
++
++	if ( err != ESP_OK )
++	{
++		ESP_LOGE( "HOOK", "Failed to get Cert Store partition info" );
++	}
++	return ( reinterpret_cast<uint8_t*>( cert_store.offset ) );
++}
++
++/*
++ *****************************************************************************************
++ * See header file for function definition.
++ *****************************************************************************************
++ */
++uint8_t* Get_Device_Cert_End_Address( void )
++{
++	esp_partition_pos_t cert_store = {};
++	esp_err_t err = Get_Partition_Info( &cert_store );
++
++	if ( err != ESP_OK )
++	{
++		ESP_LOGE( "HOOK", "Failed to get Cert Store partition info" );
++	}
++	return ( reinterpret_cast<uint8_t*>( cert_store.offset + cert_store.size - 1 ) );
++}
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.h
+new file mode 100644
+index 00000000..7b5b6ce2
+--- /dev/null
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.h
+@@ -0,0 +1,57 @@
++/**
++ **************************************************************************************************
++ *  @file		Product_Ctrl.h
++ *  @brief      This file provides APIs to access uberloader cert store update API for ESP32 bootloader
++ *
++ *	@details    This file has uses as Integration for Cert store located in external memory with
++ *				ESP32 Bootloader hook
++ *
++ *	@copyright  2022 Eaton Corporation. All Rights Reserved.
++ *
++ **************************************************************************************************
++ */
++#ifndef PRODUCT_CTRL_H
++#define PRODUCT_CTRL_H
++
++#ifdef __cplusplus
++extern "C"
++{
++#endif
++
++#include "esp_flash_partitions.h"
++
++/**
++ *  @brief      ESP32 Bootloader hook product control for RVK update.
++ *  @details    This is getting used as integration for RVK update control to ESP32 bootloader hook
++ *  @param		None
++ *  @return     None
++ */
++void Product_Ctrl( void );
++
++/**
++ *  @brief              		This function provides partition table information.
++ *  		            		For now we are fetching only cert store partition information
++ *  @param[in]cert_store_part 	Structure pointer to get the partition information
++ *  @return[out]esp_err_t  		Returns the status of operation
++ */
++esp_err_t Get_Partition_Info( esp_partition_pos_t* cert_store_part );
++
++/**
++ *  @brief            		This function provides cert store partition starting address
++ *  @param			  		None
++ *  @return[out]uint8_t*	Returns start address of cert store partition
++ */
++uint8_t* Get_Device_Cert_Start_Address( void );
++
++/**
++ *  @brief            		This function provides cert store partition end address
++ *  @param			  		None
++ *  @return[out]uint8_t*	Returns end address of cert store partition
++ */
++uint8_t* Get_Device_Cert_End_Address( void );
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp
+deleted file mode 100644
+index 54bb31b4..00000000
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp
++++ /dev/null
+@@ -1,40 +0,0 @@
+-/**
+- *****************************************************************************************
+- *	@file		Ub_Product_Ctrl.cpp
+- *	@details 	See header file for module overview.
+- *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
+- *
+- *****************************************************************************************
+- */
+-#include "uC_Flash.h"
+-#include "Prod_Spec_Code_Sign.h"
+-
+-#ifdef CODE_SIGN
+-/*
+- * Cert Store flash memory configuration
+- */
+-const uC_FLASH_CHIP_CONFIG_TD Cert_Store_Flash_Config_Structure =
+-{
+-	0x310000,
+-	0x311FFF,
+-	0x311FFF
+-};
+-#endif
+-
+-/*
+- *****************************************************************************************
+- * See header file for function definition.
+- *****************************************************************************************
+- */
+-extern "C" void Uberloader_Product_Ctrl( void )
+-{
+-#ifdef CODE_SIGN
+-	/* uC_Flash static object creation */
+-	uC_Flash cert_store_flash_ctrl( &Cert_Store_Flash_Config_Structure, nullptr );
+-
+-	/* Initialize cert store and update RVK key if its not available in cert store */
+-	Init_Cert_Store( &cert_store_flash_ctrl );
+-
+-#endif	// CODE_SIGN
+-
+-}
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.h
+deleted file mode 100644
+index 50faa225..00000000
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.h
++++ /dev/null
+@@ -1,24 +0,0 @@
+-/**
+- **************************************************************************************************
+- *  @file		Ub_Product_Ctrl.h
+- *  @brief 		This file provides APIs to access uberloader cert store update API for ESP32 bootloader
+- *
+- *	@details 	This file has uses as Integration for Cert store located in external memory with
+- *				ESP32 Bootloader hook
+- *
+- *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
+- *
+- **************************************************************************************************
+- */
+-#ifndef PRODUCT_CTRL_H
+-	#define PRODUCT_CTRL_H
+-
+-/**
+- *  @brief 		ESP32 Bootloader hook product control for RVK update.
+- *  @details 	This is getting used as integration for RVK update control to ESP32 bootloader hook
+- *  @param		None
+- *  @return 	None
+- */
+-void Uberloader_Product_Ctrl( void );
+-
+-#endif
+diff --git a/esp-idf/components/bootloader/subproject/main/CMakeLists.txt b/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
+index 87cdd3f4..4c0ce4e9 100644
+--- a/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
++++ b/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
+@@ -1,10 +1,10 @@
+ #Set source files 
+ set( srcs "bootloader_start.c"
+ 		  "../bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c"
+-		  "../bootloader_components/Bootloader_Hooks/Ub_Product_Ctrl.cpp"
++		  "../bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp"
+ 		  "../bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp"
+ 		  "../bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp"
+-		  "../bootloader_components/Bootloader_Hooks/MiscCode_FUS/Cert_Store_NV.cpp"
++		  "../bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.cpp"
+ 		  "../bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp"
+ 		  "../bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp"
+ 		)
+@@ -15,7 +15,7 @@ set( include_dirs
+ 					"../../../../../../Code"		 
+ 					"../bootloader_components/Bootloader_Hooks"
+ 					"../bootloader_components/Bootloader_Hooks/Crypt_API"
+-					"../bootloader_components/Bootloader_Hooks/MiscCode_FUS"
++					"../bootloader_components/Bootloader_Hooks/MiscCode/FUS"
+ 					"../bootloader_components/Bootloader_Hooks/NV"
+ 					"../bootloader_components/Bootloader_Hooks/Lib"
+ 					"../bootloader_components/Bootloader_Hooks/uC"
+@@ -35,7 +35,6 @@ set(scripts "ld/${target}/bootloader.ld"
+ target_linker_script(${COMPONENT_LIB} INTERFACE "${scripts}")
+ 
+ target_link_libraries(${COMPONENT_LIB} INTERFACE "-u Bootloader_Hooks_Include")
+-target_link_libraries(${COMPONENT_LIB} INTERFACE "-u Bootloader_RVK_Include")
+ 
+ #Adding Compiler option for this component to disable re-order warnings
+ set_target_properties(${COMPONENT_LIB} PROPERTIES COMPILE_FLAGS "-Wno-reorder")
+\ No newline at end of file
+-- 
+2.31.1.windows.1
+
+
+From 73bcd464ee55d6b75c7551199dd4841c62690732 Mon Sep 17 00:00:00 2001
+From: "Verma, Vimal Kumar" <vimalkumarverma@eaton.com>
+Date: Tue, 8 Feb 2022 19:03:51 +0530
+Subject: [PATCH 3/3] Fixed review comments
+
+---
+ .../Bootloader_Hooks/Bootloader_Hooks.c        | 10 ++++++----
+ .../Bootloader_Hooks/Crypt_API/PKI_Common.h    |  3 ++-
+ .../Bootloader_Hooks/Lib/CRC16.cpp             |  2 +-
+ .../Bootloader_Hooks/Lib/CRC16.h               |  2 +-
+ .../Bootloader_Hooks/Lib/StdLib_MV.cpp         |  2 +-
+ .../Bootloader_Hooks/Lib/StdLib_MV.h           |  2 +-
+ .../Bootloader_Hooks/Local_Sign_RVK.c          |  3 ++-
+ .../Bootloader_Hooks/MiscCode/FUS/Cert_Store.h |  2 +-
+ .../MiscCode/FUS/Cert_Store_NV.cpp             |  9 ++++-----
+ .../MiscCode/FUS/Cert_Store_NV.h               |  3 ++-
+ .../Bootloader_Hooks/NV/NV_Ctrl.h              |  2 +-
+ .../Bootloader_Hooks/Prod_Spec_Code_Sign.cpp   |  3 ++-
+ .../Bootloader_Hooks/Prod_Spec_Code_Sign.h     |  4 +---
+ .../Bootloader_Hooks/Product_Ctrl.cpp          |  4 ++--
+ .../Bootloader_Hooks/Product_Ctrl.h            | 10 +---------
+ .../Bootloader_Hooks/Server_Sign_RVK.c         |  3 ++-
+ .../Bootloader_Hooks/uC/Etn_Types.h            |  2 +-
+ .../Bootloader_Hooks/uC/uC_Flash.cpp           |  2 +-
+ .../Bootloader_Hooks/uC/uC_Flash.h             |  2 +-
+ .../subproject/main/Bootloader_Hooks.h         | 18 ++++++++++++++++++
+ .../bootloader/subproject/main/CMakeLists.txt  |  4 ++--
+ 21 files changed, 53 insertions(+), 39 deletions(-)
+
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
+index 6c93816a..0a42ee5d 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Bootloader_Hooks.c
+@@ -3,7 +3,7 @@
+  *  @file		Bootloader_Hooks.c
+  *  @brief      This file has implementation of the hooks to execute on boot, either before or after bootloader_init().
+  *	@details    This file should provide the interface to integrate bootloader hooks with
+- *				ESP32 Bootloader.
++ *				ESP32 Bootloader. This file is added by Edge RTOS platform team.
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  **************************************************************************************************
+  */
+@@ -11,6 +11,7 @@
+ #include "Product_Ctrl.h"
+ #include "esp_partition.h"
+ #include "bootloader_flash.h"
++#include "Bootloader_Hooks.h"
+ 
+ /* Defining cert store subtype to fetch the cert store information from partition table */
+ static const esp_partition_subtype_t CERT_STORE_PARTITION_SUBTYPE = ( esp_partition_subtype_t )0xFD;
+@@ -57,7 +58,7 @@ void Bootloader_RVK_Update( void )
+  * See header file for function definition.
+  *****************************************************************************************
+  */
+-esp_err_t Get_Partition_Info( esp_partition_pos_t* cert_store_part )
++esp_err_t Get_Partition_Info( esp_partition_pos_t* partition_info )
+ {
+ 	const esp_partition_info_t* partitions;
+ 	esp_err_t err = ESP_FAIL;
+@@ -84,10 +85,11 @@ esp_err_t Get_Partition_Info( esp_partition_pos_t* cert_store_part )
+ 			for ( int index = 0; index < num_partitions; index++ )
+ 			{
+ 				const esp_partition_info_t* partition = &partitions[index];
+-				/* valid partition table */
++				/* Currently only cert store partition information is extracting,
++				 * Modify this logic in case requires other partition information. */
+ 				if ( ( PART_TYPE_DATA == partition->type ) && ( CERT_STORE_PARTITION_SUBTYPE == partition->subtype ) )
+ 				{
+-					*cert_store_part = partition->pos;
++					*partition_info = partition->pos;
+ 					err = ESP_OK;
+ 					break;
+ 				}
+
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Crypt_API/PKI_Common.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Crypt_API/PKI_Common.h
+index d9b824d2..b1733ad5 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Crypt_API/PKI_Common.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Crypt_API/PKI_Common.h
+@@ -4,7 +4,8 @@
+  *	@brief 	This file provides the base structure required for the certificate class.
+  *
+  *	@details PKI_Common contains the necessary enums, structures and Key masks as the certificate
+- *	generation attributes to be passed to the certificate class constructors.
++ *	generation attributes to be passed to the certificate class constructors. This file is added
++ *	by Edge RTOS platform team.
+  *
+  *	@copyright 2022 Eaton Corporation. All Rights Reserved.
+  *
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp
+index 25167dbd..fdd2f3f4 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.cpp
+@@ -1,7 +1,7 @@
+ /**
+  *****************************************************************************************
+  *	@file		CRC16.cpp
+- *	@details 	See header file for module overview.
++ *	@details 	See header file for module overview. This file is added by Edge RTOS platform team.
+  *	@copyright 	2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.h
+index 8c657c8f..37fc2952 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/CRC16.h
+@@ -7,7 +7,7 @@
+  *
+  *	@details The algorithm used for this implementation is quite fast on an embedded
+  *	system in the non-table format.  The table format may be a little quicker but this
+- *	should be tested if speed is crucial.
++ *	should be tested if speed is crucial. This file is added by Edge RTOS platform team.
+  *
+  *	@copyright 2022 Eaton Corporation. All Rights Reserved.
+  *
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
+index 07173475..b6cc5091 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.cpp
+@@ -1,7 +1,7 @@
+ /**
+  *****************************************************************************************
+  *	@file		StdLib_MV.cpp
+- *	@details    See header file for module overview.
++ *	@details    See header file for module overview. This file is added by Edge RTOS platform team.
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.h
+index 0081eb7d..38ebeb8b 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Lib/StdLib_MV.h
+@@ -7,7 +7,7 @@
+  *
+  *	@details The string could be constant, null, constant null, the checksum return could
+  *	be expected, string comparison such different scenarios over strings considers and
+- *	implemented in this module.
++ *	implemented in this module. This file is added by Edge RTOS platform team.
+  *
+  *  @n @b Usage: Operations using strings - copy, compare, align, copy null string, copy
+  *  constant string, copy single value across, copy with CRC return.
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Local_Sign_RVK.c b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Local_Sign_RVK.c
+index 2f2b9e10..187d083b 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Local_Sign_RVK.c
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Local_Sign_RVK.c
+@@ -2,7 +2,8 @@
+  **************************************************************************************************
+  *  @file		Local_Sign_RVK.c
+  *  @brief      This file provides the local_sign_rvk key array and length definition.
+- *	@details    This file can be directly added into the required file without any header file
++ *	@details    This file can be directly added into the required file without any header file.
++ *				This file is added by Edge RTOS platform team.
+  *	@copyright  2021 Eaton Corporation. All Rights Reserved.
+  **************************************************************************************************
+  */
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store.h
+index 0d3115de..ac1fbfd0 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store.h
+@@ -3,7 +3,7 @@
+  *  @file		Cert_Store.h
+  *
+  *	@details    Fw_Store.h provides base class and APIs to access firmware and code
+- *              sign information block
++ *              sign information block. This file is added by Edge RTOS platform team.
+  *
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.cpp
+index 5857008b..5e5227ba 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.cpp
+@@ -1,7 +1,7 @@
+ /**
+  *****************************************************************************************
+  *	@file		Cert_Store_NV.cpp
+- *	@details    See header file for module overview.
++ *	@details    See header file for module overview. This file is added by Edge RTOS platform team.
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+@@ -25,8 +25,8 @@ extern "C"
+ #define BOOT_TAG "BOOT_CERTSTORE"
+ 
+ /**
+- * @brief Macro to alignment length variable while read/write with bootloader API's
+- *        Bootloader API's accept data length only aligned with 4Bytes in bootloader.
++ * @brief Macro to align the data while read/write with bootloader API's.
++ *        Bootloader API's accepts variables only aligned with 4Bytes in bootloader.
+  */
+ #define BYTES_ALIGNMENT 2
+ 
+@@ -311,11 +311,10 @@ PKI_Common::pki_status_t Cert_Store_NV::Get_CRC_Buf( uint16_t* crc_out )
+  */
+ Cert_Store::cert_store_struct_t* Cert_Store_NV::Get_Cert_Store_Ram_Ptr( void )
+ {
+-	static Cert_Store::cert_store_struct_t cert_store_ram_var = { };
+-
+ 	/* ram is allocated only when need to update cert store */
+ 	if ( m_cert_store_ram_ptr == nullptr )
+ 	{
++		static Cert_Store::cert_store_struct_t cert_store_ram_var = { };
+ 		m_cert_store_ram_ptr = &cert_store_ram_var;
+ 
+ 		if ( m_cert_store_ram_ptr != nullptr )
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.h
+index 1c5d7452..94a1eda1 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/MiscCode/FUS/Cert_Store_NV.h
+@@ -4,7 +4,8 @@
+  *  @brief      This file provides APIs to access certificate storage area located in external memory
+  *
+  *	@details    This file has cert_store_struct_t structure and APIs to access this structure and
+- *              manage the certificate storage area located in external memory
++ *              manage the certificate storage area located in external memory.
++ *              This file is added by Edge RTOS platform team.
+  *
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/NV/NV_Ctrl.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/NV/NV_Ctrl.h
+index 088b1b99..6b81d82d 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/NV/NV_Ctrl.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/NV/NV_Ctrl.h
+@@ -5,7 +5,7 @@
+  *	@brief 	Base class for NV memories
+  *
+  *	@details Defines the interface for performing operations with NV memories
+- *
++ *			 This file is added by Edge RTOS platform team.
+  *	@copyright 2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
+index 04814e2a..88b6980b 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.cpp
+@@ -1,7 +1,7 @@
+ /**
+  *****************************************************************************************
+  *	@file		Prod_Spec_Code_Sign.cpp
+- *	@details    See header file for module overview.
++ *	@details    See header file for module overview. This file is added by Edge RTOS platform team.
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+@@ -12,6 +12,7 @@
+ #ifdef CODE_SIGN
+ #include "Prod_Spec_Code_Sign.h"
+ #include "Product_Ctrl.h"
++#include "Bootloader_Hooks.h"
+ #include "NV_Ctrl.h"
+ #ifdef SERVER_SIGN
+ #include "server_sign_rvk.c"
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
+index 1181f1e5..b6b847da 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Prod_Spec_Code_Sign.h
+@@ -2,7 +2,7 @@
+  **************************************************************************************************
+  *  @file		Prod_Spec_Code_Sign.h
+  *	@brief      This file provides APIs that calls code sigining and certificate generation APIs
+- *
++ *	@details 	This file is added by Edge RTOS platform team.
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  **************************************************************************************************
+@@ -14,8 +14,6 @@
+ #include "uC_Flash.h"
+ #include "Cert_Store_NV.h"
+ 
+-static const uint16_t PKI_TIMER_PERIOD_250_MS = 250U;
+-
+ /**
+  * @brief       					Initialize cert store
+  * @param[in]cert_store_flash_ctrl	Control to the Flash memory where cert store is located.
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp
+index 9ff39f61..c712d1d0 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.cpp
+@@ -1,7 +1,7 @@
+ /**
+  *****************************************************************************************
+  *	@file		Product_Ctrl.cpp
+- *	@details    See header file for module overview.
++ *	@details    See header file for module overview. This file is added by Edge RTOS platform team.
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+@@ -13,7 +13,7 @@
+ #include "esp_partition.h"
+ #include "uC_Flash.h"
+ #include "Product_Ctrl.h"
+-
++#include "Bootloader_Hooks.h"
+ /*
+  *****************************************************************************************
+  * See header file for function definition.
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.h
+index 7b5b6ce2..3cf18d4f 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Product_Ctrl.h
+@@ -4,7 +4,7 @@
+  *  @brief      This file provides APIs to access uberloader cert store update API for ESP32 bootloader
+  *
+  *	@details    This file has uses as Integration for Cert store located in external memory with
+- *				ESP32 Bootloader hook
++ *				ESP32 Bootloader hook. This file is added by Edge RTOS platform team.
+  *
+  *	@copyright  2022 Eaton Corporation. All Rights Reserved.
+  *
+@@ -28,14 +28,6 @@ extern "C"
+  */
+ void Product_Ctrl( void );
+ 
+-/**
+- *  @brief              		This function provides partition table information.
+- *  		            		For now we are fetching only cert store partition information
+- *  @param[in]cert_store_part 	Structure pointer to get the partition information
+- *  @return[out]esp_err_t  		Returns the status of operation
+- */
+-esp_err_t Get_Partition_Info( esp_partition_pos_t* cert_store_part );
+-
+ /**
+  *  @brief            		This function provides cert store partition starting address
+  *  @param			  		None
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Server_Sign_RVK.c b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Server_Sign_RVK.c
+index c2d75db9..6cc0238e 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Server_Sign_RVK.c
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/Server_Sign_RVK.c
+@@ -2,7 +2,8 @@
+  **************************************************************************************************
+  *  @file		Server_Sign_RVK.c
+  *  @brief      This file provides the server_sign_rvk key array and length definition.
+- *	@details    This file can be directly added into the required file without any header file
++ *	@details    This file can be directly added into the required file without any header file.
++ *				This file is added by Edge RTOS platform team.
+  *	@copyright  2021 Eaton Corporation. All Rights Reserved.
+  **************************************************************************************************
+  */
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/Etn_Types.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/Etn_Types.h
+index 6010ac87..9da34d27 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/Etn_Types.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/Etn_Types.h
+@@ -3,7 +3,7 @@
+  *	@file		Etn_Types.h
+  *
+  *	@brief		Provides some basic Eaton Typedefs which shall be outside the namespace.
+-
++ *	@details 	This file is added by Edge RTOS platform team.
+  *	@copyright	2022 Eaton Corporation. All Rights Reserved.
+  *
+  *****************************************************************************************
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp
+index c1ef6693..7289c6ed 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.cpp
+@@ -1,7 +1,7 @@
+ /**
+  *****************************************************************************************
+  * @file		uC_Flash.cpp
+- * @details		See header file for module overview.
++ * @details		See header file for module overview. This file is added by Edge RTOS platform team.
+  * @copyright	2019 Eaton Corporation All Rights Reserved.
+  *****************************************************************************************
+  */
+diff --git a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.h b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.h
+index a934f80b..456e5aa1 100644
+--- a/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.h
++++ b/esp-idf/components/bootloader/subproject/bootloader_components/Bootloader_Hooks/uC/uC_Flash.h
+@@ -4,7 +4,7 @@
+  *
+  * @brief		This file provides the access to the flash memory for
+  * @n			Read, Write and Erase operations.
+- *
++ * @details 	This file is added by Edge RTOS platform team.
+  * @copyright	2019 Eaton Corporation All Rights Reserved.
+  *
+  *****************************************************************************************
+diff --git a/esp-idf/components/bootloader/subproject/main/Bootloader_Hooks.h b/esp-idf/components/bootloader/subproject/main/Bootloader_Hooks.h
+index c34d6ac2..b5a17390 100644
+--- a/esp-idf/components/bootloader/subproject/main/Bootloader_Hooks.h
++++ b/esp-idf/components/bootloader/subproject/main/Bootloader_Hooks.h
+@@ -4,6 +4,7 @@
+  *  @brief      This file provide the interface with ESP32 bootloader to Update RVK Key
+  *	@details    Here functions are defined as week to integrate hooks with ESP32 bootloader. We are
+  *				modifying in 2nd Stage bootloader After bootloader init and selecting the boot partition.
++ *				This file is added by Edge RTOS platform team.
+  *	@copyright  2021 Eaton Corporation. All Rights Reserved.
+  **************************************************************************************************
+  */
+@@ -28,4 +29,21 @@
+  */
+ void __attribute__( ( weak ) ) Bootloader_RVK_Update( void );
+ 
++#ifdef __cplusplus
++extern "C"
++{
++#endif
++/**
++ *  @brief              		This function provides partition table information.
++ *  		            		For now we are fetching only cert store partition information.
++ *  		            		To get the other partition information, Update this function accordingly.
++ *  @param[in]cert_store_part 	Structure pointer to get the partition information
++ *  @return[out]esp_err_t  		Returns the status of operation
++ */
++esp_err_t Get_Partition_Info( esp_partition_pos_t* partition_info );
++
++#ifdef __cplusplus
++}
++#endif
++
+ #endif	// BOOTLOADER_HOOKS_H
+diff --git a/esp-idf/components/bootloader/subproject/main/CMakeLists.txt b/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
+index 4c0ce4e9..3d2ca0d4 100644
+--- a/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
++++ b/esp-idf/components/bootloader/subproject/main/CMakeLists.txt
+@@ -11,6 +11,7 @@ set( srcs "bootloader_start.c"
+ 		
+ #Set include directories
+ set( include_dirs   
++                    "."
+ 					"../../../../../../Code/Config"
+ 					"../../../../../../Code"		 
+ 					"../bootloader_components/Bootloader_Hooks"
+@@ -18,8 +19,7 @@ set( include_dirs
+ 					"../bootloader_components/Bootloader_Hooks/MiscCode/FUS"
+ 					"../bootloader_components/Bootloader_Hooks/NV"
+ 					"../bootloader_components/Bootloader_Hooks/Lib"
+-					"../bootloader_components/Bootloader_Hooks/uC"
+-										
++					"../bootloader_components/Bootloader_Hooks/uC"					
+ 					"../../../spi_flash/include"
+ 				)
+ 
+-- 
+2.31.1.windows.1
+

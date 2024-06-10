@@ -1,0 +1,23 @@
+<script>
+/**
+ * Override all functions to provide stub functions instead
+ */
+
+  Polymer.NeonAnimationRunnerBehavior = {
+    /**
+     * Plays an animation with an optional `type`.
+     * @param {string=} type
+     * @param {!Object=} cookie
+     */
+    playAnimation: function(type, cookie) {
+      return;
+    },
+
+    /**
+     * Cancels the currently running animation.
+     */
+    cancelAnimation: function() {
+      return;
+    }
+  };
+</script>

@@ -1,0 +1,31 @@
+<dom-module id="tab-current">
+    <template>
+        <tab-default label='Current' id='Current' icon='px-icons:energy'>
+            <section-card label='Apparent Energy' id='Apparent_Energy'>
+                <group-table-row label='Apparent Energy' id='Apparent_Energy'>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-table-row>
+            </section-card>
+            <section-card label='Phase Unbalance' id='Phase_Unbalance'>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-card>
+        </tab-default>
+    </template>
+    <script>
+        Polymer({
+            is: 'tab-current'
+        });
+    </script>
+</dom-module>

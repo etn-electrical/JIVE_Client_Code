@@ -1,0 +1,25 @@
+From 305014e6cb8b29aa78b552d64a397ae06424f3df Mon Sep 17 00:00:00 2001
+From: "Bharda, dineshbhai" <dineshbhaibharda@eaton.com>
+Date: Sat, 1 Jan 2022 00:36:45 +0530
+Subject: [PATCH 2/2] IDF Catche Disabled
+
+---
+ esp-idf/tools/tools.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/esp-idf/tools/tools.json b/esp-idf/tools/tools.json
+index 783861f1..1dc1f730 100644
+--- a/esp-idf/tools/tools.json
++++ b/esp-idf/tools/tools.json
+@@ -565,7 +565,7 @@
+         ]
+       ],
+       "export_vars": {
+-        "IDF_CCACHE_ENABLE": "1"
++        "IDF_CCACHE_ENABLE": ""
+       },
+       "info_url": "https://github.com/ccache/ccache",
+       "install": "never",
+-- 
+2.34.1.windows.1
+

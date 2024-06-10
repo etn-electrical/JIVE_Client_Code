@@ -1,0 +1,100 @@
+// Please note -- this is a representative set of error suppression
+//                options.  Please adjust to suit your own policies
+//                See  manual (chapter LIVING WITH LINT)
+//                for further details.
+
+
+/* Following e numbers are required to take exceptions against some of the MISRA C++ rules,
+so that corresponding Note/Info/Errors are not given by PC-Lint */
+
+/* e number */	/* Description of the e number in brief */
+//-elib(751)      /* local typedef 'Symbol' (Location) not referenced, for MISRA rule 0-1-5(req) */
+//-elib(753)      /* local struct, union or enum tag 'Symbol' (Location) not referenced, for MISRA rule 0-1-5(req) */
+//-elib(756)      /* global typedef 'Symbol' (Location) not referenced, for MISRA rule 0-1-5(req) */
+//-elib(758)      /* global struct, union or enum tag 'Symbol' (Location) not referenced, for MISRA rule 0-1-5(req) */
+-e438           /* Last value assigned to variable 'Symbol' not used for MISRA rule 0-1-6(req) */
+-e534           /* Ignoring return value of function 'Symbol' for MISRA rule 0-1-7(req) */
+//-elib(528)      /* Symbol 'Symbol' (Location) not referenced (static variable or static function) for MISRA rule 0-1-10(req)*/
+//-elib(714)      /* Symbol 'Symbol' (Location) not referenced (external variable or external function) for MISRA rule 0-1-10(req)*/
+//-elib(1714)     /* Member function 'Symbol' (Location) not referenced for MISRA rule 0-1-10(req)*/
+//-elib(1716)     /* Virtual member function 'Symbol' (Location) not referenced for MISRA rule 0-1-10(req)*/
+//-elib(1914)     /* Default constructor 'Symbol' (Location) not referenced for MISRA rule 0-1-10(req) */
+-e946           /* Relational or subtract operator applied to pointers for MISRA rule 5-0-15(req) */
+-e947           /* Subtract operator applied to pointers for MISRA rule 5-0-15(req)*/
+-e415           /* access of out-of-bounds pointer ('Integer' beyond end of data) by operator 'String' for MISRA rule 5-0-16(req)*/
+-e416           /* creation of out-of-bounds pointer ('Integer' beyond end of data) by operator 'String' for MISRA rule 5-0-16(req)*/
+-e661           /* possible access of out-of-bounds pointer for MISRA rule 5-0-16(req)*/
+-e662           /* possible creation of out-of-bounds pointer for MISRA rule 5-0-16(req)*/
+-e796           /* Conceivable access of out-of-bounds pointer for MISRA rule 5-0-16(req)*/
+-e797           /* Conceivable creation of out-of-bounds pointer for MISRA rule 5-0-16(req)*/
+-e1773          /* Attempt to cast away const (or volatile) for MISRA rule 5-2-5(req) */
+-e923           /* An object with integer type or pointer to void type shall not be converted to an object with pointer type. Rule 5-2-8 */
+-e925           /* same as 923 Rule 5-2-8 */
+-e952           /* Parameter 'Symbol' (Location) could be declared const for MISRA rule 7-1-1(req)*/
+-e818           /* Pointer parameter 'Symbol' (Location) could be declared ptr to const for MISRA rule 7-1-2(req) */
+-elib(1795)     /* Defined template 'Symbol' was not instantiated for MISRA rule 14-7-1(req) */
+-e1923          /* macro 'Symbol' could become const variable for MISRA rule 16-2-2(req) */
+-e952           /* A variable which is not modified shall be const qualified. Rule 7-1-1  (req) */
+-e818           /* use const on paramaters where appropriate  Rule 7-1-2  (req)*/
+-esym(1960,5-2-12) /* An identifier with array type passed as a function argument shall not decay to a pointer. Rule 5-2-12*/
+-esym(1960,7-3-1)  /* The global namespace shall only contain main, namespace declarations and extern "C" declarations MISRA(7-3-1)*/
+-esym(1960,0-1-8)  /* All functions with void return type shall have external side-effects MISRA(Rule 0-1-8)*/
+-esym(1960,16-0-4) /* Function-like macros shall not be defined MISRA Rule 16-0-4(req)*/
+-esym(1960,5-0-16) /* A pointer operand and any pointer resulting from pointer arithmetic using that operand shall both address elements of the same array.5-0-16(req)*/
+-esym(1960,5-2-5)  /* A cast shall not remove any const or volatile qualification from the type of a pointer or reference. exempt 5-2-5(req) */
+-estring(970,bool)	/*  */
+
+/* some Lib .h file does not have a standard include guard [MISRA C++ Rule 16-2-3]*/
+-elib(967)
+
+
+/* In order to keep a history of adds - We shall append the date of addition to the end.  For now I am going to assume beginning of March for the following. */
+-e613										/*Warning 613: Possible use of null pointer 'Lib::Bit_List::m_bit_list' in left argument. - 20140301 */
+-esym(1960,5-0-15)							/* Array indexing shall be the only form of pointer arithmetic.5-0-15(req). - 20140301 */
+-e731										/* This code is just for info. "Info 731: Boolean argument to equal/not equal". - 20140301 */
+-estring(926,*[MISRA C++ Rule 5-2-7]*) 		/*An object with pointer type shall not be converted to an unrelated pointer type. - 20140301 */
+-estring(928,*[MISRA C++ Rule 5-2-7]*) 		/*An object with pointer type shall not be converted to an unrelated pointer type. - 20140301 */
+-estring(929,*[MISRA C++ Rule 5-2-7]*) 		/*An object with pointer type shall not be converted to an unrelated pointer type. - 20140301 */
+-estring(925,*[MISRA C++ Rule 5-2-8]*) 		/*An object with integer type or void* shall not be converted to pointer type. - 20140301 */
+-estring(1938,*[MISRA C++ Rule 12-8-1]*)	/*This code is reporting an error that is not correct.  1938->Constructor access global data. 12-8-1 -> A copy constructor should only initiate its nonstatic members. - 20140301 */
+-estring(586,*[MISRA C++ Rule 18-4-1]*)		/*We are not doing dynamic memory allocation in the traditional sense. - 20140301 */
+-e701 										/*LINT is having a difficult time interpreting this error correctly.  It makes the wrong assumptions.  Info 701: Shift left of signed quantity (int). - 20140301 */
+-e1551										/* "Warning 1551: Function may throw exception '...' in destructor".  We do not throw exceptions so it is not possible to use "Try" - 20140301 */
+-e1550                                      /* "Warning 1550: exception thrown by function 'Symbol' is not on throwlist of function 'Symbol'. Same explanation as 1551 */
+-e1771										/* "Info 1771: function 'Symbol' replaces global function", we have defined the build in functions 'new' and 'delete' */
+-esym(1960,5-0-12) 							/* "Note 1960: Violates MISRA C++ 2008 Required Rule 5-0-12, Disallowed use of non-numeric value in a case label" LINT is in error on this. - 20140410 */
+-e788										/* "Info 788: enum constant not used within defaulted switch":  This is a lint info only output.  We are still mandating a default requirement.  Some enums may clutter the code. */
+
+/* Following comments corresponds to the -elib(#,..) used below, it tells reasons (e.g.'s) why are we bypassing 
+the particular Note/Info/Error in the Library headers files */
+/* 
+To remove unnecessary 'Note 1960' inside Lib .h files like iar-ewarm-predefined_macros_for_PC-lint.h, intrinsics.h, ycheck.h, yvals.h etc.,
+'Note 970' inside Lib .h files like intrinsics.h, DLib_Product.h, yvals.h, VPC3_dp_if.h etc.,
+'Note 1963' inside Lib .h files like DLib_Defaults.h, intrinsics.h, ycheck.h, yvals.h etc.,
+'Note 1924' inside Lib .h files like APP_IO_CONFIG_PROFI_STM32F101.h, VPC3_dp_if.h, DCI_Defines.h, CR_Queue.h etc.
+'Info 829' inside Lib .h files like includes.h , VPC3_platform.h etc.
+in STM32F10x.h, (521, 38) Note 909: Implicit conversion from int to bool
+in VPC3_dp_if.h (3634, 64) Note 944: Left argument for operator '?' always evaluates to True
+in APP_IO_CONFIG_PROFI_STM32F101.h (79, 54) Note 923: cast from unsigned int to pointer
+in VPC3_dp_if.h (3634, 64) Note 948: Operator '>' always evaluates to True
+in Ram_Handler.h (30, 89) Info 1735: Virtual function 'Ram_Handler::Allocate(unsigned int, bool, unsigned char)' has default parameter
+in OS_FIFO.hpp (40, 66) Warning 506: Constant value Boolean, 
+in uC_IO_Define_STM32F101.h (41, 11) Error 10: Expecting ';',
+in intrinsics.h (29, 10) Error 129: declaration expected, identifier 'C' ignored,
+in uC_Base_HW_IDs_STM32F101.h (168, 29) Error 40: Undeclared identifier 'uC_BASE_TIMER_CAP_COMP_CH2'" 
+in uC_Base_HW_IDs_STM32F101.h (168, 29) Error 30: Expected an integer constant" uC_BASE_PWM_CHANNEL_3 = uC_BASE_TIMER_CAP_COMP_CH3, 
+in Device_Defines.h (109, 49) Error 101: Expected an identifier"inline void Pop_Int( GINT_TDEF int_bit_temp ) { __set_PRIMASK( int_bit_temp ); }
+in uC_IO_Define_STM32F101.h (72, 13) Error 148: member 'uint8_t' previously declared at line 71
+in uC_IO_Define_STM32F101.h (72, 13) Error 38: Offset of symbol 'uint8_t' inconsistent (conflicts with line 71)"
+in uC_Base_HW_IDs_STM32F101.h (90, 15) Error 31: Redefinition of symbol 'uint8_t'
+in OS_List_Item.h (31, 33) Error 36: redefining the storage class of symbol 'OS_TICK_TD' (type vs. static data), conflicts with line 109
+in System_Reset.h (46, 68) Error 49: Expected a type"
+in core_cm3.h Warning 553: Undefined preprocessor variable '__CM3_REV' in core_cm3.h, and 'uC_OS_INT_MAX_PRIORITY' in uC_OS_Interrupt.h
+in core_cm3.h Warning 578: observed 4-5 times coming out of the core_cm3.h (Declaration of symbol 'IRQn' hides symbol 'IRQn')
+in Faults.h (132, 43) Warning 572: Excessive shift value
+in stdio.h (171, 72) Note 1916: Ellipsis encountered [MISRA C++ Rule 8-4-1]
+*/
+-elib(1960,970,1963,1924,829,909,944,923,948,1735,506,129,10,30,40,101,148,38,31,36,49,1511,1909,553,578,572,910,1916)     
+
+
+

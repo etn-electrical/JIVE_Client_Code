@@ -1,0 +1,21 @@
+
+1. Generate 1024 Private Key and 2048 Private Key
+   C:\Git_WD\mbedtls-2.2.0-apache\mbedtls-2.2.0\programs\pkey>gen_key type=rsa rsa_keysize=1024 filename=1024_RSA_Key.pem format=pem
+   C:\Git_WD\mbedtls-2.2.0-apache\mbedtls-2.2.0\programs\pkey>gen_key type=rsa rsa_keysize=2048 filename=2048_RSA_Key.pem format=pem
+2. Generate self signed CA certificate using 2048 Private Key.
+
+C:\Git_WD\mbedtls-2.2.0-apache\mbedtls-2.2.0\programs\x509>cert_write selfsign=1 issuer_key=2048_RSA_KEY.pem issuer_name=CN=192.16
+8.1.254,O=Eaton,C=NL not_before=20160801000000 not_after=20180731235959 is_ca=1 max_pathlen=0 output_file=ca_ltk_self_signed.crt
+
+3. Generate the Device Certificate using Self Signed CA and the 1024_RSA_KEY
+C:\Git_WD\mbedtls-2.2.0-apache\mbedtls-2.2.0\programs\x509>cert_write subject_name=CN=192.168.1.254,O=Eaton,C=NL subject_key=1024_
+RSA_KEY.pem issuer_crt=ca_ltk_self_signed.crt issuer_key=2048_RSA_KEY.pem output_file=device.crt
+
+4. Convert the Keys and the certificates to der format.
+openssl rsa -in 1024_RSA_KEY.pem -outform DER -out 1024_RSA_KEY.der
+openssl x509 -outform der -in ca_ltk_self_signed.crt -out ca_ltk_self_signed.crt
+
+5. Convert the der certificates and keys to an array of hex char using the xxd exe.
+xxd -i ca_ltk_self_signed.crt > 1024_RSA_CA.h
+xxd -i 1024_RSA.der > 1024_RSA.h
+xxd -i 1024_RSA_KEY.der > 1024_RSA_KEY.h

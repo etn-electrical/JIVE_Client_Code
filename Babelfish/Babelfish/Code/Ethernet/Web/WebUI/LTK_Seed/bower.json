@@ -1,0 +1,44 @@
+{
+  "name": "ltk-seed",
+  "version": "0.0.0",
+  "dependencies": {
+    "webcomponentsjs": "^0.7.3",
+    "blueimp-md5": "https://github.com/blueimp/JavaScript-MD5.git#~1.1.0",
+    "polymer": "Polymer/polymer#^1.0.0",
+    "neon-animation": "./bower_overrides/neon-animation",
+    "font-opensans": "PXBLUE/font-opensans",
+    "px-styles": "^1.0.0",
+    "px-desktop-actionbar": "^1.0.0",
+    "px-desktop-button": "^1.0.0",
+    "px-desktop-card": "^1.0.0",
+    "px-desktop-checkbox": "^1.0.0",
+    "px-desktop-collapse": "^1.0.0",
+    "px-desktop-column": "^1.0.0",
+    "px-desktop-content": "^1.0.0",
+    "px-desktop-dropdown": "^1.0.0",
+    "px-desktop-modal": "^1.0.0",
+    "px-desktop-navigation": "^1.0.0",
+    "px-desktop-radio": "^1.0.0",
+    "px-desktop-row": "^1.0.0",
+    "px-desktop-row-button": "^1.0.0",
+    "px-desktop-sidebar": "^1.0.0",
+    "px-desktop-tab": "^1.0.0",
+    "px-desktop-title": "^1.0.0",
+    "px-desktop-toggle": "^1.0.0",
+    "px-desktop-button-group": "^1.0.0",
+    "px-desktop-progress": "^1.0.0",
+    "px-desktop-date-picker": "^1.0.0",
+    "px-desktop-pocket": "^1.0.0"
+  },
+  "overrides": {
+    "webcomponentsjs": {
+      "main": [
+        "webcomponents-lite.js"
+      ]
+    },
+    "iron-flex-layout": {
+      "main": []
+    }
+  },
+  "appPath": "app"
+}

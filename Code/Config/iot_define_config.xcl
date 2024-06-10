@@ -1,0 +1,17 @@
+/*
+ * This xcl file contains additional configuration specifically for IoT.
+ */
+
+// This is the overall enabler for IoT building:
+-D PX_GREEN_IOT_SUPPORT
+// We are a client for TLS, to connect to Azure Server
+-D USE_CLIENT_SIDE_SSL
+
+/* Enable this to set the OPTION_SAS_TOKEN_LIFETIME to the given value.
+ * The Azure default is 60min => 3600secs, if not set here. 
+ * For MQTT, it uses 80% of the value we set as the interval at which it reconnects.
+ * We might set it much shorter to accelerate testing, 
+ * or much longer in release code to minimize the interruption and time to reconnect 
+ * when the SAS token expires and must be refreshed.
+ */
+-D IOT_SAS_TOKEN_REFRESH_SECS=86400

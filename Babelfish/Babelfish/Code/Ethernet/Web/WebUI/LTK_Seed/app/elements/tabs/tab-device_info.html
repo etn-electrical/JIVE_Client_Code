@@ -1,0 +1,41 @@
+<dom-module id="tab-device_info">
+    <template>
+        <tab-default label='Device Info' icon='px-icons:device'>
+            <section-card label='Device Info' style="flex-basis: 100%">
+                <group-cells-row>
+                    <param-read-only param='30'>
+                    </param-read-only>
+                    <param-read-only param='31'>
+                    </param-read-only>
+                    <param-read-only param='32'>
+                    </param-read-only>
+                    <param-read-only param='33'>
+                    </param-read-only>
+                    <param-read-only param='34'>
+                    </param-read-only>
+                    <param-read-only param='35'>
+                    </param-read-only>
+                    <param-read-only param='36'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-card>
+            <section-card label='Device Logs'>
+                <group-table-header-row>
+                </group-table-header-row>
+                <group-table-row>
+                    <param-read-only param='5028[2]'>
+                    </param-read-only>
+                    <param-read-only param='5028[0]'>
+                    </param-read-only>
+                    <param-read-only param='5028[1]'>
+                    </param-read-only>
+                </group-table-row>
+            </section-card>
+        </tab-default>
+    </template>
+    <script>
+        Polymer({
+            is: 'tab-device_info'
+        });
+    </script>
+</dom-module>

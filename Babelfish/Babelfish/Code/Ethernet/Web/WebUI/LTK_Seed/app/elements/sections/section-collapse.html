@@ -1,0 +1,48 @@
+<dom-module id="section-collapse">
+	<template>
+		<!-- Display the section name and icon-->
+		<px-collapse-header icon="[[icon]]">
+			<px-title maintitle="[[label]]"></px-title>
+			<content select=".action"></content>
+		</px-collapse-header>
+		<px-collapse settings>
+			<!-- For each pelem... -->
+			<template is="dom-repeat" items="[[distChildren]]">
+				<content select=".item[[item]]"></content>
+			</template>
+		</px-collapse>
+	</template>
+	<script>
+	Polymer({
+		is: 'section-collapse',
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.disabled,
+			PB.behaviors.distribute
+		],
+		properties: {
+			icon: String,
+			label: String,
+			count: {
+				type: Number,
+				value: 0
+			}
+		},
+		childrenAttached: function() {
+			var params = this.getParams();
+			for (i = 0; i < params.length; i++) {
+				if (PB.currentUserRoleLevel >= params[i].r) {
+					break;
+				} else {
+					this.count += 1;
+						if (this.count == params.length) {
+							var x = document.getElementById(this.id);
+							x.style.display = "none";
+						}
+				}
+				
+			}
+		}
+	});
+	</script>
+</dom-module>

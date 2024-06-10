@@ -1,0 +1,359 @@
+<dom-module id="modal-login">
+	<style>
+		.splash {
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 2;
+				height: 100%;
+				background-position: top left;
+				display: none;
+				background-repeat: no-repeat;
+				overflow: auto;
+				color: white;
+			}
+			
+			.splash.visible {
+				display: block;
+				z-index: 3;
+			}
+			
+			.splash.blue {
+				/* background-color: Background color is determined by the image*/
+				/* background-image: Set in attached for simplicity */
+				background-size: 16px;
+			}
+			
+			.splash-content {
+				width: 500px;
+				margin: 10vh auto;
+				text-align: center;
+			}
+			
+			.product {
+				text-align: center;
+				margin: 10% auto;
+			}
+			
+			.product-name,
+			.assembly-name {
+				color: white;
+				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+				font-size: 2.5em;
+				font-weight: 300;
+			}
+			
+			.assembly-name {
+				font-size: 1em;
+				font-weight: normal;
+				margin: .5em 0;
+			}
+			
+			.splash px-actionbar[bottom] {
+				position: fixed;
+				bottom: 0px;
+				width: 100vw;
+			}
+			
+			.splash .label {
+				display: block;
+				color: white;
+				padding: .5em 0;
+				text-align: left;
+				font-size: 1.25em;
+			}
+	
+			.splash /deep/ label {
+				width:150px;
+			}
+		
+			.splash /deep/ px-button{
+				width: 200px;
+				float: right;
+				margin-right: 180px;
+			}
+	
+			.splash /deep/ px-input {
+				width: 500px;
+			}
+			
+			.splash .rights {
+				color: white;
+				padding: 10vh;
+			}
+			
+			.developer-extras {
+				margin-top: 9%;
+				border-top: 2px solid rgba(255, 255, 255, 0.3);
+				padding: 6% 0;
+			}
+			
+			.developer {
+				font-size: 1.5em;
+				padding-bottom: 2%;
+			}
+	
+			:host /deep/ input {
+				-ms-user-select: text;
+				-moz-user-select: text;
+			}
+	
+			:host /deep/ input::-ms-clear {
+				display: none;
+			} 
+			
+			:host /deep/ input::-ms-reveal {
+				display: none;
+			}
+	
+			.underline-on-hover:hover {
+				text-decoration: underline;
+				cursor: pointer;
+			}
+		</style>
+
+	<template>
+		<div class="splash blue visible">
+			<div class="splash-content" nopadding>
+				<div class="product">
+					<div class="product-name">{{productName}}</div>
+					<div class="">{{urlBase}}</div>
+					<!--div class="assembly-name">{{Selection.lineup.name || 'Unnamed Lineup'}}</div-->
+					<div class="error" style="font-weight: bold">
+						<span style="color: red">{{errMsg}}</span> &nbsp;
+						<span style="color: lightGray">{{message}}</span>
+					</div>
+				</div>
+				<px-input flex placeholder="Username" label="Username" id="username" value='{{username::input}}' type='text'
+				 maxlength="20" on-keyup="keyUpUser" on-keypress="keyPressEnter" autofocus invalid="[[userInvalid]]"></px-input>
+				<br />
+				<px-input flex placeholder="Password" label="Password" id="password" value='{{password::input}}' type='password'
+				 maxlength="20" on-keyup="keyUpPassword" on-keypress="keyPressEnter" invalid="[[passwordInvalid]]"></px-input>
+				<br />
+				<px-button disabled$="[[validateInputs(username, password)]]" flex primary on-click="login">Log In</px-button>
+
+
+				<span flex></span>
+
+				<template is="dom-if" if="[[urlPlaceholder]]">
+					<div class="developer-extras">
+						<div class="developer">Developer View</div>
+						<px-input flex label="URL Base" id="username" value='{{urlBase::input}}' type='text' placeholder="{{urlPlaceholder}}"></px-input>
+					</div>
+				</template>
+
+				<br />
+				<br />
+
+				<!--Footer on Login Page with Eaton Logo, Install SSL Certificate Link and Copyright Information-->
+
+				<px-actionbar style="height: 60px; position: absolute; bottom: 0px; width: 100%; left: 0px;" dark>
+					<span>
+						<template is="dom-if" if="[[isLogo]]">
+							<img src={{isLogo}} alt="logo" height="56px">
+						</template>
+					</span>
+					<span flex></span>
+					<span>&#169;2018 Eaton All Rights Reserved</span>
+					<span class="underline-on-hover" on-click="terms">Terms</span>
+					<!-- <span class="underline-on-hover">Privacy</span> -->
+				</px-actionbar>
+			</div>
+
+
+		</div>
+
+	</template>
+	<script>
+		Polymer({
+			is: "modal-login",
+			properties: {
+				username: String,
+				password: String
+			},
+			attached: function () {
+				// This block sets the background to the color of the last pixel in the image
+				var backgroundElement = this.firstElementChild;
+				// var image = new Image(); // Create new img element
+				// // When image loads, find the last pixel and set the background color
+				// image.addEventListener("load", function () {
+				// 	// Create a canvas to draw the image
+				// 	var canvas = document.createElement("CANVAS");
+				// 	var context = canvas.getContext && canvas.getContext("2d");
+				// 	var height = canvas.height = image.naturalHeight;
+				// 	var width = canvas.width = image.naturalWidth;
+				// 	context.drawImage(image, 0, 0);
+				// 	try {
+				// 		// Harvest the last pixel and set the background to it
+				// 		var rgb = context.getImageData(width - 1, height - 1, 1, 1).data;
+				// 		backgroundElement.style.backgroundColor = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
+				// 	} catch (e) {
+
+				// 	}
+				// }, false);
+				// // Set the image source so the image is loaded
+				// image.src = "../../images/splash.png";
+				// backgroundElement.style.backgroundImage = "url(" + image.src + ")";
+				backgroundElement.style.backgroundColor = "rgb(" + 34 + "," + 114 + "," + 185 + ")";
+
+
+
+				this.currentUser = PB.currentUser;
+				// Preset the username and password on load to prevent errors
+				if (!this.username) {
+					this.username = null;
+					this.password = null;
+				}
+				this.message = "";
+				this.errMsg = "";
+				this.productName = navbar[navbar.length - 1].name;
+				this.urlBase = PB.urlBase;
+				if (this.urlBase) {
+					this.urlPlaceholder = "https://" + window.location.host;
+				}
+				
+				var self = this;
+				var imageUrl = PB.urlBase + "/if/images/logo_login.svg";
+				$.ajax({
+					method: "GET",
+					url: imageUrl
+				}).then(function () {
+					self.isLogo = imageUrl;
+				})
+
+				PB.loginModalOpen = true;
+			},
+			detached: function() {
+				PB.loginModalOpen = false;
+			},
+			validateInputs: function (username, password) {
+				if (username == null || password == null) return true;
+				else if (username == '' || password == '') return true;
+				return false;
+			},
+			// Closes the modal by returning to the currently active tab
+			close: function (resolve) {
+				if (resolve) {
+					this.tab.promise.resolve(true);
+                    if (PB.currentUser.UserName.value == "admin" && PB.changePswd) {
+						navbar.modals.forcePasswordChange.go({
+							title: 'Change Password',
+						})
+					} else if (!PB.changePswd && PB.changePswd != undefined) {
+						navbar.showMessage("You are using default credentials, making your password very easy to guess! Please change it.", "Warning");
+					}
+				} else {
+					this.tab.promise.reject();
+				}
+				this.password = null;
+			},
+			// Cancels any pending retries and closes the modal
+			cancel: function () {
+				this.close(false);
+			},
+			// Logs out from the DCI
+			logout: function () {
+				var self = this;
+				PB.logout().then(function () {
+					self.currentUser = PB.currentUser;
+				});
+			},
+			// Logs into the DCI. If successful, retries all pending requests and closes the modal
+			login: function () {
+				PB.urlBase = this.urlBase;
+				var self = this;
+				self.clearMessages();
+				self.message = "Logging In ...";
+				PB.loginCount += 1;
+				if(PB.checkIfLocalStorageExists()) { //Checking localStorage for digest info of the user
+					var obj = PB.retrieveFromLocalStorage();
+					//Check storage has logout value and clear it
+					if (obj.logout) {
+						PB.deleteLocalStorage();
+					} else {
+						PB.cred.digest = obj;
+						if (PB.cred.digest.type == 'TK_Digest') {
+							PB.cred.type = "DIGEST";
+						} else if (PB.cred.digest.type == "TK_Basic") {
+							PB.cred.type = "BASIC"
+						}
+						PB.loginCount = 2;
+						PB.oldNonce = PB.cred.digest.nonce;
+					}	
+				}
+				PB.login(this.username, this.password).then(function (user) {
+					// Login successful
+					self.message = "Login Successful";
+					self.close(true);
+				}, function (error) {
+					// Login failure
+					self.message = "";
+					if (error.status === 423) {
+						self.errMsg = error.statusText;
+						localStorage.removeItem(md5(PB.cred.username));
+					} else if (!error.status) {
+						self.errMsg = "Device Communication Failed";
+						PB.loginCount = 0;
+					} else if (error.status === 401 && error.statusText != "Invalid User Credentials") {
+						self.errMsg = "Login Failed";
+					} else if (error.status == 422 && error.statusText == "SFU Session in Progress") {
+						self.errMsg = "Firmware update session in progress, please retry after sometime.";
+					}else{
+						self.errMsg = error.statusText;
+					}
+					PB.cred.digest = undefined;
+					PB.cred.username = undefined;
+					PB.cred.password = undefined;
+					PB.cred.type = undefined;
+					PB.loginCount = 0;
+				});
+			},
+			keyUpUser: function (event) {
+				var username = event.target.value;
+				if (event.keyCode !== 9) {
+					if (username != null) {
+						if (/^[a-zA-Z0-9-_']+\.?[a-zA-Z0-9-_']*$/.test(username)) {
+							this.userInvalid = false;
+							return;
+						}
+						this.userInvalid = true;
+					};
+				}
+			},
+			keyUpPassword: function (event) {
+				var password = event.target.value;
+				if (event.keyCode !== 9) {
+					if (password != null) {
+						if (password != '') {
+							this.passwordInvalid = false;
+							return;
+						}
+						this.passwordInvalid = true;
+					}
+				}
+			},
+			keyPressEnter: function (event) {
+				if (this.username != '' && this.username != null && this.password != '' && this.password != null) {
+					if ((event.keyCode === 13 || event.key === 'Enter' || event.code === 'Enter') && !this.disabled) {
+						this.clearMessages();
+						this.message = "Logging In ..."
+						this.login();
+						event.preventDefault();
+					}
+				}
+			},
+			clearMessages: function () {
+				this.errMsg = '';
+				this.message = '';
+			},
+			terms: function () {
+				navbar.modals.terms.go({
+					title: 'Terms',
+					options: ["Ok"]
+				});
+			}
+		});
+	</script>
+</dom-module>

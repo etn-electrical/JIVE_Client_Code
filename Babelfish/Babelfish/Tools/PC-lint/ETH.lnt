@@ -1,0 +1,428 @@
+//    iar-co-arm-v6.lnt
+//    IAR ARM v6 compiler settings.
+//  MODIFY to point to your IAR Embedded Workbench installation
+
+-h1
+-width(0) 
+-v
+-"format=\q%f\q,\q%l\q,\q%t\q,\q%n\q,\q%m\q"
+-"format_specific="
+  -width(
+  0)
+
+// Generic IAR compiler settings.
+iar-co.lnt	
+
+defines.lnt
+
+//-i"..\..\Tools\IAR_Lint"
+
+//-i"..\..\Tools\IAR_Lint"
+//+libdir("..\..\Tools\IAR_Lint")
+
+-i"C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc\c"
+-i"C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc"
+-i"C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\CMSIS\Include"
+-i"C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc\ecpp"
+
++libdir("C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc\c")
++libdir("C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc")
++libdir("C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\CMSIS\Include")
++libdir("C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc\ecpp")
++libh(defines.lnt)
+-wlib(1)
+
+
+
+// MODIFY and ADD your project include paths here
+
+-i"C:\Pythia\Babelfish\Code"
+-i"C:\Pythia\Babelfish\Code\BF"
+-i"C:\Pythia\Babelfish\Code\BF\Delta_Com"
+-i"C:\Pythia\Babelfish\Code\BF\Delta_Com\Test_Classes"
+-i"C:\Pythia\Babelfish\Code\BF\Delta_Com\Device_Classes"
+-i"C:\Pythia\Babelfish\Code\BF\Delta_Com\Protocol_Specific"
+-i"C:\Pythia\Babelfish\Code\BF\Delta_Com\Interfaces"
+-i"C:\Pythia\Babelfish\Code\BF\DCI"
+-i"C:\Pythia\Babelfish\Code\BF\EIP"
+-i"C:\Pythia\Babelfish\Code\BF\EIP\Platform"
+-i"C:\Pythia\Babelfish\Code\BF\MODBUS"
+-i"C:\Pythia\Babelfish\Code\BF\PROFIBUS"
+-i"C:\Pythia\Babelfish\Code\FatFs"
+-i"C:\Pythia\Babelfish\Code\Lib"
+-i"C:\Pythia\Babelfish\Code\Level_Monitors"
+-i"C:\Pythia\Babelfish\Code\MiscCode"
+-i"C:\Pythia\Babelfish\Code\NV"
+-i"C:\Pythia\Babelfish\Code\NVCtrls"
+-i"C:\Pythia\Babelfish\Code\OS"
+-i"C:\Pythia\Babelfish\Code\TimeConversion"
+-i"C:\Pythia\Babelfish\Code\uC"
+-i"C:\Pythia\Babelfish\Code\USB"
+-i"C:\Pythia\Babelfish\Code\USB\Device"
+-i"C:\Pythia\Babelfish\Code\USB\Device\CDC"
+-i"C:\Pythia\Babelfish\Code\USB\Device\MSC"
+-i"C:\Pythia\Babelfish\Code\USB\Device\MSC Class"
+-i"C:\Pythia\Babelfish\Code\USB\Device\Core"
+-i"C:\Pythia\Babelfish\Code\USB\MSC"
+-i"C:\Pythia\Babelfish\Code\USB\STM32 Eval"
+-i"C:\Pythia\Babelfish\Code\USB\Core"
+-i"C:\Pythia\Babelfish\Code\USB\Driver"
+-i"C:\Pythia\Babelfish\Code\USB\Host MSC"
+-i"C:\Pythia\Babelfish\Code\uC\Generic"
+-i"C:\Pythia\Babelfish\Code\uC\STM32F40x"
+-i"C:\Pythia\Babelfish\Code\uC\STM32F40x\driverlib"
+-i"C:\Pythia\Babelfish\Code\uC\STM32F40x\driverlib\inc"
+-i"C:\Pythia\Babelfish\Code\uC\STM32F40x\Init"
+-i"C:\Pythia\Babelfish\Code\uC\STM32F40x\STM32F407"
+-i"C:\Pythia\Babelfish\Code\Ethernet"
+-i"C:\Pythia\Babelfish\Code\Ethernet\Include"
+-i"C:\Pythia\Babelfish\Code\Ethernet\Include\ipv4"
+-i"C:\Pythia\Babelfish\Code\Ethernet\Include\ipv4\lwip"
+-i"C:\Pythia\Babelfish\Code\Ethernet\Include\apps"
+-i"C:\Pythia\Babelfish\Code\Ethernet\Include\lwip"
+-i"C:\Pythia\Babelfish\Code\Unit_Test"
+-i"C:\Pythia\ETH\Code"
+-i"C:\Pythia\ETH\Code\BFData"
+-i"C:\Pythia\ETH\Code\Platform"
+
+//-i"C:\Pythia\BCM\Code"
+//-i"C:\AccuRev\PC-lint"
+
+//
+//    EWARM Size of Scalars
+//
+-si4
+-sl4
+-sp4
+-sf4
+-sd8
+
+//
+//    EWARM extended keywords
+//
+-d__absolute=       // Makes references to the object use absolute addressing
+-d__arm=            // Makes a function execute in ARM mode
+-d__big_endian=     // Declares a variable to use the big-endian byte order
+-d__fiq=            // Declares a fast interrupt function
+-d__interwork=      // Declares a function to be callable from both ARM and Thumb mode
+-d__irq=            // Declares an interrupt function
+-d__little_endian=  // Declares a variable to use the little-endian byte order
+-d__nested=         // Allows an __irq declared interrupt function to be nested, that is, interruptible by the same type of interrupt
+-d__pcrel=          // Used internally by the compiler for constant data when the --ropi compiler option is used
+-d__ramfunc=        // Makes a function execute in RAM
+-d__stackless=      // Makes a function callable without a working stack
+-d__swi=            // Declares a software interrupt function
+-d__thumb=          // Makes a function execute in Thumb mode
+-d__weak=           // Declares a symbol to be externally weakly linked
+
+// This symbol determines properties for class objects.
+-d__construction_by_bitwise_copy_allowed(x)=true
+
+// This symbol determines properties for class objects.
+-d__assignment_by_bitwise_copy_allowed(x)=true
+
+// These symbols determine properties for class objects and they function like the
+// sizeof operator. The symbols are true when a class, base class, or member
+// (recursively) has a user-defined constructor or destructor, respectively.
+-d__has_destructor(x)=true
+-d__has_constructor(x)=true
+
+// These symbols are used as memory attributes internally by the compiler, and they
+// might have to be used as arguments in certain templates.
+-d__code
+-d__data
+
+// Determines the allowed range for a parameter to an intrinsic function and that the
+// parameter must be of type const.
+-d__constrange(x,y)=const
+
+// Determines the class memory. A class memory determines which memory a class
+// object can reside
+-d__memory_of(x)=true
+
+
+// MODIFY
+// for problems with internal compiler library files: ichooser, iutility and xmemory...etc..
+// ------------------------------------------------------------------------------------------
+-elib(19)           // Usually about stray semicolons
+-elib(1076)         // Anonymous union assumed to be 'static'
+-elibsym(1512)      // Base class destructor is non-virtual
+-elib(46)           // For bitfields with non-int fields
+
+-w3        //Global Warning level, 3 = w+e+messages; 2 = warnings and errors both, 1=errors only
+
+
+au-misra-cpp.lnt                                    // Applying MISRA CPP rules
+
+options.lnt                                         // Taking exemptions for some MISRA CPP rules
+-elib(129)
+-e10
+-elib(40)
+-e606
+
+-e1065
+
+-esym(752, REST_DCI_DATA_ASSY_LIST_ACCESS_R)
+-esym(752, REST_DCI_DATA_ASSY_LIST_ACCESS_W)
+
+//  ***************************************************************************
+//
+//  IAR Systems
+//
+//  File name:  iar-co-arm-v6.lnt
+//
+//  Revision:   0.3 (alpha)
+//
+//  Modified:   2011-11-03
+//
+//  ***************************************************************************
++linebuf
+-dPLATFORM_HEADER="C:\\Pythia\\ETH\\Code\\Platform\\platform.h"
+-duC_STM32F407_USAGE=1
+
++fcp
+"C:\Pythia\Babelfish\Code\BF\DCI\Change_Tracker.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\Change_Tracker_Plus.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\DCI.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\DCI_Config_CRC.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\DCI_Lock.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\DCI_NV_Mem.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\DCI_Owner.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\DCI_Patron.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\DCI_Worker.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\DCI_Workers.cpp"
+"C:\Pythia\Babelfish\Code\BF\DCI\Range_Check.cpp"
+"C:\Pythia\Babelfish\Code\BF\Delta_Com\Protocol_Specific\Modbus_Delta_Com_Client_Port.cpp"
+"C:\Pythia\Babelfish\Code\BF\Delta_Com\Delta_Com.cpp"
+"C:\Pythia\Babelfish\Code\BF\Delta_Com\Delta_Com_Client.cpp"
+"C:\Pythia\Babelfish\Code\BF\Delta_Com\Delta_Com_Display.cpp"
+"C:\Pythia\Babelfish\Code\BF\Delta_Com\Delta_Com_Server.cpp"
+"C:\Pythia\Babelfish\Code\BF\Delta_Com\Delta_Data.cpp"
+"C:\Pythia\Babelfish\Code\BF\EIP\EIP_Display.cpp"
+"C:\Pythia\Babelfish\Code\BF\EIP\EtherNetIP_DCI.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Ch_Track.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\ModBus_CRC.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_DCI.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_DCI_Config.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Display.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Master.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Master_No_OS.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Msg.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Negotiation.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Net.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Prod_Cons.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_Serial.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_SysCmd.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_TCP.cpp"
+"C:\Pythia\Babelfish\Code\BF\Modbus\Modbus_UART.cpp"
+"C:\Pythia\Babelfish\Code\BF\System_Reset.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\api\api_lib.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\api\api_msg.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\api\err.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\api\netbuf.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\api\netdb.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\api\netifapi.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\api\sockets.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\api\tcpip.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\ipv4\autoip.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\ipv4\icmp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\ipv4\igmp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\ipv4\inet.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\ipv4\inet_chksum.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\ipv4\ip.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\ipv4\ip_addr.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\ipv4\ip_frag.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\snmp\asn1_dec.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\snmp\asn1_enc.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\snmp\mib2.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\snmp\mib_structs.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\snmp\msg_in.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\snmp\msg_out.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\acd.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\dhcp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\dns.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\init.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\mem.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\memp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\netif.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\pbuf.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\raw.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\stats.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\sys.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\tcp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\tcp_in.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\tcp_out.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\core\udp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\netif\etharp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\netif\ethernetif.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\netif\loopif.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\Base64.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\BIN_ASCII_Conversion.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_basic_authentication.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_common.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_digest_authentication.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_header.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_onchip_files.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_pre_resp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_process_req.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_req_line.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_resp.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_rest_dci.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\httpd_rs_struct.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\INT_ASCII_Conversion.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\MD5_Digest.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\Unicode_Util.cpp"
+"C:\Pythia\Babelfish\Code\Ethernet\apps\XML_Util.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Bit_List.cpp"
+"C:\Pythia\Babelfish\Code\Lib\CRC16.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Defines.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Exception.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Input.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Input_Neg.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Input_Pos.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Linked_List.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Micro_Task.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Output.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Output_Neg.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Output_Pos.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Ram.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Ram_Handler.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Ram_Hybrid.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Ram_Malloc.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Ram_Static.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Rand_Num.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Scratch_Ram.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Services.cpp"
+"C:\Pythia\Babelfish\Code\Lib\StdLib_MV.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Timers.cpp"
+"C:\Pythia\Babelfish\Code\Lib\Timers_uSec.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\AtoD.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\Buffer.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\Com_Dog.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\Faults.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\LED.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\Mem_Check.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\My_FIFO.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\Voltage_Divider.cpp"
+"C:\Pythia\Babelfish\Code\MiscCode\Voltage_Monitor.cpp"
+"C:\Pythia\Babelfish\Code\NV\NV_Ctrl.cpp"
+"C:\Pythia\Babelfish\Code\NV\NV_Mem.cpp"
+"C:\Pythia\Babelfish\Code\NVCtrls\Fram.cpp"
+"C:\Pythia\Babelfish\Code\NVCtrls\Ram_NV.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Task.cpp"
+"C:\Pythia\Babelfish\Code\OS\CR_Queue.cpp"
+"C:\Pythia\Babelfish\Code\OS\CR_Tasker.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Binary_Semaphore.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Counting_Semaphore.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_List.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_List_Item.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Mutex.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Queue.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Recursive_Mutex.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Semaphore.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Task_Mon.cpp"
+"C:\Pythia\Babelfish\Code\OS\OS_Tasker.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\driverlib\src\ETH_Driver.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\driverlib\src\ETH_Handler.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\driverlib\src\LWIPService.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\driverlib\src\sys_arch.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\STM32F407\uC_Base_HW_IDs_STM32F407.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\STM32F407\uC_Base_STM32F407.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\STM32F407\uC_IO_Define_STM32F407.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\Advanced_Vect.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_AtoD.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Base.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Code_Range.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_CStack.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_DMA.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_EMAC.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Ethernet.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Ext_Int.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Flash.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_I2C.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Input.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Interrupt.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_IO_Config.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Multi_Timers.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_OS_Interrupt.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_OS_Tick.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_PWM.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_RAM.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Rand_Num.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Reset.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Single_Timer.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_SPI.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Tick.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Timers.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Timers_HW.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_USART.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_USART_DMA.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_USART_HW.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_USART_Soft_DMA.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Watchdog.cpp"
+"C:\Pythia\Babelfish\Code\uC\STM32F40x\uC_Watchdog_HW.cpp"
+"C:\Pythia\ETH\Code\BFData\Com_Dog_Data.cpp"
+"C:\Pythia\ETH\Code\BFData\DCI_Data.cpp"
+"C:\Pythia\ETH\Code\BFData\DynamicAssembly_DCI_Data.cpp"
+"C:\Pythia\ETH\Code\BFData\EIP_DCI_Data.cpp"
+"C:\Pythia\ETH\Code\BFData\Fault_Data.cpp"
+"C:\Pythia\ETH\Code\BFData\Modbus_DCI_Data.cpp"
+"C:\Pythia\ETH\Code\BFData\NV_Default.cpp"
+"C:\Pythia\ETH\Code\BFData\REST_DCI_Data.cpp"
+"C:\Pythia\ETH\Code\BFData\Virtual_BCM_Def.cpp"
+"C:\Pythia\ETH\Code\Ambi_Temp.cpp"
+"C:\Pythia\ETH\Code\Ambi_Temp_STM32F40x.cpp"
+"C:\Pythia\ETH\Code\App_Output.cpp"
+"C:\Pythia\ETH\Code\C445_Device_Identity.cpp"
+"C:\Pythia\ETH\Code\C445_ETH_Device_Identity.cpp"
+"C:\Pythia\ETH\Code\CIP_Asm.cpp"
+"C:\Pythia\ETH\Code\CIP_Ctrl_Spvsr.cpp"
+"C:\Pythia\ETH\Code\CIP_Ident_Svc.cpp"
+"C:\Pythia\ETH\Code\Dynamic_In_Asm_C445.cpp"
+"C:\Pythia\ETH\Code\Dynamic_Out_Asm_C445.cpp"
+"C:\Pythia\ETH\Code\EIP_Obj_Svc.cpp"
+"C:\Pythia\ETH\Code\EIP_Service.cpp"
+"C:\Pythia\ETH\Code\Event_Client.cpp"
+"C:\Pythia\ETH\Code\KSZ8863.cpp"
+"C:\Pythia\ETH\Code\Main.cpp"
+"C:\Pythia\ETH\Code\NV_Refresh.cpp"
+"C:\Pythia\ETH\Code\NV_Refresh_List.cpp"
+"C:\Pythia\ETH\Code\Param_Lock.cpp"
+"C:\Pythia\ETH\Code\Prod_Device_Diag.cpp"
+"C:\Pythia\ETH\Code\Prod_Spec.cpp"
+"C:\Pythia\ETH\Code\Prod_Spec_ETH_STM32F407.cpp"
+"C:\Pythia\ETH\Code\Prod_Spec_Services.cpp"
+"C:\Pythia\ETH\Code\Shadow.cpp"
+"C:\Pythia\ETH\Code\Shadow_C445.cpp"
+"C:\Pythia\ETH\Code\SystemTest_C445.cpp"
+"C:\Pythia\ETH\Code\Uberloader_Data.cpp"
+//-fcp
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipasm.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipclien.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipcnct.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipcnlst.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipcnmgr.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipdatbl.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipdbg.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipetlnk.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipid.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipio.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipnotfy.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eippccc.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eippdu.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipport.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipqos.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eiproutr.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eiprqgrp.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eiprqst.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipsckt.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipsessn.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eiptcpip.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eiptrace.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eipucmm.c"
+//"C:\Pythia\Babelfish\Code\BF\EIP\eiputil.c"
+//"C:\Pythia\Babelfish\Code\uC\STM32F40x\driverlib\src\stm32_eth.c"
+//"C:\Pythia\Babelfish\Code\uC\STM32F40x\driverlib\src\stm32f4xx_rcc.c"
+//"C:\Pythia\Babelfish\Code\uC\STM32F40x\Init\system_stm32f4xx.c"
+//"C:\Pythia\ETH\Code\Platform\platform.c"

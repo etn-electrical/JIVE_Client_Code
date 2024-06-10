@@ -1,0 +1,7 @@
+<InfoStart>
+ <HeaderFormatVersion2BytesHex>0000</HeaderFormatVersion2BytesHex>
+ <FwImageId>1</FwImageId>
+ <FwVersionInfo16BytesHex>00010200000000000000000000000000</FwVersionInfo16BytesHex>
+ <ProductCode32ByteHex>1234000000000000000000000000000000000000000000000000000000000000<ProductCode32ByteHex>
+ <MessageForBoot4BytesHex>00000005</MessageForBoot4BytesHex>
+</InfoStart>

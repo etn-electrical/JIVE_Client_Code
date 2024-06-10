@@ -1,0 +1,432 @@
+//    iar-co-arm-v6.lnt
+//    IAR ARM v6 compiler settings.
+//  MODIFY to point to your IAR Embedded Workbench installation
+
+defines.lnt
+
+//-i"..\..\Tools\IAR_Lint"
+
+//-i"..\..\Tools\IAR_Lint"
+//+libdir("..\..\Tools\IAR_Lint")
+
+-i"C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc\c"
+-i"C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc"
+-i"C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\CMSIS\Include"
+-i"C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc\ecpp"
+
++libdir("C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc\c")
++libdir("C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc")
++libdir("C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\CMSIS\Include")
++libdir("C:\Program Files (x86)\IAR Systems\Embedded Workbench 6.5\arm\inc\ecpp")
++libh(defines.lnt)
+-wlib(1)
+
+
+
+// MODIFY and ADD your project include paths here
+
+-i"..\..\..\..\Babelfish\Code\"
+-i"..\..\..\..\Babelfish\Code\BF\"
+-i"..\..\..\..\Babelfish\Code\BF\Delta_Com\"
+-i"..\..\..\..\Babelfish\Code\BF\Delta_Com\Test_Classes"
+-i"..\..\..\..\Babelfish\Code\BF\Delta_Com\Device_Classes"
+-i"..\..\..\..\Babelfish\Code\BF\Delta_Com\Protocol_Specific"
+-i"..\..\..\..\Babelfish\Code\BF\DCI\"
+-i"..\..\..\..\Babelfish\Code\BF\MODBUS\"
+-i"..\..\..\..\Babelfish\Code\BF\PROFIBUS\"
+-i"..\..\..\..\Babelfish\Code\FatFs\"
+-i"..\..\..\..\Babelfish\Code\Lib\"
+-i"..\..\..\..\Babelfish\Code\Level_Monitors"
+-i"..\..\..\..\Babelfish\Code\MiscCode\"
+-i"..\..\..\..\Babelfish\Code\NV\"
+-i"..\..\..\..\Babelfish\Code\NVCtrls\"
+-i"..\..\..\..\Babelfish\Code\OS\"
+-i"..\..\..\..\Babelfish\Code\TimeConversion\"
+-i"..\..\..\..\Babelfish\Code\uC\"
+-i"..\..\..\..\Babelfish\Code\USB\"
+-i"..\..\..\..\Babelfish\Code\USB\Device\"
+-i"..\..\..\..\Babelfish\Code\USB\Device\CDC\"
+-i"..\..\..\..\Babelfish\Code\USB\Device\MSC\"
+-i"..\..\..\..\Babelfish\Code\USB\Device\MSC Class\"
+-i"..\..\..\..\Babelfish\Code\USB\Device\Core\"
+-i"..\..\..\..\Babelfish\Code\USB\MSC\"
+-i"..\..\..\..\Babelfish\Code\USB\STM32 Eval\"
+-i"..\..\..\..\Babelfish\Code\USB\Core\"
+-i"..\..\..\..\Babelfish\Code\USB\Driver\"
+-i"..\..\..\..\Babelfish\Code\USB\Host MSC\"
+-i"..\..\..\..\Babelfish\Code\uC\STM32F20x\"
+-i"..\..\..\..\Babelfish\Code\uC\Generic\"
+-i"..\..\..\..\Babelfish\Code\uC\STM32F20x\Init\"
+-i"..\..\..\..\Babelfish\Code\uC\STM32F20x\STM32F207\"
+-i"..\..\..\..\Babelfish\Code\uC\STM32F20x\STM32F205\"
+-i"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\"
+-i"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\inc\"
+-i"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\For USB\inc\"
+-i"..\..\..\..\Babelfish\Code\Ethernet\"
+-i"..\..\..\..\Babelfish\Code\Ethernet\Include"
+-i"..\..\..\..\Babelfish\Code\Ethernet\Include\ipv4"
+-i"..\..\..\..\Babelfish\Code\Ethernet\Include\ipv4\lwip"
+-i"..\..\..\..\Babelfish\Code\Ethernet\Include\apps"
+-i"..\..\..\..\Babelfish\Code\Ethernet\Include\lwip"
+-i"..\..\..\..\Babelfish\Code\Unit_Test"
+-i"..\..\..\Code\"
+-i"..\..\..\Code\FatFs"
+-i"..\..\..\Code\USB\"
+-i"..\..\..\Code\Delta Com Test\"
+-i"..\..\..\Code\BFData\"
+-i"..\..\..\Code\Motor\"
+-i"..\..\..\Code\Motor Control\"
+-i"..\..\..\Code\Starter\"
+-i"..\..\..\Code\Starter\Unit Tests"
+-i"..\..\..\Code\Protection\"
+-i"..\..\..\Code\RTC\"
+
+
+
+
+//
+//    EWARM Size of Scalars
+//
+-si4
+-sl4
+-sp4
+-sf4
+-sd8
+
+//
+//    EWARM extended keywords
+//
+-d__absolute=       // Makes references to the object use absolute addressing
+-d__arm=            // Makes a function execute in ARM mode
+-d__big_endian=     // Declares a variable to use the big-endian byte order
+-d__fiq=            // Declares a fast interrupt function
+-d__interwork=      // Declares a function to be callable from both ARM and Thumb mode
+-d__irq=            // Declares an interrupt function
+-d__little_endian=  // Declares a variable to use the little-endian byte order
+-d__nested=         // Allows an __irq declared interrupt function to be nested, that is, interruptible by the same type of interrupt
+-d__pcrel=          // Used internally by the compiler for constant data when the --ropi compiler option is used
+-d__ramfunc=        // Makes a function execute in RAM
+-d__stackless=      // Makes a function callable without a working stack
+-d__swi=            // Declares a software interrupt function
+-d__thumb=          // Makes a function execute in Thumb mode
+-d__weak=           // Declares a symbol to be externally weakly linked
+
+// This symbol determines properties for class objects.
+-d__construction_by_bitwise_copy_allowed(x)=true
+
+// This symbol determines properties for class objects.
+-d__assignment_by_bitwise_copy_allowed(x)=true
+
+// These symbols determine properties for class objects and they function like the
+// sizeof operator. The symbols are true when a class, base class, or member
+// (recursively) has a user-defined constructor or destructor, respectively.
+-d__has_destructor(x)=true
+-d__has_constructor(x)=true
+
+// These symbols are used as memory attributes internally by the compiler, and they
+// might have to be used as arguments in certain templates.
+-d__code
+-d__data
+
+// Determines the allowed range for a parameter to an intrinsic function and that the
+// parameter must be of type const.
+-d__constrange(x,y)=const
+
+// Determines the class memory. A class memory determines which memory a class
+// object can reside
+-d__memory_of(x)=true
+
+
+// MODIFY
+// for problems with internal compiler library files: ichooser, iutility and xmemory...etc..
+// ------------------------------------------------------------------------------------------
+-elib(19)           // Usually about stray semicolons
+-elib(1076)         // Anonymous union assumed to be 'static'
+-elibsym(1512)      // Base class destructor is non-virtual
+-elib(46)           // For bitfields with non-int fields
+
+-w3        //Global Warning level, 3 = w+e+messages; 2 = warnings and errors both, 1=errors only
+
+
+au-misra-cpp.lnt                                    // Applying MISRA CPP rules
+
+options.lnt                                         // Taking exemptions for some MISRA CPP rules
+-elib(129)
+-e10
+-elib(40)
+-e606
+
+
+
+//  ***************************************************************************
+//
+//  IAR Systems
+//
+//  File name:  iar-co-arm-v6.lnt
+//
+//  Revision:   0.3 (alpha)
+//
+//  Modified:   2011-11-03
+//
+//  ***************************************************************************
+
+
+
+"..\..\..\..\Babelfish\Code\BF\DCI\DCI_NV_Mem.cpp"
+"..\..\..\..\Babelfish\Code\BF\DCI\Change_Tracker.cpp"
+"..\..\..\..\Babelfish\Code\BF\DCI\Change_Que_Lt.cpp"
+"..\..\..\..\Babelfish\Code\BF\DCI\DCI.cpp"
+"..\..\..\..\Babelfish\Code\BF\DCI\DCI_Config_CRC.cpp"
+"..\..\..\..\Babelfish\Code\BF\DCI\DCI_Owner.cpp"
+"..\..\..\..\Babelfish\Code\BF\DCI\DCI_Patron.cpp"
+"..\..\..\..\Babelfish\Code\BF\DCI\DCI_Worker.cpp"
+"..\..\..\..\Babelfish\Code\BF\DCI\Range_Check.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Device_Classes\Test_Delta_Device.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Device_Classes\Virtual_Device.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Protocol_Specific\Delta_Com_Modbus_Client.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Protocol_Specific\Protocol_Specific_Delta_Com.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Protocol_Specific\Test_Delta_Com_Client.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Delta_Com.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Delta_Com_Client.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Delta_Com_Display.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Delta_Com_Monitor.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Buffer.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Delta_Com_Server.cpp"
+"..\..\..\..\Babelfish\Code\BF\Delta_Com\Virtual_Device_List_Item.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_DCI.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Ch_Track.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\ModBus_CRC.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_DCI_Config.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Delta_Com_Server.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Display.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Negotiation.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Master.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Master_No_OS.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Msg.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Prod_Cons.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Net.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_UART.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_Serial.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_SysCmd.cpp"
+"..\..\..\..\Babelfish\Code\BF\Modbus\Modbus_TCP.cpp"
+"..\..\..\..\Babelfish\Code\FatFs\ccsbcs.c"
+"..\..\..\..\Babelfish\Code\BF\System_Reset.cpp"
+"..\..\..\..\Babelfish\Code\FatFs\fattime.c"
+"..\..\..\..\Babelfish\Code\FatFs\ff.c"
+"..\..\..\..\Babelfish\Code\Level_Monitors\Fault_Monitor.cpp"
+"..\..\..\..\Babelfish\Code\Level_Monitors\Monitors_Monitor.cpp"
+"..\..\..\..\Babelfish\Code\Level_Monitors\Level_Monitor.cpp"
+"..\..\..\..\Babelfish\Code\Level_Monitors\Monitors_List_Item.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Bit_List.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Button.cpp"
+"..\..\..\..\Babelfish\Code\Lib\CRC16.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Defines.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Exception.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Input.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Input_Neg.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Input_Pos.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Linked_List.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Micro_Task.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Output.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Output_Neg.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Output_Pos.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Ram.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Ram_Handler.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Ram_Hybrid.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Ram_Malloc.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Ram_Static.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Rand_Num.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Relay_PWM_Output.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Remote_Output.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Scratch_Ram.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Services.cpp"
+"..\..\..\..\Babelfish\Code\Lib\StdLib_MV.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Timers.cpp"
+"..\..\..\..\Babelfish\Code\Lib\Timers_uSec.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\AtoD.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\Bi_Color_LED.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\Buffer.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\Com_Dog.cpp"
+"..\..\..\..\Babelfish\Code\Ethernet\apps\INT_ASCII_Conversion.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\LED.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\Mem_Check.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\My_FIFO.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\Voltage_Divider.cpp"
+"..\..\..\..\Babelfish\Code\NVCtrls\AT25DF.cpp"
+"..\..\..\..\Babelfish\Code\MiscCode\Voltage_Monitor.cpp"
+"..\..\..\..\Babelfish\Code\NV\NV_Mem.cpp"
+"..\..\..\..\Babelfish\Code\NVCtrls\AT25DFx.cpp"
+"..\..\..\..\Babelfish\Code\NVCtrls\Fram.cpp"
+"..\..\..\..\Babelfish\Code\NVCtrls\Ram_NV.cpp"
+"..\..\..\..\Babelfish\Code\OS\CR_Queue.cpp"
+"..\..\..\..\Babelfish\Code\OS\CR_Tasker.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Binary_Semaphore.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Counting_Semaphore.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_List.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_List_Item.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Mutex.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Queue.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Recursive_Mutex.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Semaphore.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Task.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Task_Mon.cpp"
+"..\..\..\..\Babelfish\Code\OS\OS_Tasker.cpp"
+"..\..\..\..\Babelfish\Code\TimeConversion\DateUtil.cpp"
+"..\..\..\..\Babelfish\Code\TimeConversion\POSIXTimeUtil.cpp"
+"..\..\..\..\Babelfish\Code\TimeConversion\TimeUtil.cpp"
+"..\..\..\..\Babelfish\Code\TimeConversion\TimeZoneDST.cpp"
+"..\..\..\..\Babelfish\Code\uC\Generic\uC_Queued_SPI.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\For USB\src\stm32f2xx_dma.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\For USB\src\misc.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\For USB\src\stm32f2xx_exti.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\For USB\src\stm32f2xx_i2c.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\For USB\src\stm32f2xx_sdio.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\src\stm32f2xx_gpio.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\src\stm32f2xx_rcc.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\driverlib\src\sys_arch.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\Init\system_stm32f2xx.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\STM32F205\uC_Base_HW_IDs_STM32F205.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\STM32F205\uC_Base_STM32F205.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\STM32F205\uC_IO_Define_STM32F205.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\Advanced_Vect.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_AtoD.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\STM32F2xx_SPI.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\STM32F2xx_USART_SPI.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Base.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Code_Range.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_DMA.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_CStack.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Input.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Ext_Int.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Flash.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Interrupt.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Rand_Num.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_IO_Config.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Multi_Timers.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_OS_Interrupt.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_OS_Tick.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_PWM.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Single_Timer.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Reset.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_SPI.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Tick.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Timers.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Timers_HW.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_USART_DMA.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_USART.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Watchdog.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_USART_HW.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_USART_Soft_DMA.cpp"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_USB.cpp"
+"..\..\..\..\Babelfish\Code\USB\Device\CDC\usbd_cdc_core.c"
+"..\..\..\..\Babelfish\Code\uC\STM32F20x\uC_Watchdog_HW.cpp"
+"..\..\..\..\Babelfish\Code\USB\Device\MSC\stm32fxxx_it.c"
+"..\..\..\..\Babelfish\Code\USB\Device\Core\usbd_core.c"
+"..\..\..\..\Babelfish\Code\USB\Device\Core\usbd_ioreq.c"
+"..\..\..\..\Babelfish\Code\USB\Device\Core\usbd_req.c"
+"..\..\..\..\Babelfish\Code\USB\Device\MSC\usbd_usr.c"
+"..\..\..\..\Babelfish\Code\USB\Device\MSC\usbd_desc.c"
+"..\..\..\..\Babelfish\Code\USB\Device\MSC Class\usbd_msc_bot.c"
+"..\..\..\..\Babelfish\Code\USB\Device\MSC Class\usbd_msc_core.c"
+"..\..\..\..\Babelfish\Code\USB\Device\MSC Class\usbd_msc_data.c"
+"..\..\..\..\Babelfish\Code\USB\Device\MSC Class\usbd_msc_scsi.c"
+"..\..\..\..\Babelfish\Code\USB\Driver\usb_core.c"
+"..\..\..\..\Babelfish\Code\USB\Driver\usb_dcd.c"
+"..\..\..\..\Babelfish\Code\USB\Driver\usb_dcd_int.c"
+"..\..\..\..\Babelfish\Code\USB\Driver\usb_hcd.c"
+"..\..\..\..\Babelfish\Code\USB\Driver\usb_hcd_int.c"
+"..\..\..\..\Babelfish\Code\USB\Core\usbh_core.c"
+"..\..\..\..\Babelfish\Code\USB\Core\usbh_hcs.c"
+"..\..\..\..\Babelfish\Code\USB\Core\usbh_ioreq.c"
+"..\..\..\..\Babelfish\Code\USB\Core\usbh_stdreq.c"
+"..\..\..\..\Babelfish\Code\USB\Host MSC\usb_bsp.c"
+"..\..\..\..\Babelfish\Code\USB\Host MSC\usbh_usr.c"
+"..\..\..\..\Babelfish\Code\USB\MSC\usbh_msc_bot.c"
+"..\..\..\..\Babelfish\Code\USB\MSC\usbh_msc_core.c"
+"..\..\..\..\Babelfish\Code\USB\MSC\usbh_msc_scsi.c"
+"..\..\..\Code\BFData\BCM_Logic.cpp"
+"..\..\..\Code\BFData\Com_Dog_Data.cpp"
+"..\..\..\Code\BFData\DCI_Data.cpp"
+"..\..\..\Code\BFData\DCOM_Param_DCI_Data.cpp"
+"..\..\..\Code\BFData\Fault_Data.cpp"
+"..\..\..\Code\BFData\Modbus_DCI_Data.cpp"
+"..\..\..\Code\BFData\NV_Default.cpp"
+"..\..\..\Code\BFData\Virtual_BUI_Def.cpp"
+"..\..\..\Code\BFData\Virtual_MM_Def.cpp"
+"..\..\..\Code\Delta Com Test\DCOM_Unit_Test_Data.cpp"
+"..\..\..\Code\FatFS\diskio.cpp"
+"..\..\..\Code\Delta Com Test\Delta_Com_Test.cpp"
+"..\..\..\Code\FatFS\FatFs_API_Client.cpp"
+"..\..\..\Code\FatFS\FatFs_API_Server.cpp"
+"..\..\..\Code\FatFS\Mem_Client.cpp"
+"..\..\..\Code\FatFS\Mem_Server.cpp"
+"..\..\..\Code\Motor\BUI_IO_Ctrl.cpp"
+"..\..\..\Code\Motor\Energy_Accumulator.cpp"
+"..\..\..\Code\Motor\Motor_Control.cpp"
+"..\..\..\Code\Motor\Motor_Control_Profile.cpp"
+"..\..\..\Code\Motor\Motor_Data_Access.cpp"
+"..\..\..\Code\Motor\Motor_Dynamics.cpp"
+"..\..\..\Code\Motor\Motor_Info_Rated.cpp"
+"..\..\..\Code\Motor\Motor_Simulator.cpp"
+"..\..\..\Code\Motor\Motor_State.cpp"
+"..\..\..\Code\Motor\Protection_Control_Monitor.cpp"
+"..\..\..\Code\Motor Control\Logic_Collector.cpp"
+"..\..\..\Code\Motor Control\Motor_Control_Logic.cpp"
+"..\..\..\Code\Protection\Events.cpp"
+"..\..\..\Code\Protection\Ground_Fault_Delay.cpp"
+"..\..\..\Code\Protection\Log_Float.cpp"
+"..\..\..\Code\Protection\Overload.cpp"
+"..\..\..\Code\Protection\Overload_Data_Access.cpp"
+"..\..\..\Code\Protection\Overload_Data_Access_DCI.cpp"
+"..\..\..\Code\Protection\Protection_Comparison.cpp"
+"..\..\..\Code\Protection\Protection_Comparison_Raw.cpp"
+"..\..\..\Code\Protection\Protection_Debounce.cpp"
+"..\..\..\Code\Protection\Protection_DCI_Access.cpp"
+"..\..\..\Code\Protection\Protection_Generic.cpp"
+"..\..\..\Code\Protection\Protection_Monitor.cpp"
+"..\..\..\Code\Protection\Protection_Overload_Wrapper.cpp"
+"..\..\..\Code\Protection\Protection_PTC.cpp"
+"..\..\..\Code\Protection\Protection_Phase_Sequence.cpp"
+"..\..\..\Code\Protection\Protection_Pre_Condition.cpp"
+"..\..\..\Code\Protection\Protection_Regular.cpp"
+"..\..\..\Code\Protection\Protection_Stall.cpp"
+"..\..\..\Code\Protection\Trip_Alarm_Indicate.cpp"
+"..\..\..\Code\RTC\DS3234_SPI.cpp"
+"..\..\..\Code\RTC\DS3234_Util.cpp"
+"..\..\..\Code\RTC\RTC_Option.cpp"
+"..\..\..\Code\RTC\Tick_Based_Time.cpp"
+"..\..\..\Code\RTC\Time_Generic.cpp"
+"..\..\..\Code\Starter\Unit Tests\Two_Speed_Pole_Unit_Test.cpp"
+"..\..\..\Code\Starter\Unit Tests\Direct_On_Line_Unit_Test.cpp"
+"..\..\..\Code\Starter\Unit Tests\Reverser_Unit_Test.cpp"
+"..\..\..\Code\Starter\Unit Tests\Star_Delta_Unit_Test.cpp"
+"..\..\..\Code\Starter\Unit Tests\Starter_Unit_Test.cpp"
+"..\..\..\Code\Starter\Overload_Only.cpp"
+"..\..\..\Code\Starter\Direct_On_Line.cpp"
+"..\..\..\Code\Starter\Profile_Control.cpp"
+"..\..\..\Code\Starter\Reverser.cpp"
+"..\..\..\Code\Starter\Star_Delta.cpp"
+"..\..\..\Code\Starter\Two_Speed_Pole_Changing.cpp"
+"..\..\..\Code\USB\USB.cpp"
+"..\..\..\Code\USB\usbd_storage_msd.c"
+"..\..\..\Code\Ambi_Temp_RTD.cpp"
+"..\..\..\Code\Ambi_Temp.cpp"
+"..\..\..\Code\Ambi_Temp_STM32F20x.cpp"
+"..\..\..\Code\App_Output.cpp"
+"..\..\..\Code\Backup_Mem.cpp"
+"..\..\..\Code\Dip_Config.cpp"
+"..\..\..\Code\Dip_Switch.cpp"
+"..\..\..\Code\Input_Deb.cpp"
+"..\..\..\Code\Main.cpp"
+"..\..\..\Code\Output_Comm_State.cpp"
+"..\..\..\Code\Power_Supply_Board.cpp"
+"..\..\..\Code\Prod_Device_Diag.cpp"
+"..\..\..\Code\Prod_Spec.cpp"
+"..\..\..\Code\Prod_Spec_BCM_STM32F205.cpp"
+"..\..\..\Code\Prod_Spec_Services.cpp"
+"..\..\..\Code\Relay_Output.cpp"
+"..\..\..\Code\Serial_Flash_Reader_Test.cpp"
+"..\..\..\Code\Test_Timers.cpp"
+"..\..\..\Code\Test_Volt_Mon.cpp"
+"..\..\..\Code\Test_Voltage.cpp"
+

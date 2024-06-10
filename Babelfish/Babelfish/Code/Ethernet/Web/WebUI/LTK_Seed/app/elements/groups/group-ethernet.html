@@ -1,0 +1,108 @@
+<dom-module id="group-ethernet">
+    <template>
+            <template is="dom-if" if="[[checkUserReadAccess(distChildren[0])]]">
+                    <!-- Display the group name and icon-->
+            <px-row>
+                <px-column label>[[getChildProperty(0, 'param', 'name')]]</px-column>
+                <px-column action>
+                    <template is="dom-if" if="{{disableEdit}}">
+                        <param-read-only param="[[getChildProperty(0, 'param', 'pid')]]"></param-read-only>
+                    </template>
+                    <template is="dom-if" if="{{!disableEdit}}">
+                        <param-input param="[[getChildProperty(0, 'param', 'pid')]]"></param-input>
+                    </template>
+                </px-column>
+                <px-column helper>[[getChildProperty(0, 'param', 'desc')]]</px-column>
+            </px-row>
+        </template>
+
+        <!-- For each pelem... -->
+        <template is="dom-repeat" items="[[options]]">
+            <template is="dom-if" if="[[checkUserReadAccess(item)]]">
+                <px-row>
+                    <px-column label>[[getChildProperty(item, 'param', 'name')]]</px-column>
+                    <px-column action>
+                        <!-- Children Go Here -->
+                        <content select$=".item[[item]]"></content>
+                    </px-column>
+                    <px-column helper>[[getChildProperty(item, 'param', 'desc')]]</px-column>
+                </px-row>
+            </template>
+        </template>
+        <span style='display: none'>
+            <content></content>
+        </span>
+    </template>
+    <script>
+        /**
+         * group-ethernet selects between two sets of param nodes depending on the first param node
+         */
+        Polymer({
+            is: 'group-ethernet',
+            behaviors: [
+                PB.behaviors.navElem,
+                PB.behaviors.disabled,
+                PB.behaviors.distribute
+            ],
+            properties: {
+                distChildren: {
+                    type: Array,
+                    observer: 'distChildrenChanged'
+                },
+                groupCount: Number
+            },
+            checkUserReadAccess: function(item) {
+                var paramsList = this.getParams();
+                if (paramsList.length > 0 && PB.currentUserRoleLevel >= paramsList[item].r) {
+                    return true;
+                }
+                return false;
+            },
+
+            distChildrenChanged: function() {
+                var methodType = this.getChildProperty(0, 'param');
+                if (this.methodType === methodType) {
+                    return;
+                }
+
+                if (this.methodType) {
+                    this.methodType.removeEventListener(ENUM.EVENT.PARAM.CHANGE, this.onMethodChange);
+                }
+
+                this.methodType = methodType;
+
+                if (this.methodType) {
+                    this.methodType.addEventListener(ENUM.EVENT.PARAM.CHANGE, this.onMethodChange);
+                    this.onMethodChange();
+                }
+            },
+
+            ready: function() {
+                this.onMethodChange = this.onMethodChange.bind(this);
+            },
+
+            onMethodChange: function() {
+                var mid = (this.distChildren.length - 1) / 2 + 1;
+                var options;
+
+                switch (parseInt(this.methodType.value)) {
+                    case 0:
+                    case 1:
+                        //Dynamic
+                        options = this.distChildren.slice(1, mid);
+                        break;
+                    case 2:
+                    case 3:
+                    default:
+                        //Static
+                        options = this.distChildren.slice(mid);
+                        break;
+                }
+
+                this.set('options', options);
+                this.distributeContent(true);
+            }
+
+        });
+    </script>
+</dom-module>

@@ -1,0 +1,144 @@
+<dom-module id="param-input">
+	<style>
+		:host px-button.buttonArray {
+			display: inline-block;
+		}
+		:host px-input {
+			width: 90%;
+		}
+		:host px-button[disabled]{
+			opacity: 1.5;
+		}
+		:host /deep/ input[type='number']::-webkit-inner-spin-button,
+		:host /deep/ input[type='number']::-webkit-outer-spin-button {
+			-webkit-appearance: none !important;
+
+		}
+		:host /deep/ input[type='number'] {
+			-moz-appearance: textfield !important;
+		}
+		:host /deep/ input[type='number']::-ms-clear {
+			display: none !important;
+		}
+	</style>
+	<template>
+		<template is="dom-if" if="{{disableEdit}}">
+			<param-read-only param="{{param}}"></param-read-only>
+		</template>
+		<template is="dom-if" if="{{!disableEdit}}">
+			<template is="dom-if" if="{{checkUserWriteAccess(param)}}">
+				<template is="dom-if" if="[[param.enum]]" restamp="true">
+					<template is="dom-if" if="[[!isButtonArray()]]" restamp="true">
+						<px-dropdown value="{{param.value}}" disabled="[[disabled]]" on-change="_onChange" items="[[dropdownItemList(param)]]"
+						 label-key="desc" value-key="value"></px-dropdown>
+						<span>{{param.units}}</span>
+						<template is="dom-if" if="{{param.saveFailed}}">
+							<iron-icon icon="px-icons:alert" style="width: 16px; height: 16px; padding-left: 10px;  color:#a94442" title="[[param.saveFailureMsg]]"></iron-icon>
+						</template>
+					</template>
+					<template is="dom-if" if="[[isButtonArray()]]" restamp="true">
+						<template is="dom-repeat" items="[[param.enum]]">
+							<px-button class="buttonArray" pressed$='[[isEnabled(param.value,item.value)]]' disabled$='[[isEnabled(param.value,item.value)]]' value="[[item.value]]"
+							 fixedwidth on-tap="buttonClick">{{item.desc}}</px-button>
+						</template>
+						<template is="dom-if" if="{{param.saveFailed}}">
+							<iron-icon icon="px-icons:alert" style="width: 16px; height: 16px; padding-left: 10px; color:#a94442" title="[[param.saveFailureMsg]]"></iron-icon>
+						</template>
+					</template>
+				</template>
+				<template is="dom-if" if="[[!param.enum]]" restamp="true">
+					<!-- Otherwise, display the elem as a text input with the appropriate type -->
+					<template is="dom-if" if="{{isCheckbox(param.input_type)}}">
+						<px-checkbox checked='{{param.value}}' disabled$='[[disabled]]' invalid='[[!param.isValid]]' on-change='_onChange'></px-checkbox>
+						<span>{{param.units}}</span>
+						<template is="dom-if" if="{{param.saveFailed}}">
+							<iron-icon icon="px-icons:alert" style="width: 16px; height: 16px; padding-left: 10px; padding-top: 4px; color:#a94442" title="[[param.saveFailureMsg]]"></iron-icon>
+						</template>
+					</template>
+					<template is="dom-if" if="{{!isCheckbox(param.input_type)}}">
+						<div style="display: flex">
+							<px-input id='input' type='[[param.input_type]]' class$="save-failed-[[param.saveFailed]]" value='{{param.value::input}}'
+							 disabled='[[disabled]]' invalid='[[!param.isValid]]' on-change='_onChange' suffix='[[param.units]]' />
+							</px-input>
+							<template is="dom-if" if="{{param.saveFailed}}">
+								<iron-icon icon="px-icons:alert" style="width: 16px; height: 16px; padding-left: 10px; padding-top: 10px;  color:#a94442"
+								 title="[[param.saveFailureMsg]]"></iron-icon>
+							</template>
+						</div>
+					</template>
+				</template>
+			</template>
+			<template is="dom-if" if="{{!checkUserWriteAccess(param)}}">
+				<param-read-only param="{{param}}"></param-read-only>
+			</template>
+		</template>
+	</template>
+	<script>
+	Polymer({
+		is: 'param-input',
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.param,
+			PB.behaviors.disabled
+		],
+		properties: {
+			onchange: {
+				type: Function
+			},
+		},
+		checkUserWriteAccess: function(param) {
+			if(PB.currentUserRoleLevel >= param.w) {
+                return true;
+            } else {
+				return false;
+			}
+		},
+		dropdownItemList: function(param) {	
+ 			var enumList = param.enum;
+			var arr = [];
+            for(var i in enumList){
+                var v = enumList[i];
+                v.value = v.value.toString();
+                arr.push(v);
+            }
+            return arr;
+        },
+		isEnabled:function(pValue,iValue) {
+			//Convert boolean pValue to 1's & 0's
+			if(typeof pValue === 'boolean') {
+				var tValue;
+				if(pValue) {
+					tValue = 1;
+				} else {
+					tValue = 0;
+				}
+				//Button pressed logic
+				if(iValue === tValue) {
+					return true;
+				}
+			} else if(pValue === iValue) { 
+				return true;
+			} else {
+				return false;
+			}
+		},
+		_onChange: function(e) {
+			if (this.onchange) {
+				this.onchange(e);
+			}
+		},
+		isCheckbox: function(type) {
+			return (type === 'checkbox' ? true : false);
+		},
+		isButtonArray: function() {
+			return this.param.enum && this.param.enum.length === 2;
+		},
+		isSelected: function(pValue, iValue) {
+			return iValue === pValue;
+		},
+		buttonClick: function(elem) {
+			this.set("param.value", elem.model.item.value);
+		}
+	});
+	</script>
+</dom-module>

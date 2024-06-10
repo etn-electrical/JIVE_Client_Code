@@ -1,0 +1,40 @@
+//
+//  Generic IAR Embedded Workbench options
+//
+// My PC-Lint installation location
+//-i%PCLINT_INCLUDE%\Tools\IAR_Lint
+// Message hight
+//-hsb^3			
+
+// define the tab size as 4 characters
+//-t4			
+
+// Build Window output format for IAR Embedded Workbench
+//-format="LINT: <SRCREF line=%l file="%f">%f (%l, %C)</SRCREF > %t %n: %m"
+
+// Don't break lines
+//-width(0,10)		
+-h1
+-width(0) 
+-v
+-"format=\q%f\q,\q%l\q,\q%t\q,\q%n\q,\q%m\q"
+-"format_specific="
+  -width(
+  0)
+
+// Generic IAR compiler settings.
+iar-co.lnt		
+// IAR compiler target specific options
+iar-co-arm-v6.lnt	
+
+//  ***************************************************************************
+//  
+//  IAR Systems
+//  
+//  File name:  iar-ewarm.lnt
+//  
+//  Revision:   0.3 (alpha)
+//  
+//  Modified:   2011-11-03
+//  
+//  ***************************************************************************

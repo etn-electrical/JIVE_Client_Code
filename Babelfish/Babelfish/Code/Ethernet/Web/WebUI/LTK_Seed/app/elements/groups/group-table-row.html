@@ -1,0 +1,63 @@
+<dom-module id="group-table-row">
+	<style>
+		::host .selected {
+			background-color: #CCCCCC;
+		}
+	</style>
+	<template>
+			<template is="dom-if" if="[[showRow]]">
+					<px-row selectable$="{{selectable}}" selected$="{{selected}}" on-click="select">
+							<!-- Display the group name and icon, if present-->
+							<template is="dom-if" if="[[label]]">
+								<px-column icon="[[icon]]" width="0">
+									<px-title maintitle="[[label]]" style="text-align: left"></px-title>
+								</px-column>
+							</template>
+							<!-- For each pelem... -->
+							<template is="dom-repeat" items="[[distChildren]]">
+								<template is="dom-if" if="[[checkUserReadAccess(item)]]">
+									<px-column label>
+										<content select$=".item[[item]]" style="text-align: left"></content>
+									</px-column>
+								</template>
+							</template>
+						</px-row>
+			</template>
+	</template>
+	<script>
+		Polymer({
+			is: 'group-table-row',
+			behaviors: [
+				PB.behaviors.navElem,
+				PB.behaviors.disabled,
+				PB.behaviors.distribute,
+				PB.behaviors.selectableSidebar
+			],
+			properties: {
+				label: String,
+				icon: String,
+				showRow: {
+					tyep: Boolean,
+					value: false
+				},
+				paramsList: Array
+			},
+			checkUserReadAccess: function(item) {
+                this.paramsList = this.getParams();
+                if (this.paramsList.length > 0 && PB.currentUserRoleLevel >= this.paramsList[item].r) {
+                    return true;
+                }
+                return false;
+            },
+			attached: function() {
+				this.paramsList = this.getParams();
+				for (i = 0; i < this.paramsList.length; i++) {
+					if (this.checkUserReadAccess(i)) {
+						this.set("showRow", true);
+						break;
+					}
+				}
+			}
+		});
+	</script>
+</dom-module>

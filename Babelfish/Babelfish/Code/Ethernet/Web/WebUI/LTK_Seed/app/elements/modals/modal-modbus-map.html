@@ -1,0 +1,131 @@
+<dom-module id="modal-modbus-map">
+     <style>
+            px-modal[overlay] {
+                background: none;
+            }
+    </style>
+    <template>
+        <px-modal class="visible" overlay>
+            <px-actionbar dark>
+                <px-title maintitle="Modbus Map"></px-title>
+            </px-actionbar>
+            <px-content layout vertical center-justified borderlessRows style="min-height: 100px;">
+                <template is="dom-if" if="{{entries.length}}">
+                    <px-row>
+                        <px-column>Address</px-column>
+                        <px-column>Registers</px-column>
+                        <px-column>Name</px-column>
+                        <px-column>Type</px-column>
+                        <px-column>Count</px-column>
+                    </px-row>
+                    <div style='overflow-y: scroll; max-height: 400px'>
+                        <template is="dom-repeat" items="{{entries}}" as="entry">
+                            <px-row>
+                                <px-column><a href="#" on-click="close">{{entry.address}}</a></px-column>
+                                <px-column>{{entry.registers}}</px-column>
+                                <px-column>{{entry.name}}</px-column>
+                                <px-column>{{entry.type}}</px-column>
+                                <px-column>{{entry.count}}</px-column>
+                            </px-row>
+                        </template>
+                    </div>
+                </template>
+                <template is="dom-if" if="{{!entries.length}}">
+                    <px-row>
+                        <px-column center-justified>No entries found<br />Change search parameter below</px-column>
+                    </px-row>
+                </template>                
+            </px-content>
+            <px-actionbar bottom>
+                <span>Search:</span>
+                <input id='input' type='text' value='{{searchValue:input}}' on-keydown='searchKeydown' />
+                <span class="flex"></span>
+                <px-button on-click="close" primary>Close</px-button>
+            </px-actionbar>
+        </px-modal>
+    </template>
+    <script>
+    Polymer({
+        is: 'modal-modbus-map',
+        properties: {
+            tab: {
+                type: Object,
+                notify: true
+            },
+            data: {
+                type: Object,
+                notify: true
+            }
+        },
+
+        doSearch: function() {
+            var s = (this.$.input.value || this.searchValue || '').trim().toLowerCase();
+
+            if (s === '') {
+                this.set('entries', this.allEntries);
+                return;
+            }
+
+            var fields = ['address', 'registers', 'lname', 'type', 'count'];
+            var entries = this.allEntries.filter(function(e) {
+                for (var i = fields.length - 1; i >= 0; i--) {
+                    if (e[fields[i]].indexOf(s) >= 0) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            this.set('entries', entries);
+        },
+
+        searchKeydown: function(e, detail, target) {
+            this.debounce('search', this.doSearch, 100);
+        },
+
+        ready: function() {
+            //Set entries
+            var j = 0;
+            var entries = [];
+            for (var n in PB.DCI) {
+                var param = PB.DCI[n];
+                if (param.modbus) {
+                    for (var i = param.modbus.length - 1; i >= 0; i--) {
+                        var modbus = param.modbus[i];
+                        //modbus.start refers to the index within the param that the data represents and is usually zero
+                        entries[j++] = {
+                            address: modbus.reg.toString(),
+                            registers: Math.ceil(modbus.length / 2).toString(),
+                            name: param.name,
+                            type: param.datatype,
+                            count: (modbus.length / ENUM.DATATYPE_SIZE[param.datatype]).toString(),
+
+                            //These values are not displayed
+                            lname: param.name.toLowerCase(),
+                            param: param,
+                            modbus: modbus
+                        };
+                    }
+                }
+            }
+
+            entries.sort(function(e1, e2) {
+                return e1.address - e2.address;
+            });
+
+            this.allEntries = entries;
+            this.entries = entries;
+
+        },
+
+        close: function(e) {
+            e.preventDefault();
+            if (e.model && e.model.entry) {
+                this.tab.promise.resolve(e.model.entry);
+            } else {
+                this.tab.promise.reject();
+            }
+        }
+
+    });
+    </script>
+</dom-module>

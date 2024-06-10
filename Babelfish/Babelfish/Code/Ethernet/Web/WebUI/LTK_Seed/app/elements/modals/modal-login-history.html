@@ -1,0 +1,66 @@
+<dom-module id="modal-login-history">
+        <template>
+            <style>
+                px-modal[overlay] {
+                    background: none;
+                }
+            </style>
+            <px-modal overlay class="visible">
+                    <px-actionbar dark>
+                        <px-title maintitle="[[data.title]]" subtitle="[[data.subtitle]]" flex></px-title>
+                    </px-actionbar>
+                    <px-content>
+                        <table style="border-collapse: collapse;">
+                            <tr><td style="width: 150px; padding-bottom: 20px;"><b>Username:      </b></td><td style="padding-bottom: 20px;">[[userName]]</td></tr>
+                            <tr><td style="width: 150px; padding-bottom: 20px;"><b>Last Login:    </b></td><td style="padding-bottom: 20px;">[[lastLogin]]</td></tr>
+                            <tr><td style="width: 150px;"><b>Failed Attempt<template is="dom-if" if="[[countMoreThanOne(failedAttemptCount)]]">s</template>:    </b></td><td>[[failedAttemptCount]]</td></tr>
+                        </table>
+                    </px-content>
+                    <px-actionbar bottom>
+                        <span class="flex"></span>
+                        <template is="dom-repeat" items="{{data.options}}">
+                            <px-button id="{{item}}" on-click="click" primary$="{{isPrimary(item)}}">{{item}}</px-button>
+                        </template>
+                        <span class="flex"></span>
+                    </px-actionbar>
+                </px-modal>
+        </template>
+        <script>
+        Polymer({
+            is: 'modal-login-history',
+            properties: {
+                tab: {
+                    type: Object,
+                    notify: true
+                },
+                data: {
+                    type: Object,
+                    notify: true
+                }
+            },
+    
+            isPrimary: function(item) {
+                setTimeout(function () {
+                   document.getElementById(item).focus();
+                });
+                return this.data.options.length - 1 === this.data.options.indexOf(item);
+            },
+    
+            click: function(e) {
+                this.tab.promise.resolve(e.model.index);
+            },
+
+            attached: function() {
+                this.userName = PB.currentUser.UserName.value;
+                this.lastLogin = PB.currentUser.lastLogin.toLocaleString();
+                this.failedAttemptCount = PB.currentUser.failedAttemptCount;
+            },
+
+            countMoreThanOne: function(failedCount) {
+                return parseInt(failedCount) > 1;
+            }
+
+        });
+        </script>
+    </dom-module>
+    

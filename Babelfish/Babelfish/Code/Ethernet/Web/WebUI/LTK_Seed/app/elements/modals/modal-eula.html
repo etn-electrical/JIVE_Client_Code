@@ -1,0 +1,78 @@
+<dom-module id="modal-eula">
+    <template>
+        <style>
+            px-modal[overlay] {
+                background: none;
+            }
+            :host /deep/ .content {  
+                transform: translateX(-50%) translateY(-50%);
+                -webkit-transform: translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px)) !important;
+            }
+        </style>
+        <px-modal class="visible" maxwidth="700px" overlay>
+            <px-actionbar dark>
+                <px-title maintitle="[[data.title]]"></px-title>
+            </px-actionbar>
+            <px-content>
+                <px-row id="scrollableRow" bucket scrollable style="display: block; max-height:400px; position: relative; overflow: auto; border: 1px solid grey;  background-color: #FCFCFC">
+                    <legal-eula></legal-eula>
+                </px-row>
+            </px-content>
+            <px-content style="padding: 0px 10px 0px 10px">
+                <px-row noborder nopadding>
+                    <px-column>
+                        <px-radio checked="{{agree}}" label="I agree to the terms of the License Agreement" group="data"></px-radio>
+
+                    </px-column>
+                </px-row>
+                <px-row noborder nopadding>
+                    <px-column>
+                        <px-radio checked="{{!agree}}" label="I do NOT agree to the terms of the License Agreement" group="data"></px-radio>
+                    </px-column>
+                </px-row>
+            </px-content>
+            <px-actionbar bottom>
+                <span class="flex"></span>
+                <template is="dom-repeat" items="{{data.options}}">
+                    <px-button on-click="click" primary$="{{isPrimary(item)}}" disabled$='[[validateInputs(item, agree)]]'>{{item}}</px-button>
+                </template>
+            </px-actionbar>
+        </px-modal>
+    </template>
+    <script>
+        Polymer({
+            is: 'modal-eula',
+            properties: {
+                tab: {
+                    type: Object,
+                    notify: true
+                },
+                data: {
+                    type: Object,
+                    notify: true
+                },
+                agree: {
+                    type: Boolean,
+                    value: false
+                },
+                
+            },
+            validateInputs : function (item, agree) {
+                if (item === 'Accept' && !agree) {
+                    return true;
+                } else if ((item === 'Accept' && agree)) {
+                    return false;
+                }        
+            },
+
+            isPrimary: function (item) {
+                return this.data.options.length - 1 === this.data.options.indexOf(item);
+            },
+
+            click: function (e) {
+                this.tab.promise.resolve(e.model.index);
+            },
+
+        });
+    </script>
+</dom-module>

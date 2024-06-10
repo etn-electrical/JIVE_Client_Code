@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>LTK Seed</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
+
+    <!-- build:js(.) scripts/vendor.js -->
+    <!-- bower:js -->
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="bower_components/blueimp-md5/js/md5.js"></script>
+    <!-- endbower -->
+    <!--<script src="bower_components/polymer/polymer.js"></script>-->
+    <!-- endbuild -->
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <!-- build:css(.) styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/font-opensans/fontface.css" />
+    <!-- endbower -->
+    <link rel="stylesheet" href="styles/main.css" />
+    <!-- endbuild -->
+    
+    <!-- Clear Cache in IE-->
+    <script>document.execCommand('ClearAuthenticationCache');</script>
+
+    <!-- favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    
+    <!-- build:js({.tmp,app}) scripts/dci.js -->
+    <script src="scripts/lib/object-setprototypeof-ie9.js"></script>
+    <script src="scripts/lib/dci.js"></script>
+    <!-- endbuild -->
+
+    <!-- build:js({.tmp,app}) scripts/scripts.js -->
+    <script src="scripts/lib/jquery.js"></script>
+    <script src="scripts/lib/jquery.retryAjax.js"></script>
+    <script src="scripts/constants.js"></script>
+    <script src="scripts/lib/pb.js"></script>
+    <script src="scripts/lib/param.js"></script>
+    <script src="scripts/lib/user.js"></script>
+    <script src="scripts/lib/navelem.js"></script>
+    <script src="scripts/lib/behaviors.js"></script>
+    <script src="scripts/tabs.js"></script>
+    <script src="scripts/modals.js"></script>
+    <script src="scripts/version.js"></script>
+    <!-- endbuild -->
+
+    <!-- Old Style -->
+	<link rel="import" href="bower_components/iron-flex-layout/classes/iron-flex-layout.html">
+
+    <!-- New Style -->
+    <!--
+    <link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+    <style is="custom-style" include="iron-flex"></style>
+    -->
+
+    <!-- bower:html -->
+    <link rel="import" href="bower_components/polymer/polymer.html" />
+    <link rel="import" href="bower_components/polymer/polymer-mini.html" />
+    <link rel="import" href="bower_components/polymer/polymer-micro.html" />
+    <link rel="import" href="bower_components/px-styles/px-styles.html" />
+    <link rel="import" href="bower_components/px-styles/px-flex.html" />
+    <link rel="import" href="bower_components/px-styles/px-scrollbars.html" />
+    <link rel="import" href="bower_components/iron-media-query/iron-media-query.html" />
+    <link rel="import" href="bower_components/px-colors/px-colors.html" />
+    <link rel="import" href="bower_components/px-colors/px-color-changer.html" />
+    <link rel="import" href="bower_components/px-desktop-actionbar/px-actionbar.html" />
+    <link rel="import" href="bower_components/iron-meta/iron-meta.html" />
+    <link rel="import" href="bower_components/iron-icon/iron-icon.html" />
+    <link rel="import" href="bower_components/px-desktop-button/px-button.html" />
+    <link rel="import" href="bower_components/px-desktop-button/px-icon-button.html" />
+    <link rel="import" href="bower_components/px-desktop-card/px-card.html" />
+    <link rel="import" href="bower_components/px-desktop-card/px-card-container.html" />
+    <link rel="import" href="bower_components/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html" />
+    <link rel="import" href="bower_components/iron-behaviors/iron-button-state.html" />
+    <link rel="import" href="bower_components/iron-behaviors/iron-control-state.html" />
+    <link rel="import" href="bower_components/px-desktop-checkbox/px-checkbox.html" />
+    <link rel="import" href="bower_components/iron-iconset-svg/iron-iconset-svg.html" />
+    <link rel="import" href="bower_components/px-icons/px-icons.html" />
+    <link rel="import" href="bower_components/px-desktop-collapse/px-collapse.html" />
+    <link rel="import" href="bower_components/px-desktop-collapse/px-collapse-header.html" />
+    <link rel="import" href="bower_components/px-desktop-column/px-column.html" />
+    <link rel="import" href="bower_components/px-desktop-content/px-content.html" />
+    <link rel="import" href="bower_components/iron-fit-behavior/iron-fit-behavior.html" />
+    <link rel="import" href="bower_components/iron-resizable-behavior/iron-resizable-behavior.html" />
+    <link rel="import" href="bower_components/iron-overlay-behavior/iron-overlay-behavior.html" />
+    <link rel="import" href="bower_components/iron-dropdown/iron-dropdown.html" />
+    <link rel="import" href="bower_components/iron-selector/iron-selector.html" />
+    <link rel="import" href="bower_components/iron-selector/iron-multi-selectable.html" />
+    <link rel="import" href="bower_components/iron-selector/iron-selectable.html" />
+    <link rel="import" href="bower_components/iron-selector/iron-selection.html" />
+    <link rel="import" href="bower_components/px-desktop-item/px-item.html" />
+    <link rel="import" href="bower_components/px-desktop-title/px-title.html" />
+    <link rel="import" href="bower_components/iron-menu-behavior/iron-menu-behavior.html" />
+    <link rel="import" href="bower_components/iron-menu-behavior/iron-menubar-behavior.html" />
+    <link rel="import" href="bower_components/px-desktop-menu/px-menu.html" />
+    <link rel="import" href="bower_components/iron-a11y-announcer/iron-a11y-announcer.html" />
+    <link rel="import" href="bower_components/iron-validatable-behavior/iron-validatable-behavior.html" />
+    <link rel="import" href="bower_components/iron-input/iron-input.html" />
+    <link rel="import" href="bower_components/iron-form-element-behavior/iron-form-element-behavior.html" />
+    <link rel="import" href="bower_components/px-desktop-input/px-input.html" />
+    <link rel="import" href="bower_components/px-desktop-input/px-textarea.html" />
+    <link rel="import" href="bower_components/px-desktop-input/px-file-input.html" />
+    <link rel="import" href="bower_components/px-desktop-dropdown/px-dropdown.html" />
+    <link rel="import" href="bower_components/px-desktop-modal/px-modal.html" />
+    <link rel="import" href="bower_components/px-desktop-navigation/px-navigation.html" />
+    <link rel="import" href="bower_components/px-desktop-navigation/px-navigation-container.html" />
+    <link rel="import" href="bower_components/px-desktop-radio/px-radio.html" />
+    <link rel="import" href="bower_components/px-desktop-row/px-row.html" />
+    <link rel="import" href="bower_components/px-desktop-row/px-row-group.html" />
+    <link rel="import" href="bower_components/px-desktop-row-button/px-row-button.html" />
+    <link rel="import" href="bower_components/px-desktop-sidebar/px-sidebar.html" />
+    <link rel="import" href="bower_components/px-desktop-tab/px-tab.html" />
+    <link rel="import" href="bower_components/px-desktop-toggle/px-toggle.html" />
+    <link rel="import" href="bower_components/px-desktop-button-group/px-button-group.html" />
+    <link rel="import" href="bower_components/px-desktop-progress/px-progress.html" />
+    <link rel="import" href="bower_components/px-desktop-date-picker/px-date-picker.html" />
+    <link rel="import" href="bower_components/px-desktop-pocket/px-pocket.html" />
+    <!-- endbower -->
+
+    <!-- include:elements -->
+    <link rel="import" href="elements/action/action-export.html" />
+    <link rel="import" href="elements/action/action-import.html" />
+    <link rel="import" href="elements/action/action-save.html" />
+    <link rel="import" href="elements/groups/group-cells-row.html" />
+    <link rel="import" href="elements/groups/group-certificate.html" />
+    <link rel="import" href="elements/groups/group-ethernet.html" />
+    <link rel="import" href="elements/groups/group-firmware-upgrade.html" />
+    <link rel="import" href="elements/groups/group-iot-cloud.html" />
+    <link rel="import" href="elements/groups/group-log-row.html" />
+    <link rel="import" href="elements/groups/group-proxy-settings.html" />
+    <link rel="import" href="elements/groups/group-settings-row.html" />
+    <link rel="import" href="elements/groups/group-sntp-manual.html" />
+    <link rel="import" href="elements/groups/group-table-header-row.html" />
+    <link rel="import" href="elements/groups/group-table-row.html" />
+    <link rel="import" href="elements/groups/group-time.html" />
+    <link rel="import" href="elements/groups/group-users.html" />
+    <link rel="import" href="elements/layout.html" />
+    <link rel="import" href="elements/legal/legal-eula.html" />
+    <link rel="import" href="elements/legal/legal-privacy.html" />
+    <link rel="import" href="elements/legal/legal-terms.html" />
+    <link rel="import" href="elements/modals/modal-confirm.html" />
+    <link rel="import" href="elements/modals/modal-connection-loss.html" />
+    <link rel="import" href="elements/modals/modal-eula.html" />
+    <link rel="import" href="elements/modals/modal-failure.html" />
+    <link rel="import" href="elements/modals/modal-firmware-codepack.html" />
+    <link rel="import" href="elements/modals/modal-force-password-change.html" />
+    <link rel="import" href="elements/modals/modal-license-information.html" />
+    <link rel="import" href="elements/modals/modal-login-history.html" />
+    <link rel="import" href="elements/modals/modal-login.html" />
+    <link rel="import" href="elements/modals/modal-modbus-map.html" />
+    <link rel="import" href="elements/modals/modal-session-expired.html" />
+    <link rel="import" href="elements/modals/modal-terms.html" />
+    <link rel="import" href="elements/modals/modal-time.html" />
+    <link rel="import" href="elements/params/param-bitfield-input.html" />
+    <link rel="import" href="elements/params/param-input-action.html" />
+    <link rel="import" href="elements/params/param-input.html" />
+    <link rel="import" href="elements/params/param-read-only.html" />
+    <link rel="import" href="elements/sections/section-card.html" />
+    <link rel="import" href="elements/sections/section-collapse.html" />
+    <link rel="import" href="elements/sections/section-iot.html" />
+    <link rel="import" href="elements/sections/section-metrics.html" />
+    <link rel="import" href="elements/sections/section-modbus.html" />
+    <link rel="import" href="elements/sections/section-none.html" />
+    <link rel="import" href="elements/sections/section-time-autoupdate.html" />
+    <link rel="import" href="elements/sidebars/sidebar-default.html" />
+    <link rel="import" href="elements/tabs/tab-app_settings.html" />
+    <link rel="import" href="elements/tabs/tab-current.html" />
+    <link rel="import" href="elements/tabs/tab-data.html" />
+    <link rel="import" href="elements/tabs/tab-default.html" />
+    <link rel="import" href="elements/tabs/tab-device_info.html" />
+    <link rel="import" href="elements/tabs/tab-ethernet.html" />
+    <link rel="import" href="elements/tabs/tab-firmware.html" />
+    <link rel="import" href="elements/tabs/tab-io.html" />
+    <link rel="import" href="elements/tabs/tab-logs.html" />
+    <link rel="import" href="elements/tabs/tab-network.html" />
+    <link rel="import" href="elements/tabs/tab-overview.html" />
+    <link rel="import" href="elements/tabs/tab-section_user.html" />
+    <link rel="import" href="elements/tabs/tab-setpoints.html" />
+    <link rel="import" href="elements/tabs/tab-timeline.html" />
+    <link rel="import" href="elements/tabs/tab-user_settings.html" />
+    <!-- endinclude -->
+
+    <style>
+    px-navigation, px-tab {
+        z-index: auto !important;
+    }
+    
+    px-actionbar {
+        z-index: 1;
+    }
+    
+    section.body {
+        background: #f2f2f2;
+    }
+
+    px-tab #dropdown {
+        top: 32px !important;
+    }
+
+    px-tab px-dropdown .inline-container>px-title {
+        flex: 1 0 auto !important;
+    }
+
+    px-tab px-dropdown px-menu-container iron-icon.px-dropdown {
+        display: none !important;
+    }
+    </style>
+</head>
+<body unresolved fullscreen fullbleed>
+    <template id="main" is="dom-bind">
+        <px-navigation extra layout horizontal center>
+            <!-- Top Level (Status Bar) -->
+            <!-- Status/Loader -->
+            <span class="flex">{{status}}</span>
+            <template is="dom-if" if="{{!currentUser.Role}}">
+                <!-- A button to login the user; changes whether user is logged in or not -->
+                <px-tab icon="px-icons:user" on-click="login">
+                    Log In
+                </px-tab>
+            </template>
+            <template is="dom-if" if="{{currentUser.Role}}">
+                <px-tab extra>
+                    <px-dropdown placeholder='[[welcomeMsg]]' action inline dark>
+                        <px-item onclick='PB.showLoginHistory()' icon='px-icons:history'>Login History</px-item>
+                        <px-item onclick='PB.showlicenseInformation()' icon='px-icons:document'>License Information</px-item>
+                        <px-item onclick='PB.appLogout()' icon='px-icons:log-out'>Log Out</px-item>
+                    </px-dropdown>
+                </px-tab>
+            </template>
+            <!-- A button to view and set the time -->
+            <px-tab icon="px-icons:time"  style="cursor:default">
+                <strong>{{timeString}}</strong> <span>{{dateString}}</span>
+            </px-tab>
+            <template is="dom-if" if="{{currentUser.Role}}">
+                <section-time-autoupdate></section-time-autoupdate>
+            </template>
+            <!-- Display each tabbar name and icon -->
+            <template is="dom-repeat" items="{{navbar}}" as="tabbar">
+                <px-tab icon="{{tabbar.icon}}" app$='{{tabbar.isApp}}' on-click="go" tabbar="{{tabbar}}">{{tabbar.name}}</px-tab>
+            </template>
+            <template is="dom-if" if="{{currentUser.Role}}">
+                <section-iot></section-iot>
+            </template>
+            <!-- Eaton Logo -->
+            <template is="dom-if" if="[[isLogo]]">
+                <px-tab style="cursor:default">
+                    <img src={{isLogo}} alt="logo" height="56px">
+                </px-tab>
+            </template>
+        </px-navigation>
+        <!-- Each tabBar gets a Tab Bar, though only 1 will be available at a time -->
+        <template is="dom-repeat" items="{{navbar}}" as="tabbar">
+            <template is="dom-if" if="{{isActive(activeTabBar, tabbar)}}">
+                <px-navigation dark$="{{!tabbar.isApp}}">
+                    <!-- Each tab gets a tab -->
+                    <template is="dom-repeat" items="{{tabbar.children}}" as="tab">
+                        <px-tab tab="{{tab}}" icon="{{tab.icon}}" on-click="go">{{tab.name}}</px-tab>
+                    </template>
+                </px-navigation>
+            </template>
+        </template>
+        <!-- Each tabbar also gets a view -->
+        <template is="dom-repeat" items="{{navbar}}" as="tabbar">
+            <template is="dom-if" if="{{isActive(activeTabBar, tabbar)}}">
+                <div hashtag$="{{tabbar.hashtag}}" class="view-container" style="height: calc(100% - 103px)"></div>
+            </template>
+        </template>
+        <!-- Modal -->
+        <div class$="{{mask}}"></div>
+        <template is="dom-if" if="{{modal}}">
+            <div class="modal" hashtag='modal'></div>
+        </template>
+    </template>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<dom-module id="action-import">
+	<template>
+		<style>
+			.import-loader {
+				position: fixed;
+				left: 0px;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+				z-index: 9999;
+				background: rgb(249, 249, 249);
+				opacity: .8;
+			}
+	
+			.progressBar {
+				position: fixed;
+				text-align: center;
+				top: 50%;
+				left: 50%;
+				width: 300px;
+				transform: translate(-50%, -50%);
+				z-index: 9999;
+			}
+		</style>
+		<div class="import-loader" style="display: none;">
+			<div class="progressBar">
+				<span>
+					Importing...
+				</span>
+				<px-progress percent="{{loadingPercentage}}" color="#88CD6B" animate></px-progress>
+			</div>
+		</div>
+		<px-button icon="{{icon}}" on-click='import'>{{label}}</px-button>
+	</template>
+	<script>
+	Polymer({
+		is: 'action-import',
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.disabled,
+			PB.behaviors.action
+		],
+		properties: {
+			icon: String,
+			label: String,
+			params: Array
+		},
+		
+		import: function() {
+			var self = this;
+			PB.loadFile("application/json").then(function(arrayObjs) {
+				var lookup = {};
+				var level = PB.currentUserRoleLevel;
+
+				if (arrayObjs.length > 0) {
+					for (var i = 0, len = arrayObjs.length; i < len; i++) {
+						if (arrayObjs[i].pid != undefined && arrayObjs[i].name != undefined && arrayObjs[i].value != undefined) {
+							lookup[arrayObjs[i].pid] = arrayObjs[i];
+						} else {
+							navbar.showMessage("Invalid file","Alert");
+							return;
+						}
+					}
+				} else {
+					navbar.showMessage("Invalid file","Alert");
+					return;
+				}
+				
+				for (var define in lookup) {
+					var p = PB.DCI.get(define);
+					if (!p) {
+						navbar.showMessage("Invalid file","Alert");
+						return;
+					}
+				}
+
+				var proms = [];
+				var importList = [];
+				var importFailedList = [];
+				var paramCounter = 0;
+
+				var repeat_loop = function () {
+					if (arrayObjs.length == paramCounter) {
+						navbar.showProgress(ENUM.STATUS.IMPORT, "Importing and saving parameters", proms).then(function () {
+							if (importList.length > 0) {
+								navbar.setStatus(ENUM.STATUS.IMPORT, "Import Successful", 4000);
+							} else {
+								navbar.setStatus(ENUM.STATUS.IMPORT, "Nothing to Import", 4000);
+							}
+							$(".import-loader").fadeOut("slow");
+						}, function () {
+							navbar.setStatus(ENUM.STATUS.IMPORT, "Import Failed!", 8000);
+							$(".import-loader").fadeOut("slow");
+							navbar.modals.failure.go({
+								list: importFailedList,
+								message: 'The following parameters were not imported. The likely cause is invalid or out of range data values or write permission.',
+                                title: 'Import Failure Alert',
+                                options: ["Ok"]
+							});
+						});
+					} else {
+						$(".import-loader").fadeIn("slow");
+						var p = PB.DCI.get(arrayObjs[paramCounter].pid);
+						if (p.import) {					
+							var value = arrayObjs[paramCounter].value;
+							if (p.datatype == "bool" && typeof(value) == "boolean") {
+								value = value ? 1 : 0;
+							} else if (p.datatype == "string8" && !parseInt(value) && typeof(value) != "boolean") {
+								value = "\"" + value + "\"";
+							} else if (p.datatype == "float" && typeof(value) != "boolean" && !isNaN(parseFloat(value))) {
+								var buffer = new ArrayBuffer(4);
+								var intView = new Int32Array(buffer);
+								var floatView = new Float32Array(buffer);
+								floatView[0] = value;
+								value = "0x" + intView[0].toString(16);
+							} else if (p.datatype == "dfloat" && typeof(value) != "boolean" && !isNaN(parseFloat(value))) {
+								var buffer = new ArrayBuffer(8);
+								var intView = new Int32Array(buffer);
+								var floatView = new Float64Array(buffer);
+								floatView[0] = value;
+								value = "0x" + ((intView[0] * 0x100000000) + (intView[1])).toString(16);
+							} else if (typeof(value) == "string" && !isNaN(parseInt(value)) && p.format != "IPV4_BIG_ENDIAN_U8()" && p.format != "IPV4_BIG_ENDIAN()" && p.format != "MAC_ADDRESS()") {
+								value = "\"" + value + "\"";
+							}
+
+							var data = "<Value pid=\"" + p.pid + "\">" + value + "</Value>";
+							proms.push(PB.http.put("/rs/param/" + p.pid + "/value", data).then(function () {
+								importList.push(p);
+								self.loadingPercentage = Math.round((importList.length / arrayObjs.length) * 100);
+								paramCounter += 1;
+								repeat_loop();
+							}.bind(p), function () {
+								console.warn("Failed to write " + p.debug, p);
+								importFailedList.push(p)
+								p.revert();
+								paramCounter += 1;
+								repeat_loop();
+							}.bind(p)));
+						} else {
+							console.warn('Param not writable', p.define);
+							paramCounter += 1;
+							repeat_loop();
+						}
+					}
+				}
+				repeat_loop();				
+			});
+		}
+	});
+	</script>
+</dom-module>

@@ -1,0 +1,80 @@
+<dom-module id="section-modbus">
+    <template>
+        <section class="ModbusTable">
+            <nav class="modbusNav">
+                <label class="modbusNav-option">
+                    <span class="modbusNav-label">Start address:</span>
+                    <px-input type="number" value="{{startAddress:input}}">
+                </label>
+                <label class="modbusNav-option">
+                    <span class="modbusNav-label">Count:</span>
+                    <px-input type="number" value="{{count:input}}" max='125'>
+                </label>
+                <div class="modbusNav-option">
+                    <div class="u-pxCheckbox-light">
+                        <px-input type="checkbox" value="{{reverseStrings:change}}">
+                        <label for="reverseStrings">
+                            <span class="checkbox"></span>
+                            <span class="modbusNav-label">Reverse Strings</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modbusNav-option">
+                    <div class="u-pxCheckbox-light">
+                        <px-input type="checkbox" value="{{signed:change}}">
+                        <label for="signed">
+                            <span class="checkbox"></span>
+                            <span class="modbusNav-label">Signed</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modbusNav-option">
+                    <div class="u-pxCheckbox-light">
+                        <px-input type="checkbox" value="{{autoRefresh:change}}">
+                        <label for="autoRefresh">
+                            <span class="checkbox"></span>
+                            <span class="modbusNav-label">Auto-refresh</span>
+                        </label>
+                    </div>
+                </div>
+            </nav>
+            <!-- Main -->
+            <table class="ModbusTable">
+                <thead>
+                    <tr>
+                        <th>Address</th>
+                        <th>Name</th>
+                        <th>Hex</th>
+                        <th>String</th>
+                        <th>{{signed ? "Signed Bytes" : "Unsigned Bytes"}}</th>
+                        <th>{{signed ? "SInt16" : "UInt16"}}</th>
+                        <th>{{signed ? "SInt32 (2 regs)" : "UInt32 (2 regs)"}}</th>
+                        <th>Float (2 regs)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template is='repeat' items='values' as='value'>
+                        <tr>
+                            <td>{{value.address}}</td>
+                            <td>{{value.name}}</td>
+                            <td>{{value.hex}}</td>
+                            <td ng-class="{'is-highlighted': value.type==0}">{{value.string}}</td>
+                            <td ng-class="{'is-highlighted': value.type==2 || (value.type==3 && !signed)}">{{signed ? value.sbytes : value.ubytes}}</td>
+                            <td ng-class="{'is-highlighted': value.type==4 && !signed}">{{signed ? value.sint : value.uint}}</td>
+                            <td ng-class="{'is-highlighted': (value.type==5 && !signed) || (value.type==6 && signed), 'is-ignored': value.ignore32 && ((value.type==5 && !signed) || (value.type==6 && signed))}">{{signed ? value.slong : value.ulong}}</td>
+                            <td class="ModbusTable-float" ng-class="{'is-highlighted': value.type==7, 'is-ignored':value.ignore32}">{{value.float}}</td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </section>
+    </template>
+    <script>
+    Polymer({
+        is: 'section-modbus',
+        properties: {
+            section: Object
+        }
+    });
+    </script>
+</dom-module>

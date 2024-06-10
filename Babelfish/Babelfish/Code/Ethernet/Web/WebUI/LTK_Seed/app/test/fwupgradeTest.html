@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>LTK Maintenance Page</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <script>
+            //This file is UNCOMPRESSED
+            //  to compress it, copy the contents of this <script> tag into a javascript minifier online
+            //  and replace this code with the result
+            //  http://jscompress.com/
+            //  http://javascript-minifier.com/
+
+            function openFile() {
+                //Confirm file is valid before continuing
+                var file = document.getElementById("fw").files[0];
+                if (!file) {return;}
+                
+                var report = function(msg, fail) {
+                    document.getElementById("success").innerHTML = fail ? "" : msg;
+                    document.getElementById("failure").innerHTML = fail ? msg: "";
+                }
+                var sendCommand = function(progress, failure, url, arrBuf) {
+                    return function(callback) {
+                        var data = undefined;
+                        if (arrBuf) {
+                            var blob = new Blob([arrBuf], {type: "application/octet-stream"});
+                            var data = new FormData();
+                            data.append("fw", blob);
+                        }
+
+                        report(progress);
+
+                        var xmlhttp = new XMLHttpRequest();
+                        xmlhttp.onreadystatechange = function() {
+                            if (xmlhttp.readyState == 4) {
+                                if (xmlhttp.status >= 200 && xmlhttp.status < 300) {
+                                    //Success
+                                    report("Success: " + xmlhttp.status + " " + xmlhttp.responseText);
+                                } else {
+                                    //Failure
+                                    report("Failed: " + xmlhttp.status + " " + xmlhttp.responseText, true);
+                                }
+                                callback(xmlhttp.status);
+                            }
+                        };
+                        //xmlhttp.open("POST", "http://10.130.14.199:8083"+url);
+                        xmlhttp.open("POST", url);
+                        if(data) {
+                            xmlhttp.send(data);
+                        } else {
+                            xmlhttp.send();
+                        }
+                    }
+                }
+
+                var mbRead = function(e) {
+                    try {
+                        var arrBuf = e.target.result, bufs = {};
+                        if (arrBuf.byteLength % 4 != 0) {
+                            report('Invalid File', true);
+                            return;
+                        }
+
+                        var src = new Uint32Array(arrBuf);
+                        var headerSize = 13;
+
+                        //File is made up of a series of smaller files, each with a header
+                        //  Parse each header and split them into their respective buffers
+                        for (var offset = 0; offset < src.length; ) {
+                            var magic_endian = src[0 + offset];
+                            var data_length = src[1 + offset];
+                            var crc_reserved = src[2 + offset];
+                            var version = src[3 + offset];
+                            var target_version = src[4 + offset];
+
+                            var len = data_length / 4 + headerSize;
+
+                            if (magic_endian !== 0x0000FEFF
+                                    || data_length % 4 != 0
+                                    || src.length < offset + len) {
+                                //This file is broken
+                                report('Invalid File', true);
+                                return;
+                            }
+
+                            var f = new ArrayBuffer(len * 4);
+                            var dest = new Uint32Array(f);
+                            for (var i = 0; i < len; i++) {
+                                dest[i] = src[offset + i];
+                            }
+
+                            //Buffer id is based on the version
+                            bufs[(version >> 24 & 0xFF)] = f;
+
+                            offset += len;
+                        }
+
+                        //File must have at least one buffer to send
+                        if (Object.keys(bufs).length === 0) {
+                            report('Invalid File', true);
+                            return;
+                        }
+
+
+                        //Sets up a command queue that executes each command in sequence
+                        var commands = [];
+                        var callback = function(status) {
+                            if (status >= 200 && status < 300 && commands.length > 0) {
+                                try {
+                                    commands.shift()(callback);
+                                    return;
+                                } catch (e) {
+                                    report(e.name + ": " + e.message, true);
+                                }
+                            }
+                        };
+
+                        //Queue each of the buffers to be sent
+                        for (var id in bufs) {
+                            switch (id) {
+                                //Each file upgrade should have its own customized messages
+                                default:
+                                    commands.push(sendCommand('Clearing Space...', 'Clear Failed', '/fw/app?op=clear&file='+id));
+                                    commands.push(sendCommand('Uploading File...', 'Upload Failed', '/fw/app?op=upload&file='+id, bufs[id]));
+                                    commands.push(sendCommand('Starting Install...', 'Install Failed', '/fw/app?op=upgrade&file='+id));
+                                    commands.push(function(xhr) {
+                                        //Wait 10 seconds for device to accept upgrade
+                                        report('Installing...');
+                                        setTimeout(callback.bind(this, 200), 10000);
+                                    });
+                            }
+                        }
+
+                        if (commands.length === 0) {
+                            report("Invalid File", true);
+                            return;
+                        }
+
+                        commands.push(function() {
+                            report("Upgrade Successful");
+                            callback();
+                        });
+
+                        callback(200);
+                    } catch (x) {
+                        report("Error "+x, true);
+                    }
+                };
+
+                var reader = new FileReader();
+                reader.onload = mbRead;
+                reader.readAsArrayBuffer(file);
+                document.getElementById("fw").value = "";
+            }
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>LTK Maintenance Page</h1>
+            The firmware for this device has not been installed properly.<br />
+            Click the button below to select and install firmware.
+            
+            <h2 id="failure" style="color: red"></h2>
+            <h2 id="success" style="color: green"></h2>
+            
+            <input id="fw" type="file" style="display: none" onchange="openFile()">
+            <button onclick="document.getElementById('fw').click()">Install Firmware</button><br />
+        </div>
+
+    </body>
+</html>

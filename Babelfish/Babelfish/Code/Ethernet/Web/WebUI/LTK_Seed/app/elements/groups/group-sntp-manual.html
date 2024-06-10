@@ -1,0 +1,281 @@
+<dom-module id="group-sntp-manual">
+    <template>
+        <template is="dom-if" if="[[showComponent]]">
+            <px-row>
+                <px-column action>
+                    <div style="display: flex;">
+                        <px-radio disabled='[[sntpEditEnabled]]' label='Use SNTP Synchronization' group="timeRadioGroup" checked="{{ntpEnabled.value}}"
+                            on-change="setSntpOperationEnable">
+                        </px-radio>
+                    </div>
+                </px-column>
+            </px-row>
+            <template is="dom-if" if="{{ntpEnabled.value}}">
+                <template is="dom-if" if="[[checkUserReadAccess(sntpServer)]]">
+                    <px-row>
+                        <px-column>
+                            <strong style="padding-left:30px">[[getChildProperty(sntpServer, 'param', 'name')]]</strong>
+                        </px-column>
+                        <px-column>
+                            {{activeServerStatus}}
+                        </px-column>
+                        <px-column helper>
+                            [[getChildProperty(sntpServer, 'param', 'desc')]]
+                        </px-column>
+                    </px-row>
+                </template>
+                <px-row>
+                    <px-column>
+                        <strong style="padding-left:30px">SNTP Server Setup</strong>
+                    </px-column>
+                    <px-column>
+                        <px-button-group>
+                            <px-button disabled$='[[ntpDisabled]]' on-click="toggleDHCP" pressed$="[[!ntpDHCP.value]]" value="false">Manual</px-button>
+                            <px-button disabled$='[[ntpDisabled]]' on-click="toggleDHCP" pressed$="[[ntpDHCP.value]]" value="true">Automatic</px-button>
+                        </px-button-group>
+                    </px-column>
+                    <px-column helper>
+                        Automatic Configuration via DHCP
+                    </px-column>
+                </px-row>
+                <template is="dom-repeat" items="[[ntpIndexes]]">
+                    <template is="dom-if" if="[[checkUserReadAccess(item)]]">
+                        <px-row>
+                            <px-column label>
+                                <div style="padding-left:30px">[[getChildProperty(item, 'param', 'name')]]
+                                </div>
+                            </px-column>
+                            <px-column action>
+                                <template is="dom-if" if="{{disableEdit}}">
+                                    <param-read-only param="[[getChildProperty(item, 'param', 'pid')]]"></param-read-only>
+                                </template>
+                                <template is="dom-if" if="{{!disableEdit}}">
+                                    <param-input id="item.indexV" param="[[getChildProperty(item, 'param', 'pid')]]" disabled$="[[ntpDHCP.value]]">
+                                    </param-input>
+                                </template>
+                            </px-column>
+                            <px-column helper>[[getChildProperty(item, 'param', 'desc')]]</px-column>
+                        </px-row>
+                    </template>
+                </template>
+            </template>
+            <px-row>
+                <px-column>
+                    <px-radio disabled='[[sntpEditEnabled]]' label='Set Time' group="timeRadioGroup" on-change="setSntpOperationEnable" checked="{{!ntpEnabled.value}}"></px-radio>
+                </px-column>
+                <px-column action>
+                    <px-button icon="px-icons:time" disabled$='[[manualDisabled]]' on-click='openTimeModal'>Edit Time</px-button>
+                </px-column>
+                <px-column helper>[[time.desc]]</px-column>
+            </px-row>
+        </template>
+    </template>
+    <script>
+
+
+        'use strict';
+        Polymer({
+            is: 'group-sntp-manual',
+            behaviors: [
+                PB.behaviors.navElem,
+                PB.behaviors.disabled,
+                PB.behaviors.updateParam,
+            ],
+            properties: {
+                showComponent: {
+                    type: Boolean,
+                    value: false
+                },
+                userEditEnable: Boolean,
+                sntpEditEnabled: {
+                    type: Boolean,
+                    value: true,
+                    computed: 'checkUserWriteAccess(userEditEnable, disableEdit)'
+                },
+                ntpEnabled: Object,
+                ntpDHCP: Object,
+                ntpDisabled: {
+                    type: Boolean,
+                    computed: 'computeNtpDisabled(ntpEnabled.value, disableEdit)'
+                },
+                manualDisabled: {
+                    type: Boolean,
+                    value: true,
+                    computed: 'computeManualDisabled(ntpEnabled.value, disableEdit)'
+                },
+                paramsList: Object
+            },
+
+            observers: [
+                'clearUpdateParamsTimer(disableEdit)'
+            ],
+
+            clearUpdateParamsTimer: function (disableEdit) {
+                if (!disableEdit) {
+                    clearTimeout(this.updateParamsTimer);
+                } else {
+                    var params = this.getParams();
+                    if (params.length > 0) {
+                        for (var i = 0; i < params.length; i++) {
+                            var p = params[i];
+                            if (p.define) {
+                                if (p.define == 'DCI_SNTP_SERVICE_ENABLE') {
+                                    this.enableOrDisableSNTP(p.cacheValue);                                
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    this.updateParams();
+                }
+            },
+
+            checkUserReadAccess: function (item) {
+                if (PB.currentUserRoleLevel >= this.paramsList[item].r) {
+                    return true;
+                }
+                return false;
+            },
+
+            checkUserWriteAccess: function (userEditEnable, disableEdit) {
+                if (disableEdit) {
+                    return true;
+                }
+                return userEditEnable;
+            },
+
+            computeManualDisabled: function (enabled, disableEdit) {
+                if (disableEdit) {
+                    return true;
+                }
+                return this.sntpEditEnabled || this.ntpEnabled.value;
+            },
+
+            computeNtpDisabled: function (enabled, disableEdit) {
+                if (this.sntpEditEnabled) {
+                    return true;
+                }
+                return this.disableEdit || !this.ntpEnabled.value;
+            },
+
+            /**
+             * Opens time modal
+             */
+            openTimeModal: function () {
+                navbar.modals.time.go();
+                this.set("ntpDHCP.value", true);
+            },
+
+            setSntpOperationEnable: function () {
+                if (this.ntpEnabled.value) {
+                    var rtcParam = navbar.timeParam;
+                    if(rtcParam.cacheValue != rtcParam.value) {
+                        rtcParam.revert();
+                    }
+                    if (this.ntpDHCP.value) {
+                        this.params[0].value = 2;
+                    } else {
+                        this.params[0].value = 1;
+                    }
+                } else {
+                    this.params[0].value = 0;
+                }
+            },
+
+            updateParams: function () {
+                var self = this;
+                clearTimeout(this.updateParamsTimer);
+                if (this.disableEdit) {
+                    this.updateParamsTimer = setTimeout(function () {  //Time interval for refreshing the Component when Edit mode in off
+                        self.refreshComponent();
+                    }, 5000);
+                }
+            },
+
+            refreshComponent: function () {
+                var self = this;
+                var ntpIndexes = [];
+                var sntpServer;
+                setTimeout(function () {
+                    self.paramsList = self.getParams();
+                    if (self.paramsList.length > 0) {
+                        for (var i = 0; i < self.paramsList.length; i++) {
+                            var p = self.paramsList[i];
+                            if (p.define) {
+                                if (p.define == 'DCI_SNTP_SERVICE_ENABLE') {
+                                    if (self.checkUserReadAccess(i)) {
+                                        self.set("showComponent", true);
+                                    }
+                                    self.enableOrDisableSNTP(p.value);
+                                    if (PB.currentUserRoleLevel >= p.w) {
+                                        this.userEditEnable = false;
+                                    } else {
+                                        this.userEditEnable = true;
+                                    }
+                                } else if (p.define.indexOf('DCI_SNTP_SERVER') !== -1) {
+                                    ntpIndexes.push(i);
+                                } else if (p.define == 'DCI_SNTP_ACTIVE_SERVER') {
+                                    sntpServer = i;
+                                    if (p.value > 0) {
+                                        self.activeServerStatus = "Synchronized - Server " + p.value;
+                                    } else {
+                                        self.activeServerStatus = "Error: Not Synchronized";
+                                    }
+                                }
+                            }
+                        }
+                        self.set("userEditEnable", this.userEditEnable)
+                        self.set("ntpIndexes", ntpIndexes);
+                        self.set("sntpServer", sntpServer);
+                    }
+                }, 1000);
+                self.updateParams();
+            },
+
+            enableOrDisableSNTP: function (paramValue) {
+                if (paramValue == 0) {
+                    this.ntpEnabled = {
+                        value: false
+                    }
+                    this.ntpDHCP = {
+                        value: false
+                    }
+                } else if (paramValue == 1) {
+                    this.ntpEnabled = {
+                        value: true
+                    }
+                    this.ntpDHCP = {
+                        value: false
+                    }
+                } else if (paramValue == 2) {
+                    this.ntpEnabled = {
+                        value: true
+                    }
+                    this.ntpDHCP = {
+                        value: true
+                    }
+                }
+            },
+
+            ready: function () {
+                this.time = navbar.timeParam;
+            },
+
+            childrenAttached: function () {
+                this.refreshComponent();
+            },
+
+            toggleDHCP: function (e) {
+                if (!Polymer.dom(e).localTarget.pressed) {
+                    this.set("ntpDHCP.value", !this.ntpDHCP.value);
+                    this.setSntpOperationEnable();
+                }
+            },
+
+            detached: function () {
+                clearTimeout(this.updateParamsTimer);
+            }
+
+        });
+    </script>
+</dom-module>

@@ -1,0 +1,124 @@
+<dom-module id="action-export">
+	<template>
+		<style>
+			.export-loader {
+				position: fixed;
+				left: 0px;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+				z-index: 9999;
+				background: rgb(249, 249, 249);
+				opacity: .8;
+			}
+	
+			.progressBar {
+				position: fixed;
+				text-align: center;
+				top: 50%;
+				left: 50%;
+				width: 300px;
+				transform: translate(-50%, -50%);
+				z-index: 9999;
+			}
+		</style>
+		<div class="export-loader" style="display: none;">
+			<div class="progressBar">
+				<span>
+					Exporting...
+				</span>
+				<px-progress percent="{{loadingPercentage}}" color="#88CD6B" animate></px-progress>
+			</div>
+		</div>
+		<px-button icon="{{icon}}" on-click='export'>{{label}}</px-button>
+	</template>
+	<script>
+	Polymer({
+		is: 'action-export',
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.disabled,
+			PB.behaviors.action
+		],
+		properties: {
+			icon: String,
+			label: String,
+			params: {
+				type: Array,
+				value: [],
+				notify: true
+			}
+		},
+
+		showAction: function() {
+			var level = PB.currentUserRoleLevel;
+			for (var n in this.params) {
+				if (!this.params[n].canRead(level)) {
+					return false;
+				}
+			}
+			return true;
+		},
+
+		export: function() {
+			// Populate the params list
+			this.params = [];
+			var level = PB.currentUserRoleLevel;
+
+			for (var n in PB.DCI) {
+				var p = PB.DCI[n];
+				// Param is ignored on all the following cases:
+				if (!(p instanceof PB.Param) // Not a param
+					|| !p.export // On the exception list
+				) {
+					continue;
+				}
+				this.params.push(p);
+			}
+
+			// Go through all the Params and save their values into a large JSON file
+			var obj = {};
+			var exportList = [];
+			var proms = [];
+			var self = this;
+			var paramCounter = 0;
+
+			var repeat_loop = function() {
+				if (self.params.length == paramCounter) {
+					navbar.showProgress(ENUM.STATUS.EXPORT, "Exporting Parameters", proms).then(function () {
+						if (exportList.length > 0) {
+							PB.saveFile(exportList, "config.json", "application/json");
+							navbar.setStatus(ENUM.STATUS.EXPORT, "Export Successful", 4000);
+						} else {
+							navbar.setStatus(ENUM.STATUS.EXPORT, "Nothing to Export", 4000);
+						}
+						$(".export-loader").fadeOut("slow");
+					}, function () {
+						navbar.setStatus(ENUM.STATUS.EXPORT, "Export Failed!", 8000);
+						$(".export-loader").fadeOut("slow");
+					});
+				} else {
+					$(".export-loader").fadeIn("slow");
+					var p = self.params[paramCounter];
+					proms.push(p.read(true).then(function (value) {
+						obj.name = this.name;
+						obj.pid = this.pid;
+						obj.value = value;
+						exportList.push(obj);
+						obj = {};
+						self.loadingPercentage = Math.round((exportList.length / self.params.length) * 100);
+						paramCounter += 1;
+						repeat_loop();
+					}.bind(p), function () {
+						// Report success even when something goes wrong!
+						console.warn("Trouble saving " + this.define, this);
+						paramCounter += 1;
+						repeat_loop();
+					}.bind(p)));
+				}
+			}
+			repeat_loop();
+		}
+	});
+	</script>
+</dom-module>

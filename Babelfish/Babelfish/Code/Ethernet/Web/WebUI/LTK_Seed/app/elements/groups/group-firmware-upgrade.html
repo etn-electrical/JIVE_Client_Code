@@ -1,0 +1,130 @@
+<dom-module id="group-firmware-upgrade">
+    <template>
+        <!-- For each pelem... -->
+        <px-row>
+            <px-column label>Firmware Upgrade</px-column>
+            <px-column action>
+                <input id='fileChooser' type='file' style='display: none' on-change='openFile' accept="text/xml" />
+                <px-button icon="px-icons:import" disabled$="[[!isAdminRole]]" on-click='openChooser'>Open Code Pack</px-button>
+            </px-column>
+        </px-row>
+    </template>
+    <script>
+        (function () {
+            //ENUM values that are ONLY used on this page
+            var xlink = 'xlink:href';
+            var TYPE_DEVICE = 'device';
+            var TYPE_FILE = 'file';
+            var PATH_PROCESSOR = 'processor';
+            var PATH_IMAGE = 'image';
+            var asArray = PB.asArray;
+            Polymer({
+                is: 'group-firmware-upgrade',
+                behaviors: [
+                    PB.behaviors.navElem,
+                    PB.behaviors.disabled
+                ],
+                attached: function () {
+                    var self = this;
+                    self.isAdminRole = PB.currentUser.role.toLowerCase() == "admin";
+                    var fwUpgradeMode = PB.DCI.get("DCI_FW_UPGRADE_MODE").value;
+                },
+                properties: {
+
+                },
+                openChooser: function () {
+                    this.$.fileChooser.click();
+                },
+                openFile: function (event) {
+                    var self = this;
+                    var elem = event.target;
+                    //Confirm file is valid before continuing
+                    var myFile = elem.files[0];
+                    if (!myFile) {
+                        return;
+                    }                   
+                    if(myFile.type != "text/xml") {
+                        if (!PB.continueFlag) {
+                            navbar.modals.confirm.go({
+                                message: 'Incorrect File Selected',
+                                title: 'Alert',
+                                options: ["Ok"]
+                            });
+                        }
+                    } else {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            self.file = PB.parseXML(e.target.result);
+                            //Confirm file is valid and contains Firmware Package details
+                            if (self.file.FWPackage) {
+                                PB.http.priorityGet('/rs/fw').then(function (xhr) {
+                                    var rawDeviceData = PB.parseXML(xhr.responseText);
+                                    self.deviceProductGuid = rawDeviceData.Product.ProductGuid;
+                                    var fileProductData = [];
+                                    if (PB.isArray(self.file.FWPackage.Product)) {
+                                        fileProductData = self.file.FWPackage.Product;
+                                    } else {
+                                        fileProductData.push(self.file.FWPackage.Product);
+                                    }
+                                    var matchedProductCodepack;
+                                    for (var x = 0; x < fileProductData.length; x++) {
+                                        if (fileProductData[x].ProductGuid === self.deviceProductGuid) {
+                                            matchedProductCodepack = fileProductData[x]
+                                            break;
+                                        }
+                                    }
+
+                                    if (matchedProductCodepack) {
+                                        navbar.modals.eula.go({
+                                            title: 'End User License Agreement',
+                                            options: ["Cancel", "Accept"]
+                                        }).then(function (response) {
+                                            if (response == 1) {
+                                                navbar.modals.firmwareUpgrade.go(matchedProductCodepack);
+                                            }
+                                        });
+                                    } else {
+                                        if (!PB.continueFlag) {
+                                            navbar.modals.confirm.go({
+                                                message: 'Invalid Product',
+                                                title: 'Alert',
+                                                options: ["Ok"]
+                                            });
+                                        }
+                                    }
+                                }, function (error) {
+                                    if (!PB.continueFlag) {
+                                        if (error.status == 422 && error.statusText == "SFU Session in Progress") {
+											//SFU Session in progress
+                                            navbar.modals.confirm.go({
+                                                message: 'Firmware update session in progress, please retry after sometime.',
+                                                title: 'Alert',
+                                                options: ["Ok"]
+                                            });
+                                        } else {
+                                            navbar.modals.confirm.go({
+                                                message: 'Failed to validate Firmware Information, please retry.',
+                                                title: 'Alert',
+                                                options: ["Ok"]
+                                            });
+                                        }
+                                    }
+                                });
+                            } else {
+                                if (!PB.continueFlag) {
+                                    navbar.modals.confirm.go({
+                                        message: 'Invalid File',
+                                        title: 'Alert',
+                                        options: ["Ok"]
+                                    });
+                                }
+                            }
+                        };
+                        reader.readAsText(myFile);
+                        elem.value = '';
+                    }
+                }
+            });
+        })()
+    </script>
+</dom-module>

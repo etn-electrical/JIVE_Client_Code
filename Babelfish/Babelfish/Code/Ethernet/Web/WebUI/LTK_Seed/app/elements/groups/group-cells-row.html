@@ -1,0 +1,59 @@
+<dom-module id="group-cells-row">
+	<template>
+		<template is="dom-if" if="[[showRow]]">
+			<px-row selectable$="{{selectable}}" selected$="{{selected}}" on-click="select">
+				<!-- Display the group name and icon, if present-->
+				<template is="dom-if" if="[[label]]">
+					<px-column icon="[[icon]]" width="0">
+						<px-title maintitle="[[label]]"></px-title>
+					</px-column>
+				</template>
+				<template is="dom-repeat" items="[[distChildren]]">
+					<template is="dom-if" if="[[checkUserReadAccess(item)]]">
+						<px-column width="2">
+							[[getChildProperty(item, 'param', 'name')]]
+						</px-column>
+						<px-column right style="word-wrap:break-word;">
+							<b><content select$=".item[[item]]"></content></b>
+						</px-column>
+					</template>
+				</template>
+			</px-row>
+		</template>
+	</template>
+	<script>
+		Polymer({
+			is: 'group-cells-row',
+			behaviors: [
+				PB.behaviors.navElem,
+				PB.behaviors.disabled,
+				PB.behaviors.distribute,
+				PB.behaviors.selectableSidebar
+			],
+			properties: {
+				icon: String,
+				label: String,
+				showRow: {
+					type: Boolean,
+					value: false
+				},
+				paramsList: Array
+			},
+			checkUserReadAccess: function (item) {
+				if (this.paramsList.length > 0 && PB.currentUserRoleLevel >= this.paramsList[item].r) {
+					return true;
+				}
+				return false;
+			},
+			attached: function () {
+				this.paramsList = this.getParams();
+				for (i = 0; i < this.paramsList.length; i++) {
+					if (this.checkUserReadAccess(i)) {
+						this.set("showRow", true);
+						break;
+					}
+				}
+			}
+		});
+	</script>
+</dom-module>

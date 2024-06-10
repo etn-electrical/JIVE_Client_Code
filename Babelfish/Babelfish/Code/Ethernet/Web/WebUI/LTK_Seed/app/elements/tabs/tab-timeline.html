@@ -1,0 +1,33 @@
+<dom-module id="tab-timeline">
+    <template>
+        <tab-default label='Timeline' id='Timeline' icon='px-icons:timeline'>
+            <action-export label='Export' id='Export'>
+            </action-export>
+            <action-import label='Import' id='Import'>
+            </action-import>
+            <section-collapse label='Last 24 Hours' id='Last_24_Hours'>
+                <group-cells-row icon='px-icons:alarm'>
+                    <param-input param='10014'>
+                    </param-input>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+                <group-cells-row icon='px-icons:alarm'>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-collapse>
+        </tab-default>
+    </template>
+    <script>
+        Polymer({
+            is: 'tab-timeline'
+        });
+    </script>
+</dom-module>

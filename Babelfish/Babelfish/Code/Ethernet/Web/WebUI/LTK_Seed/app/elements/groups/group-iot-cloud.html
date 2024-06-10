@@ -1,0 +1,95 @@
+<dom-module id="group-iot-cloud">
+    <template>
+        <template is="dom-repeat" items="{{myParams}}" as="currentParam">
+            <template is="dom-if" if="[[checkUserReadAccess(currentParam)]]">
+                <px-row>
+                    <px-column label>
+                        <div>{{currentParam.name}}</div>
+                    </px-column>
+                    <px-column action>
+                        <template is="dom-if" if="{{disableEdit}}">
+                            <param-read-only param="{{currentParam}}"></param-read-only>
+                        </template>
+                        <template is="dom-if" if="{{!disableEdit}}">
+                            <template is="dom-if" if="{{isCheckbox(currentParam.input_type)}}">
+                                <param-input param="[[currentParam]]" disabled$="[[disableEdit]]">
+                                </param-input>
+                            </template>
+                            <template is="dom-if" if="{{!isCheckbox(currentParam.input_type)}}">
+                                <param-input param="[[currentParam]]" disabled$="[[ctrlDisabled]]">
+                                </param-input>
+                            </template>
+                        </template>
+                    </px-column>
+                    <px-column helper>{{currentParam.desc}}</px-column>
+                </px-row>
+            </template>
+        </template>
+    </template>
+    <script>
+        Polymer({
+            is: 'group-iot-cloud',
+            behaviors: [
+                PB.behaviors.navElem,
+                PB.behaviors.disabled,
+                PB.behaviors.updateParam,
+                PB.behaviors.editSave,
+            ],
+            properties: {
+                iotEnabled: {
+                    type: Boolean,
+                    value: false
+                },
+                ctrlDisabled: {
+                    type: Boolean,
+                    value: true,
+                    computed: 'computeCtrlDisabled(iotEnabled, disableEdit)'
+                }
+            },
+            checkUserReadAccess: function(item) {
+                if (PB.currentUserRoleLevel >= item.r) {
+                    return true;
+                }
+                return false;
+            },
+            computeCtrlDisabled: function(enabled, disableEdit) {
+                return this.disableEdit || !this.iotEnabled;
+            },
+            isCheckbox: function(type) {
+                return (type === 'checkbox' ? true : false);
+            },
+            attached: function() {
+                var self = this;
+                setTimeout(function() {
+                    self.myParams = self.getParams();
+                    if (self.myParams.length > 0) {
+                        for (var i = 0; i < self.myParams.length; i++) {
+                            var p = self.myParams[i];
+                            if(p.define) {
+                                if(p.define === "DCI_IOT_CONNECT") {
+                                    if(p.value) {
+                                        self.iotEnabled = true;
+                                    }
+                                    else {
+                                        self.iotEnabled = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, 1000);
+            },
+            childrenAttached: function() {
+                this.addEventListener(ENUM.EVENT.PARAM.CHANGE, this["_onChange"].bind(this));
+            },
+            _onChange: function(type, e) {
+                if (type == 'CHANGE' && e) {
+                    if (e.param.debug == "DCI_IOT_CONNECT") {
+                        var checked = e.newValue;
+                        this.iotEnabled = checked;
+                    }
+                }
+            }
+        });
+    </script>
+</dom-module>

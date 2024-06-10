@@ -1,0 +1,37 @@
+# Compiled source #
+###################
+# *.com
+# *.class
+# *.dll
+# *.exe
+*.o
+*.so
+*.b
+*.d
+*.a
+*.pyc
+
+# backups for vim
+*~
+*.bak
+
+# gcov/lcov generated files
+*.gcno
+*.gcda
+*.info
+*.sublime-workspace
+*.sublime-project
+
+# Directories #
+###############
+docs/html
+
+# Specific Files #
+##################
+
+# Exceptions #
+##############
+# If something is covered an an earlier rule, negate it to include it now
+#!bin/scripts/
+!.gitignore
+!Makefile

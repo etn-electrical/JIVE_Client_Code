@@ -1,0 +1,13 @@
+application/json
+application/octet-stream
+application/xml
+application/zip
+image/bmp
+image/gif
+image/jpeg
+image/png
+image/svg+xml
+text/css
+text/html
+text/javascript
+text/plain

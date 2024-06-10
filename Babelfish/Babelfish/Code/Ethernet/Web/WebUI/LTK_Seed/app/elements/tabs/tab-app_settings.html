@@ -1,0 +1,63 @@
+<dom-module id="tab-app_settings">
+    <template>
+        <tab-default label='General' id='General' icon='px-icons:general'>
+            <section-collapse label='Date and Time' id='Date_and_Time' icon='px-icons:time'>
+                <group-sntp-manual>
+                    <param-input param='10038'>
+                    </param-input>
+                    <param-read-only param='10044'>
+                    </param-read-only>
+                    <param-input param='10039'>
+                    </param-input>
+                    <param-input param='10040'>
+                    </param-input>
+                    <param-input param='10041'>
+                    </param-input>
+                    <param-input param='10032'>
+                    </param-input>
+                </group-sntp-manual>
+            </section-collapse>
+            <section-collapse label='Locale' id='Locale' icon='px-icons:globe'>
+                <group-settings-row>
+                    <param-input param='10034'>
+                    </param-input>
+                    <param-input param='10035'>
+                    </param-input>
+                    <param-input param='10033'>
+                    </param-input>
+                </group-settings-row>
+            </section-collapse>
+            <section-collapse label='Manual Date and Time' id='Manual_Date_and_Time' icon='px-icons:time'>
+                <group-time label='Realtime Clock' id='Realtime_Clock' icon='px-icons:time'>
+                    <param-input param='10032'>
+                    </param-input>
+                </group-time>
+            </section-collapse>
+            <section-collapse label='Device Actions' id='Device_Actions' icon='px-icons:reset'>
+                <group-settings-row>
+                    <param-input-action param='10036'>
+                    </param-input-action>
+                </group-settings-row>
+            </section-collapse>
+            <section-collapse label='Web Session Settings' id='Web_Session_Settings' icon='px-icons:settings'>
+                <group-settings-row>
+                    <param-input param='10027'>
+                    </param-input>
+                    <param-input param='10079'>
+                    </param-input>
+                    <param-input param='10080'>
+                    </param-input>
+                    <param-input param='10081'>
+                    </param-input>
+                    <param-input param='10082'>
+                    </param-input>
+                </group-settings-row>
+            </section-collapse>
+        </tab-default>
+    </template>
+    <script>
+        Polymer({
+            is: 'tab-app_settings'
+        });
+    </script>
+</dom-module>

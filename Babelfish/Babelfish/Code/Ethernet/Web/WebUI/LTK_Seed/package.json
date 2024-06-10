@@ -1,0 +1,63 @@
+{
+  "name": "ltk-seed",
+  "description": "Low Toolkit Web UI Seed",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "clean-css": "^4.2.1",
+    "google-cdn": "~1.1.0",
+    "grunt": "~1.0.1",
+    "grunt-autoprefixer": "~3.0.4",
+    "grunt-cli": "~0.1.13",
+    "grunt-concurrent": "~2.3.1",
+    "grunt-contrib-clean": "~1.0.0",
+    "grunt-contrib-compass": "~1.1.1",
+    "grunt-contrib-compress": "~1.4.1",
+    "grunt-contrib-concat": "~1.0.1",
+    "grunt-contrib-connect": "~1.0.2",
+    "grunt-contrib-copy": "~1.0.0",
+    "grunt-contrib-cssmin": "~2.0.0",
+    "grunt-contrib-htmlmin": "~2.2.0",
+    "grunt-contrib-imagemin": "~1.0.1",
+    "grunt-contrib-jshint": "~1.1.0",
+    "grunt-sass": "~2.0.0",
+    "grunt-contrib-uglify": "~2.1.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-filerev": "~2.3.1",
+    "grunt-google-cdn": "~0.4.3",
+    "grunt-karma": "~2.0.0",
+    "grunt-line-remover": "~0.0.2",
+    "grunt-newer": "~1.2.0",
+    "grunt-svgmin": "~4.0.0",
+    "grunt-usemin": "~3.1.1",
+    "grunt-vulcanize": "~1.0.0",
+    "grunt-wiredep": "~3.0.1",
+    "jshint-stylish": "~2.2.1",
+    "load-grunt-tasks": "~3.5.2",
+    "minimize": "~2.0.0",
+    "pretty-bytes": "~1.0.4",
+    "px-blue-resolver": "git+ssh://git@bitbucket-prod.tcc.etn.com:7999/pxblue/px-blue-resolver.git",
+    "serve-static": "^1.14.1",
+    "time-grunt": "~1.4.0",
+    "uglify-js": "~2.7.5",
+    "vulcanize": "~1.15.3",
+    "bower": "~1.8.0"
+  },
+  "engines": {
+    "node": ">=0.10.0",
+    "npm": "^2.5.1"
+  },
+  "scripts": {
+    "add": "bower install",
+    "install": "bower update && bower install",
+    "serve": "grunt serve",
+    "serve:dist": "grunt serve:dist",
+    "serve:debug": "grunt serve:debug",
+    "build": "grunt build",
+    "build:debug": "grunt build:debug",
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "karma": "~1.4.1"
+  }
+}

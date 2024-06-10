@@ -1,0 +1,44 @@
+start_url
+https://artifactory-prod.tcc.etn.com/artifactory/PX-Embedded-External/vendor_source/azure/azure-iot-sdk-c-2020.07.19.7z
+end_url
+
+# Name the Azure version that will be extracted, which becomes its starting folder
+start_unzip
+azure-iot-sdk-c-2020-07-19
+end_unzip
+
+# Name the folders that are to be copied from the distro, and the folder path that they are to be copied to
+start_copy
+c-utility\inc c_utility\inc\
+c-utility\src c_utility\src\
+c-utility\pal\generic c_utility\pal\generic\
+c-utility\deps\azure-macro-utils-c\inc c_utility\inc
+c-utility\deps\umock-c\inc umock_c\inc\
+c-utility\deps\umock-c\src umock_c\src\
+iothub_client\inc iothub_client\inc\
+iothub_client\src iothub_client\src\
+umqtt\inc umqtt\inc\
+umqtt\src umqtt\src\
+end_copy
+
+
+# Name the individual files that must be renamed to avoid filename conflicts in Babelfish
+start_rename
+..\c_utility\src\base64.c ..\c_utility\src\azure_base64.c
+..\c_utility\src\buffer.c ..\c_utility\src\azure_buffer.c
+..\c_utility\src\hmac.c ..\c_utility\src\azure_hmac.c
+..\c_utility\src\hmacsha256.c ..\c_utility\src\azure_hmacsha256.c
+..\c_utility\src\sha1.c ..\c_utility\src\azure_sha1.c
+..\c_utility\src\sha224.c ..\c_utility\src\azure_sha224.c
+..\c_utility\src\sha384-512.c ..\c_utility\src\azure_sha384-512.c
+end_rename
+
+
+# Name the individual or wildcarded files that must be removed (not needed or wanted for the build)
+start_deleteme
+..\iothub_client\src\*.def
+..\iothub_client\src\iothubtransport_amqp*
+..\iothub_client\src\iothubtransportamqp*
+..\iothub_client\src\uamqp*
+..\iothub_client\src\iothub_client_ll_uploadtoblob.c
+end_deleteme

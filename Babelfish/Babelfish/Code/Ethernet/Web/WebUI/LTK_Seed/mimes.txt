@@ -1,0 +1,16 @@
+application/json
+application/octet-stream
+application/xml
+application/zip
+application/font-woff
+application/font-sfnt
+application/vnd.ms-fontobject
+image/bmp
+image/gif
+image/jpeg
+image/png
+image/svg+xml
+text/css
+text/html
+text/javascript
+text/plain

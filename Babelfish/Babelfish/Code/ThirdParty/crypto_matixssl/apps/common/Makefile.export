@@ -1,0 +1,50 @@
+#
+#   Makefile for MatrixSSL example app library "common"
+#
+#   Copyright (c) 2017 INSIDE Secure Oy. All Rights Reserved.
+#
+
+-include Makefile.config
+
+DIR_PREFIX=../../
+LIB_DIR=$(DIR_PREFIX)lib
+INCLUDE_DIR=$(DIR_PREFIX)include
+
+CPPFLAGS+=-I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/osdep/include \
+-I$(INCLUDE_DIR)/internal -I$(INCLUDE_DIR)/internal/sfzcl \
+-I$(INCLUDE_DIR)/internal/crypto -I$(INCLUDE_DIR)/CL
+
+# Add test keys directory
+CPPFLAGS+=-I$(INCLUDE_DIR)/../testkeys/..
+
+# Extensions to C(XX)FLAGS/LDFLAGS
+CFLAGS_WARNINGS_EXTRA=-Wextra
+CFLAGS_WARNINGS_NO_OLD_STYLE_DECLARATION=-Wno-old-style-declaration
+CFLAGS+=$(CFLAGS_INTERNAL) $(CFLAGS_WARNINGS_EXTRA) $(CFLAGS_WARNINGS_NO_OLD_STYLE_DECLARATION)
+CXXFLAGS+=$(CFLAGS_INTERNAL) $(CFLAGS_WARNINGS_EXTRA)
+LDFLAGS+=$(LDFLAGS_INTERNAL) $(CFLAGS_WARNINGS_EXTRA)
+
+# Allow selecting the client auth identity (ID_RSA, ID_ECDH_ECDSA,
+# etc.) via an environment variable.
+ifneq '$(CIPHER_OPTION)' ''
+  FLAGS+=-D$(CIPHER_OPTION)
+endif
+
+CFLAGS+=$(FLAGS)
+CXXFLAGS+=$(FLAGS)
+
+.PHONY: all compile clean
+
+all: compile
+
+# Only compile client_common_s.a if MatrixSSL configuration allows
+ifeq '$(USE_CLIENT_SIDE_SSL)' '1'
+OPTIONAL_CLIENT=client_common_s.a
+client_common_s.a: client_common_s.a(client_common.o clientconfig.o load_keys.o)
+
+endif
+
+compile: $(OPTIONAL_CLIENT)
+
+clean:
+	rm -f client_common_s.a client_common.o clientconfig.o load_keys.o

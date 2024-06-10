@@ -1,0 +1,166 @@
+<dom-module id="param-bitfield-input">
+	<style>
+		:host /deep/ px-collapse-header #header-wrapper {
+			padding: 0 !important;
+			height: 42px;
+		}
+		:host /deep/ px-collapse {
+			margin: 0 !important;
+		}
+		.collapse-header-style {
+			border-bottom: none;
+		}
+		.checbox-spacing {
+			padding-top: 10px;
+		}
+		:host /deep/ px-collapse-header px-input {
+			width: 50% !important;
+		}
+	</style>
+	<template>
+		<template is="dom-if" if="[[displayFields(param.value)]]">
+			<px-collapse-header class="collapse-header-style" controls="[[getId(collapseId)]]">
+				<px-input id='input' type='text' value='{{computedHexVal::input}}' readonly="{{checkUserWriteAccess(param, disableEdit)}}" on-input='_inputChange'
+				 invalid='[[!param.isValid]]' />
+				</px-input>
+			</px-collapse-header>
+
+			<px-collapse settings id="[[collapseId]]">
+				<template is="dom-if" if="[[param.bitfield]]">
+					<template is="dom-repeat" items="[[createArrayBits(param.value)]]">
+						<template is="dom-if" if="{{item.desc}}">
+							<div class="checbox-spacing">
+								<px-checkbox id="{{item.name}}" title="{{item.desc}}" label="{{item.desc}}" checked='{{item.check}}' on-change='_onChange'
+								 disabled$="{{checkUserWriteAccess(param, disableEdit)}}"></px-checkbox>
+							</div>
+						</template>
+					</template>
+				</template>
+			</px-collapse>
+		</template>
+	</template>
+	<script>
+		Polymer({
+			is: 'param-bitfield-input',
+			behaviors: [
+				PB.behaviors.navElem,
+				PB.behaviors.param,
+				PB.behaviors.disabled
+			],
+			properties: {
+				onchange: {
+					type: Function
+				},
+				collapseId: {
+					type: String,
+					computed: 'computeId(param)'
+				},
+				computedHexVal: {
+					type: String
+				}
+			},
+			checkUserWriteAccess: function (param, disableEdit) {
+				if (!disableEdit) {
+					if (PB.currentUserRoleLevel >= param.w) {
+						return false;
+					} else {
+						return true;
+					}
+				}
+				return disableEdit;
+			},
+			computeId: function (param) {
+				if (param && param.define != undefined) {
+					return param.define
+				}
+				return;
+			},
+			getId: function (id) {
+				return '#' + id;
+			},
+			displayFields: function (value) {
+				if (value || value == 0) {
+					return true;
+				}
+				return false;
+			},
+			_inputChange: function (e) {
+				var hex = e.target.value;
+				this.param.value = hex;
+			},
+			_onChange: function (e) {
+				if (e.target.value) {
+					e.target.value = 1;
+				} else {
+					e.target.value = 0;
+				}
+				for (var x = 0; x < this.arrayBits.length; x++) {
+					if (this.arrayBits[x].name == e.target.id) {
+						this.arrayBits[x].val = e.target.value;
+						break;
+					}
+				}
+				var decimalVal = parseInt(this.concatBits(this.arrayBits), 2);
+				var hex = decimalVal.toString(16).toUpperCase();
+				if (hex.length % 2) {
+					hex = '0' + hex;
+				}
+				this.computedHexVal = "0x" + hex;
+				this.param.value = this.computedHexVal; //Set hex value to dci param
+			},
+			pad: function (n, width, z) {
+				z = z || '0';
+				n = n + '';
+				return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+			},
+			concatBits: function (arrayBitsList) {
+				var binValue = '';
+				if (this.arrayBits) {
+					for (var i = 0; i < arrayBitsList.length; i++) {
+						binValue += arrayBitsList[i].val;
+					}
+				}
+				return binValue;
+			},
+			createArrayBits: function (paramVal) {
+				var bits = [];
+				var checkVal;
+				var desc;
+
+				if ((paramVal || paramVal == 0) && this.param.bitfield) {
+					if (paramVal.indexOf("0x") != -1) {
+						this.computedHexVal = paramVal;
+					} else {
+						this.computedHexVal = "0x" + paramVal;
+					}
+
+					if (this.param.datatype == "byte") {
+						binList = this.pad(parseInt(paramVal).toString(2), 8);
+					} else if (this.param.datatype == "word") {
+						binList = this.pad(parseInt(paramVal).toString(2), 16);
+					} else if (this.param.datatype == "dword") {
+						binList = this.pad(paramVal.toString(2), 32);
+					}
+
+					for (var x = 0; x < binList.length; x++) {
+						if ((parseInt(binList[x]) == 1)) {
+							checkVal = true;
+						} else {
+							checkVal = false;
+						}
+						
+						if (this.param.bitfield[(binList.length - 1) - x] != undefined) {
+							desc = this.param.bitfield[(binList.length - 1) - x].desc;
+						} else {
+							desc = undefined;
+						}
+
+						bits.push({ name: "B" + ((binList.length - 1) - x), val: parseInt(binList[x]), check: checkVal, desc: desc });
+					}
+					this.arrayBits = bits;
+				}
+				return bits;
+			}
+		});
+	</script>
+</dom-module>

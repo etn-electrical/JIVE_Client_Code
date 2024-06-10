@@ -1,0 +1,12 @@
+# Name,   Type, SubType, Offset,  Size, Flags
+# Note: if you have increased the bootloader size, make sure to update the offsets to avoid overlap,,,,
+#Note: Always erase entire flash after updating the partition table,,,,,
+#Steps to erase flash,,"1. Open ESP-IDF terminal, 2. go the project cmake directory, 3. use ""idf.py erase_flash"" commond in ESP-IDF to erase flash",,,
+nvs,      data, nvs,0x9000,        0x4000,
+otadata,      data, ota,0xd000,        0x2000,
+phy_init,      data, phy,0xf000,        0x1000,
+ota_0,  app,  ota_0,0x10000,        0x180000,
+ota_1,  app,  ota_1,0x190000,        0x180000,
+cert_store,      data, 0xFD,0x310000,        0x2000,
+nv_config,0x40,0xFC,0x312000,8K,
+coredump, data, coredump,0x314000,20K,

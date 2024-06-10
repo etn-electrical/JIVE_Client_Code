@@ -1,0 +1,19 @@
+--- esp32_common/esp-idf/install_old.ps1	2022-03-15 16:09:30.380429600 +0530
++++ esp32_common/esp-idf/install.ps1	2022-03-15 16:08:26.764968000 +0530
+@@ -3,12 +3,12 @@ $IDF_PATH = $PSScriptRoot
+ 
+ 
+ Write-Output "Installing ESP-IDF tools"
+-Start-Process -PassThru -Wait -NoNewWindow -FilePath "python" -Args "$IDF_PATH/tools/idf_tools.py install"
+-if ($LASTEXITCODE -ne 0)  { exit $LASTEXITCODE } # if error
++$process = Start-Process -PassThru -Wait -NoNewWindow -FilePath "python" -Args "$IDF_PATH/tools/idf_tools.py install"
++if ($process.ExitCode -ne 0)  { exit $process.ExitCode } # if error
+ 
+ Write-Output "Setting up Python environment"
+-Start-Process -PassThru -Wait  -NoNewWindow -FilePath "python" -Args "$IDF_PATH/tools/idf_tools.py install-python-env"
+-if ($LASTEXITCODE -ne 0)  { exit $LASTEXITCODE} # if error
++$process = Start-Process -PassThru -Wait  -NoNewWindow -FilePath "python" -Args "$IDF_PATH/tools/idf_tools.py install-python-env"
++if ($process.ExitCode -ne 0)  { exit $process.ExitCode } # if error
+ 
+ 
+ Write-Output "

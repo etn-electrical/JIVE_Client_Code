@@ -1,0 +1,64 @@
+<dom-module id="section-card">
+	<template>
+		<style>
+		:host {
+			-webkit-flex: inherit;
+			-ms-flex: inherit;
+			flex: inherit;
+			-webkit-flex-basis: inherit;
+			-ms-flex-preferred-size: inherit;
+			flex-basis: 30%;
+		}
+		</style>
+		<px-card>
+			<!-- Display the section name and icon-->
+			<px-actionbar>
+				<template is="dom-if" if="{{icon}}">
+					<iron-icon icon="[[icon]]"></iron-icon>
+				</template>
+				<px-title maintitle="[[label]]"></px-title>
+				<span class="flex"></span>
+				<content select=".action"></content>
+			</px-actionbar>
+			<content></content>
+		</px-card>
+	</template>
+	<script>
+	Polymer({
+		is: "section-card",
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.disabled
+		],
+		properties: {
+			icon: String,
+			label: String,
+			isCard: {
+				type: Boolean,
+				value: true
+			},
+			count: {
+				type: Number,
+				value: 0
+			}
+		},
+		childrenAttached: function() {
+			var params = this.getParams();
+			for (i = 0; i < params.length; i++) {
+				if (PB.currentUserRoleLevel >= params[i].r) {
+					break;
+				} else {
+					this.count += 1;
+						if (this.count == params.length) {
+							var x = document.getElementById(this.id);
+							if (x) {
+								x.style.display = "none";
+							}
+						}
+				}
+				
+			}
+		}
+	});
+	</script>
+</dom-module>

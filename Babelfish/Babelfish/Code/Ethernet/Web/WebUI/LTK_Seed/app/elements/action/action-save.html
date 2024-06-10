@@ -1,0 +1,33 @@
+<dom-module id="action-save">
+	<template>
+		<px-button icon="{{icon}}" disabled$='[[disableEdit]]' positive$='{{positive}}' on-click='save'>[[label]]</px-button>
+	</template>
+	<script>
+	Polymer({
+		is: 'action-save',
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.disabled,
+			PB.behaviors.action
+		],
+		properties: {
+			icon: {
+				type: String,
+				value: "px-icons:save"
+			},
+			label: {
+				type: String,
+				value: "Save"
+			},
+			positive: {
+				type: Boolean,
+				value: true
+			}
+		},
+
+		save: function() {
+			return this.getTab().save();
+		}
+	});
+	</script>
+</dom-module>

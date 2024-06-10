@@ -1,0 +1,539 @@
+<dom-module id="group-log-row">
+	<template>
+		<style>
+			.loader {
+				position: fixed;
+				left: 0px;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+				z-index: 9999;
+				background: rgb(249, 249, 249);
+				opacity: .8;
+			}
+
+			.progressBar {
+				position: fixed;
+				text-align: center;
+				top: 50%;
+				left: 50%;
+				width: 300px;
+				transform: translate(-50%, -50%);
+				z-index: 9999;
+			}
+
+			.flex-container {
+				list-style: none;
+				display: inline-flex;
+				width: 94%;
+				height: auto;
+				max-height: 55%;
+				position: fixed;
+				overflow-x: auto;
+				overflow-y: auto;
+			}
+
+			tr:nth-child(odd){
+				background-color:#e5e5e5;
+			}
+
+			.flex-container table {
+				width: 100%;
+				border-spacing: 1px;
+				white-space: nowrap;
+				border-collapse: collapse;
+				border-style: hidden;
+			}
+
+			.table-header {
+				text-align: left;
+				padding: 8px;
+				top: 0;
+				position: sticky;
+			}
+
+			td {
+				text-align: left;
+				padding: 8px;
+				height: 40px;
+				border: 2px solid #f3f3f3;
+			}
+
+			th {
+				border: 2px solid #f3f3f3;
+			}
+
+			.common-header {
+				background: #2f2f2f; /* Old browsers */
+                background: -moz-linear-gradient(top, #2f2f2f 0%, #171717 100%); /* FF3.6+ */
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#2f2f2f), color-stop(100%,#171717)); /* Chrome,Safari4+ */
+                background: -webkit-linear-gradient(top, #2f2f2f 0%,#171717 100%); /* Chrome10+,Safari5.1+ */
+                background: -o-linear-gradient(top, #2f2f2f 0%,#171717 100%); /* Opera 11.10+ */
+                background: -ms-linear-gradient(top, #2f2f2f 0%,#171717 100%); /* IE10+ */
+                background: linear-gradient(to bottom, #2f2f2f 0%,#171717 100%); /* W3C */
+                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2f2f2f', endColorstr='#171717',GradientType=0 ); /* IE6-9 */
+
+				color: #f3f3f3;
+				min-height: 35px;
+				height: 24px;
+				font-weight: 500;
+			}
+		</style>
+		<div class="loader">
+			<div class="progressBar">
+				<span>
+					Loading...
+				</span>
+				<px-progress percent="{{loadingPercentage}}" color="#88CD6B" animate></px-progress>
+			</div>
+		</div>
+
+		<template is="dom-if" if="[[logDropdownList]]">
+			<px-actionbar style="background-color: #F8F8F8; box-shadow: none; padding-left: 0; padding-right: 0">
+				<px-dropdown id="selectLogs" items="[[logDropdownList]]" label-key="name" value={{selectedLog}} style="width: 30%"></px-dropdown>
+				<px-button on-click='display' disabled$=[[displayingStatus]]>Display Log</px-button>
+				<span class="flex"></span>
+				<px-button-group>
+					<px-button positive on-click='download' disabled$="[[downloadingStatus]]">Export Log</px-button>
+					<px-button negative on-click='delete'>Clear Log</px-button>
+				</px-button-group>
+			</px-actionbar>
+
+			<template is='dom-if' if="[[displayLogTable(logTableDataList)]]">
+				<px-row class="common-header">
+					<px-column center>{{fileName}}</px-column>
+				</px-row>
+				<div class="flex-container">
+					<table>
+						<tr>
+							<template is='dom-repeat' items="[[logHeaderList]]">
+								<th class="table-header common-header">{{item.name}}</th>
+							</template>
+						</tr>
+
+						<template is='dom-repeat' items="{{logTableDataList}}" as="log">
+							<tr class="border">
+								<template is='dom-repeat' items="{{toArray(log)}}">
+									<td>{{item}}</td>
+								</template>
+							</tr>
+						</template>
+					</table>
+				</div>
+			</template>
+
+		</template>
+
+		<template is="dom-if" if="[[displayNoEntry]]">
+			<px-row>
+				<px-column>
+					<span style="color:red;">{{displayNoEntry}}</span>
+				</px-column>
+			</px-row>
+		</template>
+
+		<template is="dom-if" if="[[loggingDisabled]]">
+			<px-row>
+				<px-column>
+					<span style="color:red;">Logging is not supported</span>
+				</px-column>
+			</px-row>
+		</template>
+
+		<template is="dom-if" if="[[loggingRestricted]]">
+			<px-row>
+				<px-column>
+					<span style="color:red;">Access Restricted</span>
+				</px-column>
+			</px-row>
+		</template>
+
+	</template>
+	<script>
+		Polymer({
+			is: 'group-log-row',
+			behaviors: [
+				PB.behaviors.navElem
+			],
+			properties: {
+				icon: String,
+				label: String,
+				logDropdownList: {
+					type: Array,
+					notify: true
+				},
+				csvData: Array,
+				isAdminRole: {
+					type: Boolean,
+					value: true
+				},
+				logHeaderList: {
+					type: Array,
+					notify: true
+				},
+				logTableDataList: {
+					type: Array,
+					notify: true,
+					value: []
+				},
+				displayingStatus: {
+					type: Boolean,
+					value: false
+				},
+				downloadingStatus: {
+					type: Boolean,
+					value: false
+				},
+				deletingStatus: {
+					type: Boolean,
+					value: false
+				},
+				displayNoEntry: {
+					type: String,
+					value: null
+				},
+				loggingDisabled: {
+					type: Boolean,
+					value: false
+				},
+				loggingRestricted: {
+					type: Boolean,
+					value: false
+				}
+			},
+			displayLogTable: function (logList) {
+				if (logList.length > 0) {
+					return true;
+				}
+				return false;
+			},
+			ready: function () {
+				var self = this;
+				this.isAdminRole = PB.currentUser.role.toLowerCase() == "admin";
+				$(".loader").fadeIn("slow");
+				PB.JQhttp('GET', '/rs/log').then(function (data) {
+					var jsonData = PB.parseXML(data);
+					var list = [];
+					var tempLogList = PB.asArray(jsonData.LogList.Log);
+					var logCounter = 0;
+					var repeat_log_loop = function () {
+						if (logCounter == tempLogList.length) {
+							self.set("logDropdownList", list);
+							self.selectedLog = list[0];
+							$(".loader").fadeOut("slow");
+						} else {
+								var obj = {
+									name: tempLogList[logCounter]["name"],
+									url: tempLogList[logCounter]["xlink:href"]
+								}
+								list.push(obj);
+								logCounter += 1;
+								self.loadingPercentage = Math.round((logCounter / tempLogList.length) * 100);
+								repeat_log_loop();
+						}
+					}
+					repeat_log_loop();
+				}, function (errorResponse) {
+					if (errorResponse.status == 403) {
+						self.loggingRestricted = true;
+					} else {
+						self.loggingDisabled = true;
+					}
+					$(".loader").fadeOut("slow");
+				});
+			},
+			display: function (e) {
+				var self = this;
+				self.logUrl = this.selectedLog.url;
+				self.csvData = [];
+				self.logTableDataList = [];
+				self.displayingStatus = true;
+				self.downloadingStatus = true;
+				self.displayNoEntry = null;
+				PB.JQhttp('GET', self.logUrl).then(function (data) {
+					var jsonData = PB.parseXML(data);
+					var headerList = jsonData.LogId.Param;
+					self.logHeaderList = headerList;
+					self.fileName = self.selectedLog.name;
+					var logUrlTail = self.logUrl + '/tail';
+					if (jsonData.LogId.CurrentEntries == 0) {
+						self.displayingStatus = false;
+						self.downloadingStatus = false;
+						self.displayNoEntry = self.selectedLog.name + " has no entries";
+					} else {
+						var paramEnumDataList = self.getEnumDetails(headerList);
+						self.createCsvData(logUrlTail, headerList, paramEnumDataList);
+					}
+				}, function (errorResponse) {
+					self.displayingStatus = false;
+					self.downloadingStatus = false;
+                if (errorResponse.status === 422 && errorResponse.statusText == "SFU Session in Progress") {
+						navbar.modals.confirm.go({
+							message: errorResponse.statusText,
+							title: 'Alert',
+							options: ["Ok"]
+						});
+					} else {
+						navbar.modals.confirm.go({
+							message: errorResponse.statusText,
+							title: 'Alert',
+							options: ["Ok"]
+						}, function (error) {
+							navbar.modals.confirm.go({
+								message: errorResponse.statusText,
+								title: 'Alert',
+								options: ["Ok"]
+							}, function (error) {
+								navbar.modals.confirm.go({
+									message: error.statusText,
+									title: 'Alert',
+									options: ["Ok"]
+								});
+							});
+						})
+					}
+				});
+			},
+			createCsvData: function (logUrlEid, headerList, paramEnumDataList) {
+				var self = this;
+
+				PB.JQhttp('GET', logUrlEid).then(function (data) {
+					var jsonData = PB.parseXML(data);
+					var entryList = [];
+					var obj = {};
+					if (jsonData.LogTail.Entry) {
+						if (Array.isArray(jsonData.LogTail.Entry)) {
+							entryList = jsonData.LogTail.Entry;
+						} else {
+							entryList.push(jsonData.LogTail.Entry);
+						}
+					}
+					if (entryList.length > 0) {
+						for (var x = 0; x < entryList.length; x++) {
+							var paramValueList = entryList[x].e;
+							for (var y = 0; y < paramValueList.length; y++) {
+								if (y == 0) {
+									var epochTime = parseInt(paramValueList[y]); //As it is string data parse to integer. 
+									var epochDate = new Date(epochTime * 1000);
+									var timestamp = epochDate.toISOString().replace(/T/g, " ").replace(/\..+/, 'Z');
+									obj[headerList[y].name] = timestamp;
+								} else if (paramEnumDataList[y].pid == headerList[y].pid && paramEnumDataList[y].desc != null) {
+									obj[headerList[y].name] = paramEnumDataList[y].desc[paramValueList[y]];
+								} else {
+									obj[headerList[y].name] = paramValueList[y];
+								}
+							}
+							self.csvData.push(obj)
+							obj = {};
+						}
+						if (jsonData.LogTail.RemEntries == 0) {
+							self.logTableDataList = self.csvData;
+							self.displayingStatus = false;
+							self.downloadingStatus = false;
+						} else {
+							var logUrlEid = self.logUrl + '/' + jsonData.LogTail.NextEID;
+							self.createCsvData(logUrlEid, headerList, paramEnumDataList);
+						}
+					} else {
+						self.displayingStatus = false;
+						self.downloadingStatus = false;
+						self.displayNoEntry = self.selectedLog.name + " has no entries";
+					}
+				}, function (xhr) {
+					self.displayingStatus = false;
+					self.downloadingStatus = false;
+					if (xhr.status && xhr.status > 0) {
+						if (xhr.status == 503) {
+							navbar.modals.confirm.go({
+								message: 'Server busy, please try again after sometime.',
+								title: 'Alert',
+								options: ["Ok"]
+							}, function (error) {
+								navbar.modals.confirm.go({
+									message: 'Server busy, please try again after sometime.',
+									title: 'Alert',
+									options: ["Ok"]
+								}, function (error) {
+									navbar.modals.confirm.go({
+										message: error.statusText,
+										title: 'Alert',
+										options: ["Ok"]
+									});
+								});
+							})
+						} else if (xhr.status === 422 && xhr.statusText == "SFU Session in Progress") {
+							navbar.modals.confirm.go({
+								message: "Firmware update session in progress, please retry after sometime.",
+								title: 'Alert',
+								options: ["Ok"]
+							})
+						}else {
+							navbar.modals.confirm.go({
+								message: xhr.statusText,
+								title: 'Alert',
+								options: ["Ok"]
+							}, function (error) {
+								navbar.modals.confirm.go({
+									message: error.statusText,
+									title: 'Alert',
+									options: ["Ok"]
+								});
+							});
+						}
+					}
+				});
+			},
+			getEnumDetails: function (listParam) {
+				var dfd = jQuery.Deferred();
+				var paramsListCount = 0;
+				var enumDetailObj = [];
+				var self = this;
+
+				for (var i = 0; i < listParam.length; i++) {
+					var paramObj = PB.DCI[listParam[i].pid];
+					var item = {};
+					if (paramObj.enum) {
+						var enumArry = paramObj.enum;
+						var arry = {};
+						for (var j = 0; j < enumArry.length; j++) {
+							arry[enumArry[j].value] = enumArry[j].desc;
+						}
+						item.pid = listParam[i].pid;
+						item.desc = arry;
+						enumDetailObj.push(item);
+					} else {
+						item.pid = listParam[i].pid;
+						item.desc = null;
+						enumDetailObj.push(item);
+					}
+				}
+				return enumDetailObj;
+			},
+			toArray: function(obj) {
+				return Object.keys(obj).map(function (key) {
+					return obj[key] ? obj[key] : 'Not defined';
+				});
+			},
+			download: function (e) {
+				if (this.logTableDataList.length < 1) {
+					navbar.modals.confirm.go({
+						message: 'No Data Available',
+						title: 'Alert',
+						options: ["Ok"]
+					}, function (error) {
+						navbar.modals.confirm.go({
+							message: error.statusText,
+							title: 'Alert',
+							options: ["Ok"]
+						});
+					});
+					return;
+				}
+				var data, filename, link;
+				this.downloadingStatus = true;
+
+				var csv = this.convertArrayOfObjectsToCSV({
+					data: this.csvData
+				});
+				if (csv == null) return;
+
+				filename = this.fileName.replace(/ /g, "_") + '.csv' || 'export.csv';
+
+				if (!csv.match(/^data:text\/csv/i)) {
+					var csvNoIE = 'data:text/csv;charset=utf-8,' + csv;
+				}
+				data = encodeURI(csvNoIE);
+				var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+				if (PB.isIE()) {
+					this.downloadingStatus = false;
+					navigator.msSaveBlob(blob, filename);
+				} else {
+					link = document.createElement('a');
+					link.setAttribute('href', data);
+					link.setAttribute('download', filename);
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+					this.downloadingStatus = false;
+				}
+			},
+			convertArrayOfObjectsToCSV: function (args) {
+				var result, ctr, keys, columnDelimiter, lineDelimiter, data;
+
+				data = args.data || null;
+				if (data == null || !data.length) {
+					return null;
+				}
+
+				columnDelimiter = args.columnDelimiter || ',';
+				lineDelimiter = args.lineDelimiter || '\n';
+
+				keys = Object.keys(data[0]);
+
+				result = '';
+				result += keys.join(columnDelimiter);
+				result += lineDelimiter;
+
+				data.forEach(function (item) {
+					ctr = 0;
+					keys.forEach(function (key) {
+						if (ctr > 0) result += columnDelimiter;
+
+						if (item[key].indexOf(',') != -1) {
+							var value = item[key].replace(/,/g, " ");
+							result += "[" + value + "]";
+						} else {
+							result += item[key];
+						}
+						ctr++;
+					});
+					result += lineDelimiter;
+				});
+
+				return result;
+			},
+			delete: function (e) {
+				var self = this;
+				var deleteUrl = this.selectedLog.url + '/tail';
+				self.deletingStatus = true;
+				PB.JQhttp('DELETE', deleteUrl).then(function (response) {
+					self.deletingStatus = false;
+					var deleteInfo = PB.parseXML(response);
+					if (deleteInfo.DeleteLog) {
+						navbar.modals.confirm.go({
+							message: 'Log is being deleted, please wait for ' + parseInt(deleteInfo.DeleteLog.OpTime) / 1000 + ' seconds.',
+							title: 'Alert',
+							options: ["Ok"]
+						});
+					} else {
+						self.display();
+					}
+				}, function (error) {
+					self.deletingStatus = false;
+					if (error.status && error.status == 403) {
+						navbar.modals.confirm.go({
+							message: 'Permission denied.',
+							title: 'Alert',
+							options: ["Ok"]
+						});
+					} else if (error.status && error.status > 0) {
+						if (error.status === 422 && error.statusText == "SFU Session in Progress") {
+							navbar.modals.confirm.go({
+								message: 'Firmware update session in progress, please retry after sometime.',
+								title: 'Alert',
+								options: ["Ok"]
+							});
+						} else {
+							navbar.modals.confirm.go({
+								message: error.statusText,
+								title: 'Alert',
+								options: ["Ok"]
+							});
+						}
+					}
+				});
+			}
+		});
+	</script>
+</dom-module>

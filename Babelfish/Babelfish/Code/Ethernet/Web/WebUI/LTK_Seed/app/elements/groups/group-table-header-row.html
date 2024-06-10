@@ -1,0 +1,124 @@
+<dom-module id="group-table-header-row">
+	<template>
+		<px-row header>
+			<!-- Display the section name and icon, if present-->
+			<template is="dom-if" if="[[hasLabel]]">
+				<px-column icon="[[icon]]" width="0">
+					<px-title maintitle="[[label]]"></px-title>
+				</px-column>
+			</template>
+
+			<!-- For each pelem... -->
+			<template is="dom-repeat" items="[[headings]]">
+				<px-column label>
+					<px-title maintitle="[[item]]"></px-title>
+				</px-column>
+			</template>
+		</px-row>
+	</template>
+	<script>
+	(function() {
+		// Takes an array of strings and combines them using the common elements
+		//  For example, given: ["Item 1 Box A", "Item 2 Box B"]
+		//  it will return: "Item Box"
+		var condenseHeaders = function(arr) {
+
+			var result = [];
+			var pieces = [];
+			var i;
+			if (!arr || arr.length === 0) {
+				return "";
+			}
+			for (i = 0; i < arr.length; i++) {
+				pieces[i] = arr[i].split(" ");
+			}
+			for (i = 0; i < pieces[0].length; i++) {
+				var p = pieces[0][i];
+				for (var j = 1; j < pieces.length; j++) {
+					if (p !== pieces[j][i]) {
+						p = undefined;
+						break;
+					}
+				}
+				if (p !== undefined) {
+					result.push(p);
+				}
+			}
+			return result.join(" ");
+		};
+
+		var updateNamesAndHeaders = function(parent, self) {
+			var names = [];
+			var headings = [];
+			var i;
+			// Create arrays of names and headings
+			//  names = [group.name]
+			//  headings = [[group.children.param.name]]
+			var children = parent.getEffectiveChildren();
+			// Find self among children and start collecting headers after it
+			var start = children.indexOf(self) + 1;
+			for (i = start; i < children.length; i++) {
+				var group = children[i];
+				// Stop collecting headers if we hit a label row
+				if (group.is === self.is) {
+					break;
+				}
+				var label = group.getAttribute("label");
+				if (label && label.length) {
+					names.push(label);
+				}
+				var grandChildren = group.getEffectiveChildren();
+				for (var j = 0; j < grandChildren.length; j++) {
+					var param = grandChildren[j].param;
+					if (param) {
+						if (!headings[j]) {
+							headings[j] = [];
+						}
+						label = param.name;
+						if (label && label.length) {
+							headings[j].push(label);
+						}
+					}
+				}
+			}
+			if (names.length || self.label) {
+				self.set("hasLabel", true);
+			}
+			// Condense names and headings
+			//  names = String
+			//  headings = [String]
+			names = condenseHeaders(names);
+			for (i = headings.length - 1; i >= 0; i--) {
+				headings[i] = condenseHeaders(headings[i]);
+			}
+			// Set the names and headings
+			if (names && !self.getAttribute("label")) {
+				// label may have been set by original creator
+				self.set("label", names);
+			}
+			self.set("headings", headings);
+		};
+
+		Polymer({
+			is: "group-table-header-row",
+			behaviors: [
+				PB.behaviors.navElem,
+				PB.behaviors.disabled
+			],
+			properties: {
+				icon: String,
+				label: String,
+				hasLabel: Boolean
+			},
+			attached: function() {
+				var parent = Polymer.dom(this).parentNode;
+				var self = this;
+				parent.addEventListener(ENUM.EVENT.PARAMS_LIST_CHANGED, function() {
+					updateNamesAndHeaders(parent, self);
+				});
+				updateNamesAndHeaders(parent, self);
+			}
+		});
+	}());
+	</script>
+</dom-module>

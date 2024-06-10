@@ -1,0 +1,69 @@
+<!-- generic header input file -->
+<!-- FieldStart tag represents the start of the Xml field   -->
+<!-- HEADERINFO tag represents the information of the Xml field,its Value can contain some specific keywords or the Constant string.The Constant 
+  string is to be placed if the field value is to be calculated by the header utility.In other cases you can specify the keyword which needs to be
+  searched from the file specified within the <HEADERINFO> .. </HEADERINFO> tags -->
+<!-- <Offset> tag represents the actual location in the firmware header where the field value needs to be placed   -->
+<!-- <Length> tag represents the actual size of the field in the header   -->
+<!-- <Format> tag represents the type of format the field value needs to be placed in header.We have NONE,ASCII and dotted format type
+  NONE type means field value can be of hex or decimal value ,
+  ASCII type means field value is to be copied in ASCII format  
+  dotted format type is for representation of firmware version ex (aa.bb.cccc) where aa means 1 byte value, cccc means 2 byte value.Based on the
+  representation it will allocate the size of firmware version in the header.Any number of dotted firmware version can be specified. The max value that 
+  a version can have is of limit 65535(2 bytes) ex 65535.65535.65535 is one firmware version so itd dotted representation will be aaaa.bbbb.cccc  -->
+<InfoStart>
+	<FieldStart>
+		<HEADERINFO Value="MagicEndian">INTERNAL</HEADERINFO>  <!-- adopter don't have to modified this field and its content -->
+		<Offset>0</Offset>                                  <!-- adopter don't have to modified this field and its content -->
+		<Length>4</Length>                                  <!-- adopter don't have to modified this field and its content -->
+		<Format>NONE</Format>                               <!-- adopter don't have to modified this field and its content -->
+	</FieldStart>
+	<FieldStart>
+		<HEADERINFO Value="FileLength">INTERNAL</HEADERINFO>  <!-- adopter don't have to modified this field and its content -->
+		<Offset>4</Offset>                                  <!-- adopter don't have to modified this field and its content -->
+		<Length>4</Length>                                  <!-- adopter don't have to modified this field and its content -->
+		<Format>NONE</Format>                               <!-- adopter don't have to modified this field and its content -->
+	</FieldStart>
+	<FieldStart>
+		<HEADERINFO Value="CRC">INTERNAL</HEADERINFO>  <!-- adopter don't have to modified this field and its content -->
+		<Offset>TOP_FW</Offset>  <!-- adopter can modified the offset value like TOP_FW and BOTTOM_FW to place CRC value -->
+		<Length>2</Length>
+		<Format>NONE</Format>
+	</FieldStart>
+	<FieldStart>
+		<HEADERINFO Value="MessageForBoot">../../../Tools/Language_Pack/Image_Header_INI/Lang_Image_Header.ini</HEADERINFO>
+		<Offset>8</Offset>
+		<Length>4</Length>
+		<Format>NONE</Format>
+	</FieldStart>
+	<FieldStart>
+		<HEADERINFO Value="HeaderFormatVersion">../../../Tools/Language_Pack/Image_Header_INI/Lang_Image_Header.ini</HEADERINFO>
+		<Offset>12</Offset>
+		<Length>2</Length>
+		<Format>NONE</Format>
+	</FieldStart>
+	<FieldStart>
+		<HEADERINFO Value="FwImageId">../../../Tools/Language_Pack/Image_Header_INI/Lang_Image_Header.ini</HEADERINFO>
+		<Offset>14</Offset>
+		<Length>2</Length>
+		<Format>NONE</Format>
+	</FieldStart>
+	<FieldStart>
+		<HEADERINFO Value="ImageVer">../../../Tools/Language_Pack/Image_Header_INI/Lang_Image_Header.ini</HEADERINFO>
+		<Offset>16</Offset>
+		<Length>16</Length>
+		<Format>aa.bb.cccc</Format>
+	</FieldStart>
+	<FieldStart>
+		<HEADERINFO Value="ProductCode">../../../Tools/Language_Pack/Image_Header_INI/Lang_Image_Header.ini</HEADERINFO>
+		<Offset>32</Offset>
+		<Length>32</Length>
+		<Format>NONE</Format>
+	</FieldStart>
+	<FieldStart>
+		<HEADERINFO Value="FwCompatibility">../../../Tools/Language_Pack/Image_Header_INI/Lang_Image_Header.ini</HEADERINFO>
+		<Offset>64</Offset>
+		<Length>2</Length>
+		<Format>NONE</Format>
+	</FieldStart>
+</InfoStart>

@@ -1,0 +1,179 @@
+<dom-module id="group-time">
+	<template>
+		<!-- Display the group name and icon-->
+		<template is="dom-if" if="{{!ntpEnabled.hide}}">
+			<px-row>
+				<px-column action>
+					<px-radio disabled='[[disableEdit]]' label='Use NTP Synchronization' group="timeRadioGroup" checked="{{ntpEnabled.value}}"></px-radio>
+				</px-column>
+			</px-row>
+			<template is="dom-if" if="{{!ntpDHCP.hide}}">
+				<px-row>
+					<px-column>
+						<strong>NTP Server Setup</strong>
+					</px-column>
+					<px-column>
+						<px-button-group>
+							<px-button disabled$='[[ntpDisabled]]' on-click="toggleDHCP" pressed$="[[!ntpDHCP.value]]" value="false">Manual</px-button>
+							<px-button disabled$='[[ntpDisabled]]' on-click="toggleDHCP" pressed$="[[ntpDHCP.value]]" value="true">Automatic</px-button>
+						</px-button-group>
+					</px-column>
+					<px-column helper>
+						Automatic Configuration via DHCP
+					</px-column>
+				</px-row>
+			</template>
+
+			<template is="dom-repeat" items="[[ntpIndexes]]">
+				<px-row>
+					<px-column label>[[getChildProperty(item, 'param', 'name')]]</px-column>
+					<px-column action>
+						<!-- Children Go Here -->
+						<content select=".item[[item]]"></content>
+					</px-column>
+					<px-column helper>[[getChildProperty(item, 'param', 'desc')]]</px-column>
+				</px-row>
+			</template>
+			<px-row>
+				<px-column label>
+					<px-radio disabled='[[disableEdit]]' label='Manually Set Date and Time' group="timeRadioGroup" checked="{{!ntpEnabled.value}}"></px-radio>
+				</px-column>
+			</px-row>
+		</template>
+		<template is="dom-if" if="[[checkUserReadAccess(time)]]">
+			<px-row>
+				<px-column label>[[time.name]]</px-column>
+				<px-column action>
+					<px-button icon="px-icons:time" disabled$='[[manualDisabled]]' on-click='openTimeModal'>Edit Time</px-button>
+				</px-column>
+				<px-column helper>[[time.desc]]</px-column>
+			</px-row>
+		</template>
+		<div style="display: none;">
+			<content></content>
+		</div>
+	</template>
+	<script>
+
+	/**
+	 * group-time expects a number of children param elements to define how it gets used
+	 * - Date / Time (uint16 array)
+	 * - NTP Enabled (bool)
+	 * - NTP use DHCP (bool)
+	 * - NTP Server (String) (repeated)
+	 */
+
+	'use strict';
+	Polymer({
+		is: 'group-time',
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.disabled,
+			PB.behaviors.distribute
+		],
+		properties: {
+			ntpEnabled: Object,
+			ntpDHCP: Object,
+			ntpDisabled: {
+				type: Boolean,
+				computed: 'computeNtpDisabled(ntpEnabled.value, disableEdit)'
+			},
+			manualDisabled: {
+				type: Boolean,
+				computed: 'computeManualDisabled(ntpEnabled.value, disableEdit)'
+			}
+		},
+		checkUserReadAccess: function (item) {
+            if (PB.currentUserRoleLevel >= item.r) {
+                return true;
+            }
+            return false;
+        },
+
+		computeManualDisabled: function(enabled, disableEdit) {
+			if(disableEdit) {
+				return true;
+			} else if(PB.currentUserRoleLevel >= this.time.w) {
+                return false;
+            }
+			return true;		
+		},
+
+		computeNtpDisabled: function(enabled, disableEdit) {
+			return this.disableEdit || !this.ntpEnabled.value;
+		},
+
+		/**
+		 * Opens time modal
+		 */
+		openTimeModal: function() {
+			navbar.modals.time.go();
+		},
+
+		ready: function() {
+			this.time = navbar.timeParam;
+		},
+
+		/**
+		 * Function to run when the time group is attached.
+		 */
+		childrenAttached: function() {
+			// Determine which params are which based on type
+			var params = this.getParams();
+			var ntpIndexes = [];
+			for (var i = 0; i < params.length; i++) {
+				var p = params[i];
+				switch (p.datatype) {
+					case "string8":
+						ntpIndexes.push(i);
+						break;
+					case "bool":
+						if (!this.ntpEnabled) {
+							this.set("ntpEnabled", p);
+							break;
+						} else if (!this.ntpDHCP) {
+							this.set("ntpDHCP", p);
+							break;
+						}
+					default:
+						if (p !== this.time) {
+							console.warn("Unnecessary group-time param: " + p.define, p);
+						}
+				}
+			}
+			if (!this.ntpEnabled) {
+				this.set("ntpEnabled", {value: false, hide: true});
+			}
+			if (!this.ntpDHCP) {
+				this.set("ntpDHCP", {value: false, hide: true});
+			}
+			this.set("ntpIndexes", ntpIndexes);
+			this.addEventListener(ENUM.EVENT.PARAM.CHANGE, this["_disabled-changed"].bind(this));
+		},
+
+		toggleDHCP: function(e) {
+			if (!Polymer.dom(e).localTarget.pressed) {
+				this.set("ntpDHCP.value", !this.ntpDHCP.value);
+			}
+		},
+
+		// override disabled behavior
+		"_disabled-changed": function(newValue, oldValue) {
+			var children = this.getEffectiveChildren();
+			var ntpIndexes = this.ntpIndexes;
+			if (children && ntpIndexes) {
+				if (this.ntpEnabled) {
+					this.notifyPath("ntpEnabled.value", this.ntpEnabled.value);
+				}
+				if (this.ntpDHCP) {
+					for (var i = 0; i < ntpIndexes.length; i++) {
+						children[ntpIndexes[i]].disableEdit = (this.computeNtpDisabled() || this.ntpDHCP.value);
+					}
+					this.notifyPath("ntpDHCP.value", this.ntpDHCP.value);
+				}
+			}
+		}
+
+	});
+	</script>
+</dom-module>

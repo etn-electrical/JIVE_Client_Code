@@ -1,0 +1,1239 @@
+<dom-module id="modal-firmware-codepack">
+    <style>
+        px-modal[overlay] {
+            background: none;
+        }
+
+        :host /deep/ .content {
+            width: 90%;
+        }
+
+        .pName {
+            min-width: 20%;
+        }
+
+        .first {
+            min-width: 7%;
+        }
+
+        .imageData {
+            min-width: 22%;
+        }
+
+        .fileVer {
+            min-width: 8%;
+        }
+
+        .device {
+            min-width: 8%;
+        }
+
+        .hardwareVer {
+            min-width: 10%;
+        }
+
+        .compatibility {
+            min-width: 10%;
+        }
+
+        .status {
+            min-width: 15%;
+        }
+    </style>
+    <template>
+        <!-- Firmware/Code Pack tabular template -->
+        <template is="dom-if" if="{{fwUpgradeDidNotStart}}">
+            <px-modal class="visible" overlay>
+                <px-actionbar dark>
+                    <px-title maintitle="Firmware / Code Pack Evaluation"></px-title>
+                </px-actionbar>
+                <px-content layout vertical center-justified>
+                    <template is="dom-if" if="{{loading}}">
+                        <span style="text-align: center">Loading...</span>
+                        <px-progress percent="100" color="#9adc95" animate></px-progress>
+                    </template>
+                    <template is="dom-if" if="{{failedToGetDeviceInfo}}">
+                        <span>Something went wrong, please try firmware upgrade again.</span>
+                    </template>
+                    <template is="dom-if" if="{{entries.length}}">
+                        <px-row header>
+                            <px-column class="first"></px-column>
+                            <px-column class="pName">Processor</px-column>
+                            <px-column class="imageData">Image</px-column>
+                            <px-column class="fileVer">File Ver</px-column>
+                            <px-column class="device">Device</px-column>
+                            <px-column class="hardwareVer">Hardware Ver</px-column>
+                            <px-column class="compatibility">Compatibility</px-column>
+                            <px-column class="status">Status</px-column>
+                        </px-row>
+                        <div style='overflow-y: auto; max-height: 400px'>
+                            <template is="dom-repeat" items="{{entries}}" as="entry">
+                                <px-row class$="{{checkFileVersion(entry)}}">
+                                    <px-column class="first">
+                                        <px-checkbox disabled$="{{checkBoxStatus(entry)}}" value="{{entry.checked}}"
+                                            on-change="changeHandler"></px-checkbox>
+                                    </px-column>
+                                    <px-column class="pName">
+                                        <strong>{{entry.processorName}}</strong>
+                                    </px-column>
+                                    <px-column class="imageData">{{entry.imageName}} <iron-icon icon="px-icons:information"
+                                            style="height: 12px; width: 12px; margin-bottom: 2px; color: #0d87c2;"
+                                            title="[[_getToolTip(entry.updateHistory)]]"></iron-icon>
+                                    </px-column>
+                                    <px-column class="fileVer">{{entry.filever}}</px-column>
+                                    <px-column class="device">{{entry.imageVer}}</px-column>
+                                    <px-column class="hardwareVer">{{entry.deviceHardwareVer}}</px-column>
+                                    <px-column class="compatibility" style="text-align: center">{{entry.compatibility}}</px-column>
+                                    <px-column class="status">
+                                        {{getStatusMessage(entry)}}
+                                    </px-column>
+                                </px-row>
+                            </template>
+                        </div>
+                    </template>
+                    <template is="dom-if" if="{{!entries.length}}">
+                        <px-row>
+                            <px-column center-justified>No entries found</px-column>
+                        </px-row>
+                    </template>
+                </px-content>
+                <px-actionbar bottom secondary>
+                    <template is="dom-if" if="{{entries.length}}">
+                        {{itemsToUpdate}} of {{entries.length}} items need updated.
+                        <span class="flex"></span>
+                        <px-button on-click="close">Close</px-button>
+                        <px-button on-click="runUpdates" positive id="submitbutton" disabled$="{{checkItemCount(itemsToUpdate)}}">
+                            <template is="dom-if" if="{{checkItemCount(itemsToUpdate)}}">
+                                No Updates
+                            </template>
+                            <template is="dom-if" if="{{!checkItemCount(itemsToUpdate)}}">
+                                Run Updates
+                            </template>
+                        </px-button>
+                    </template>
+                    <template is="dom-if" if="{{failedToGetDeviceInfo}}">
+                        <span class="flex"></span>
+                        <px-button on-click="close">Close</px-button>
+                    </template>
+                </px-actionbar>
+            </px-modal>
+        </template>
+
+        <!-- Firmware Update progress template -->
+        <template is="dom-if" if="{{!fwUpgradeDidNotStart}}">
+            <px-modal class="visible" maxwidth="45%" overlay>
+                <px-actionbar dark>
+                    <px-title maintitle="Firmware Update"></px-title>
+                </px-actionbar>
+                <px-content layout vertical center-justified>
+                    <template is="dom-if" if="{{!updateComplete}}">
+                        <div style="margin-bottom: 5px">
+                            <span style="color: red">Note: Please do not switch browser tabs until the Firmware Update is Complete.</span>
+                        </div>
+                        <strong>Overall progress </strong>
+                        <px-progress bar percent="{{processorPercentage}}" color="#9adc95" animate></px-progress>
+                        <br>
+                        <strong>Current progress </strong>
+                        <px-progress bar percent="{{percentage}}" color="#9adc95" animate></px-progress>
+                    </template>
+                    <template is="dom-if" if="{{updateComplete}}">
+                        <h2>{{updatedMessage}}</h2>
+                        <ul>
+                            <template is="dom-repeat" items="{{updateLog}}" as="update">
+                                <li>{{update}}</li>
+                            </template>
+                        </ul>
+                    </template>
+                </px-content>
+                <px-actionbar bottom secondary>
+                    <template is="dom-if" if="{{!updateComplete}}">
+                        <div style="display: inline-grid">
+                            <div>
+                                <template is="dom-if" if="{{progressMsg}}">
+                                    <strong>{{progressMsg}}</strong>
+                            </template>
+                                {{updateItem}}
+                            </div>
+                            <div>
+                                <strong>Progress:</strong> {{percentage}}%</div>
+                        </div>
+                        <span class="flex"></span>
+                        <px-button on-click="cancel" style="margin-right: 0;" disabled$=[[enableAbort]]>Abort</px-button>
+                    </template>
+                    <template is="dom-if" if="{{updateComplete}}">
+                        <span class="flex"></span>
+                        <px-button on-click="close" id="fwContinueBtn">Continue</px-button>
+                    </template>
+                </px-actionbar>
+            </px-modal>
+        </template>
+
+        <style>
+            .same-version {
+                background: #eaeaea;
+            }
+
+            .update-needed {
+                background: #9adc95;
+            }
+
+            .no-update {
+                background: #da9496;
+            }
+        </style>
+    </template>
+    <script>
+        //ENUM values that are ONLY used on this page
+            var xlink = 'xlink:href';
+            var TYPE_DEVICE = 'device';
+            var TYPE_FILE = 'file';
+            var PATH_PROCESSOR = 'processor';
+            var PATH_IMAGE = 'image';
+            var asArray = PB.asArray;
+            var codePackResults = [];
+            var imgCount = 0;
+        Polymer({
+            is: 'modal-firmware-codepack',
+            properties:
+            {
+                tab: {
+                    type: Object,
+                    notify: true
+                },
+                data: {
+                    type: Object,
+                    notify: true
+                },
+                entries: {
+                    type: Object,
+                    notify: true
+                },
+                itemsToUpdate: {
+                    type: Number,
+                    notify: true,
+                    value: 0,
+                    observer: "checkItemCount"
+                },
+                enableAbort:{
+                    type:Boolean,
+                    value:true
+                },
+                updatedMessage: {
+                    type: String,
+                    notify: true,
+                    value: "Not Updated!"
+                },
+                progressMsg: {
+                    type: String,
+                    notify: true
+                },
+                updateComplete: {
+                    type: Boolean,
+                    notify: true,
+                    value: false
+                },
+                updateLog: {
+                    type: Array,
+                    notify: true,
+                    value: []
+                },
+                totalPackets: {
+                    type: Number,
+                    notify: true,
+                    value: 0
+                },
+                currentPackageCount: {
+                    type: Number,
+                    notify: true,
+                    value: 0
+                },
+                fwUpgradeDidNotStart: {
+                    type: Boolean,
+                    notify: true,
+                    value: true
+                },
+                loading: {
+                    type: Boolean,
+                    value: true
+                },
+                failedToGetDeviceInfo: {
+                    type: Boolean,
+                    value: false
+                },
+                percentage: {
+                    type: Number,
+                    value: 0
+                }
+            },
+
+            /**
+             * 
+             * Sets debug and test data status. 
+             * Set to false to remove all logging/test data from application.
+             *
+             */
+            debug: true, // Enables logging in developer tools
+            testData: false, // Routes around the codepack to display test data
+
+            /**
+             * Used to control button state, will disable run updates button if true/
+             * @param  {number} itemsToUpdate Current number if items which need updated.
+             * @return {boolean}               Returns true if total number of items which need to be updated is less than or equal to zero.
+             */
+            checkItemCount: function (itemsToUpdate) {
+                if (typeof this.itemsToUpdate !== 'undefined') {
+                    return (itemsToUpdate <= 0 ? true : false);
+                } else {
+                    return true;
+                }
+            },
+            /**
+             * Handles Checkbox
+             * @param  {object} event Event passed in from action
+             * @return {boolean}       [description]
+             */
+            changeHandler: function (event) {
+                this.itemsToUpdate = this.getSelectedItemCount();
+            },
+
+            getSelectedItemCount: function () {
+                var count = 0;
+                this.entries.forEach(function (iterator) {
+                    if (iterator.checked) {
+                        count++;
+                    }
+                });
+                return count;
+            },
+
+            /**
+             * Closes the modal.
+             */
+            close: function (e) {
+                e.preventDefault();
+                if (e.model && e.model.entry) {
+                    this.tab.promise.resolve(e.model.entry);
+                } else {
+                    this.tab.promise.reject();
+                }
+            },
+            /**
+             * Compares file versions and returns class names
+             * @param  {string} filever   File version separated by decimals, e.g. "1.0.4"
+             * @param  {string} devicever File version separated by decimals, e.g. "1.0.4"
+             * @return {string}           Returns class name to be used on table row.
+             */
+            checkFileVersion: function (entry) {
+                var test = this.versionCompare(entry.filever, entry.imageVer);
+                if (entry.filever === undefined) {
+                    return "same-version";
+                }
+                else if (entry.isDisabled) {
+                    return "no-update"
+                }
+                else if (test === 0) {
+                    return "same-version";
+                }
+                else if (test > 0) {
+                    return "update-needed";
+                }
+                else {
+                    return "no-update"
+                }
+            },
+
+            /**
+             * Disables checkboxes in modal if there isn't an image to update the row with.
+             * @param  {object} entry Full Entry
+             * @return {boolean}       Returns true if the entry does not have a file version associated with it.
+             */
+            checkBoxStatus: function (entry) {
+                var isDisabled = true;
+
+                var v = this.versionCompare(entry.filever, entry.imageVer);
+
+                // 0, Upgrade to any version allowed
+                // 1, Upgrade to same or higher version allowed
+                // 2, Upgrade not allowed        
+                if (!(entry.filever === undefined || entry.filever === '')) {
+                    if (this.fwUpgradeMode == 0) {
+                        isDisabled = false;
+                    }
+                    else if (this.fwUpgradeMode == 1 && v < 0) {
+                        isDisabled = true;
+                    }
+                    else if (this.fwUpgradeMode == 1 && v >= 0) {
+                        isDisabled = false;
+                    }
+                }
+                entry.isDisabled = isDisabled;
+                return isDisabled;
+            },
+            /**
+             * Simply compares two string version values.
+             * 
+             * Example:
+             * versionCompare('1.1', '1.2') => -1
+             * versionCompare('1.1', '1.1') =>  0
+             * versionCompare('1.2', '1.1') =>  1
+             * versionCompare('2.23.3', '2.22.3') => 1
+             * 
+             * Returns:
+             * -1 = left is LOWER than right
+             *  0 = they are equal
+             *  1 = left is GREATER = right is LOWER
+             *  And FALSE if one of input versions are not valid
+             *
+             * @function
+             * @param {String} left  Version #1
+             * @param {String} right Version #2
+             * @return {Integer|Boolean}
+             * @author Alexey Bass (albass)
+             * @since 2011-07-14
+             */
+            versionCompare: function (left, right) {
+                if (typeof left + typeof right != 'stringstring')
+                    return false;
+
+                var a = left.split('.'),
+                    b = right.split('.'),
+                    i = 0, len = Math.max(a.length, b.length);
+
+                for (; i < len; i++) {
+                    if ((a[i] && !b[i] && parseInt(a[i]) > 0) || (parseInt(a[i]) > parseInt(b[i]))) {
+                        return 1;
+                    } else if ((b[i] && !a[i] && parseInt(b[i]) > 0) || (parseInt(a[i]) < parseInt(b[i]))) {
+                        return -1;
+                    }
+                }
+                return 0;
+            },
+
+			validateBin: function (updateArray, counter) {
+				var dfd = jQuery.Deferred();
+				var validateCount = 0;
+				var url = updateArray[counter].binXLink; //rs/fw/0/0/bin
+                url = url.replace('bin', 'validate');
+                this.updateProgressMsg("validate");
+				var repeatValidateBin = function (vUrl,vCount){
+				PB.JQhttp('GET', vUrl, '', 10000, 4).then(function (response) {
+					var binResponseData = PB.parseXML(response);
+					var waitTime = binResponseData.Validate.Wait;
+					vCount +=1
+					PB.delay(waitTime).then(function(){
+					if(binResponseData.Validate.Integrity == "Checking" && vCount < 14){
+						repeatValidateBin(vUrl,vCount);
+					}else if(binResponseData.Validate.Integrity == "Valid"){
+						dfd.resolve(binResponseData);  
+					}else{
+						// Reject's when the integrity is invalid 
+					    // and also when it exceeds the validatecount. 
+						dfd.reject(binResponseData.Validate.Integrity);
+					} 
+					})
+				}, function (error) {
+					// Reject's when there is four time connection loss.
+					dfd.reject(error);
+				});
+				}
+				repeatValidateBin(url,validateCount)
+				return dfd.promise();
+			},
+
+			firmwareIntegrityCheck: function (binResponseData, updateArray, counter, sessionId) {
+				var dfd = jQuery.Deferred();
+				if (binResponseData.Validate.Integrity == "Valid") {
+					var commitUrl = updateArray[counter].binXLink;
+					var data = '<Commit><SessionID>' + sessionId + '</SessionID></Commit>'
+                    commitUrl = commitUrl.replace('bin', 'commit');
+                    this.updateProgressMsg("commit");
+					return PB.JQhttp('POST', commitUrl, data, 10000, 4)
+						.then(function (resp) {
+							var commitResponseData = PB.parseXML(resp);
+							var waitTime = parseInt(commitResponseData.CommitResp.Wait);
+							var statusUrl = updateArray[counter].binXLink;
+							statusUrl = statusUrl.replace('bin', 'status');
+							var statusCount = 0;
+							return PB.delay(waitTime).then(function () {
+								return self.firmwareStatusCheck(statusUrl, statusCount);
+							})
+						});
+				} else {
+					// Reject's the commit request due to integrity is invalid. 
+					dfd.reject()
+					return dfd.promise();
+				}
+			},
+
+            firmwareStatusCheck: function (statusUrl, statusCount) {
+                var dfd = jQuery.Deferred();
+                var repeatStatusApi = function (sUrl, sCount) {
+                    PB.JQhttp('GET', sUrl,'', 10000, 4).then(function (data) {
+                        sCount += 1
+                        var json = PB.parseXML(data);
+                        var waitTime = json.Status.Wait
+                        if (json.Status.State == "Busy" && sCount < 14) {
+                            setTimeout(function () {
+                                repeatStatusApi(sUrl, sCount);
+                            }, waitTime);
+                        } else if (json.Status.State == "Idle") {
+                            dfd.resolve(json);
+                        } else {
+                            dfd.reject(json.Status.State);
+                        }
+                    },
+                    function (error) {
+					// Reject's when there is four time connection loss.
+					dfd.reject(error);
+				});
+                }
+                repeatStatusApi(statusUrl, statusCount);
+                return dfd.promise();
+            },
+
+            /**
+             * Returns appropriate status message for each item within the table based on the output of the version compare function which compares the version of what is on the device with the image coming from the codepack.
+             * @param  {entry} entry Full Entry
+             * @return {string}       Status message.
+             */
+            getStatusMessage: function (entry) {
+                var message = "";
+                if (typeof this.itemsToUpdate === 'undefined') { this.itemsToUpdate = 0 }
+                if (this.fwUpgradeMode == 2) {
+                    message = "Upgrade Not Allowed."
+                } else if (entry.filever) {
+                    var v = this.versionCompare(entry.filever, entry.imageVer);
+                    if (v > 0) {
+                        if (entry.isDisabled) {
+                            message = "Upgrade Disabled."
+                        }
+                        else {
+                            message = "Update Recommended.";
+                        }
+                    }
+                    else if (v < 0) {
+                        if (entry.isDisabled) {
+                            message = "Rollback Disabled."
+                        }
+                        else {
+                            message = "Rollback Not Recommended.";
+                        }
+                    }
+                    else if (v === 0) {
+                        message = "Version Is Same.";
+                    }
+                }
+                else {
+                    message = "Not in file.";
+                }
+                return message;
+            },
+            /**
+             * Returns appropriate tooltip message for each item within the table.
+             * @param  {updateHistory} updateHistory History details of updates
+             * @return {string}      Tooltip message.
+             */
+            _getToolTip: function(updateHistory) {
+                var toolTipInfo;
+                if (updateHistory.When == 0) {
+                    toolTipInfo = "No update history."
+                } else {
+                    var date = new Date(updateHistory.When *1000);
+                    toolTipInfo="Last updated by " + updateHistory.Who + " on " + date.toLocaleString();
+                }
+                return toolTipInfo;
+            },
+            /**
+             * Function which fires when the modal is attached to the screen.
+             * @return {object} Attaches the comparison table between the device firmware and what came through with the codepack.
+             */
+            attached: function () {
+                self = this;
+                this.updateLog = [];
+                this.fwUpgradeMode = PB.DCI.get("DCI_FW_UPGRADE_MODE").value | 0;
+                this.buildFirmwareTable();
+            },
+
+            /**
+             * Main function for handling the building of the firmware comparison table.
+             * @return {object} Returns the tableData object which is attached to this.entries and bound to the table.
+             */
+            buildFirmwareTable: function () {
+                var self = this,
+                    codePack = this.data;
+                PB.http.priorityGet('/rs/fw').then(function (xhr) {
+                    var rawDeviceData = PB.parseXML(xhr.responseText),
+                        firmwareDataPromise = self.buildFirmwareData(rawDeviceData, codePack);
+                    self.debug && self.debugCase(0, rawDeviceData, 'Device Data');
+                    return firmwareDataPromise.then(function (firmwareData) {
+                        var tableData = self.processTableRows(firmwareData);
+                        self.entries = tableData;
+                        self.loading = false;
+                    });
+                }, function(error) {
+                    // rs/fw API call failed
+                    self.loading = false;
+                    self.failedToGetDeviceInfo = true;
+                });
+            },
+
+            /**
+             * Primary function to build the table of firmware data along with CodePack comparisons.
+             * @param {(type)} obj Data requested from the device
+             * @param {(type)} obj Data recieved from the uploaded CodePack
+             */
+            buildFirmwareData: function (deviceData, codePack) {
+                var self = this,
+                    devicePromise = this.getProcessorImageListFromDevice(deviceData),
+                    codePackPromise = asArray(codePack);
+                return $.when(devicePromise, codePackPromise).then(function (deviceImageList, codePackProduct) {
+                    var data = [deviceImageList, codePackProduct];
+                    return data;
+                });
+            },
+
+            /**
+             * Gets list of processors from device data
+             * @param  {object} deviceData Data being pulled from the device
+             * @return {array}            Array of Objects containing processor and image data for the current device.
+             */
+             getProcessorImageListFromDevice: function(deviceData) {
+                var prom = PB.defer();
+                var list = [];
+                var procs = asArray(deviceData.Product.ProcessorList.Processor);
+                var procsCounter = 0;
+                var self = this;
+
+                var repeat_procs = function() {
+                    if (procsCounter >= procs.length) {
+                        prom.resolve(list);
+                    } else {
+                        var procUrl = procs[procsCounter]['xlink:href'];
+                        // Get each processor from device
+                        PB.http.priorityGet(procUrl).then(function(processorXhr) {
+                            var processorJson = PB.parseXML(processorXhr.responseText);
+                            var processor = processorJson.Processor;
+                            var images = asArray(processor.ImageList.Image);
+                            var imageCounter = 0;
+
+                            var repeat_images = function() {
+                                if (imageCounter >= images.length) {
+                                    procsCounter += 1;
+                                    repeat_procs();
+                                } else {
+                                    var imageUrl = images[imageCounter]['xlink:href'];
+                                    // Get each image from processor
+                                    PB.http.priorityGet(imageUrl).then(function(imageXhr) {
+                                        var image = PB.parseXML(imageXhr.responseText).Image;
+                                        var imageObj = {
+                                            processorName: processor.Name,
+                                            processorGuid: processor.Guid,
+                                            imageName: image.Name,
+                                            imageGuid: image.Guid,
+                                            deviceHardwareVer: processor.HardwareVer,
+                                            imageVer: image.Ver,
+                                            binXLink: image.Bin['xlink:href'],
+                                            updateHistory: image.UpdateHistory,
+                                            compatibility: image.Compatibility
+                                        }
+                                        list.push(imageObj);
+                                        imageCounter += 1;
+                                        repeat_images();
+                                    }, function(error) {
+                                        //Image API call failed
+                                        self.loading = false;
+                                        self.failedToGetDeviceInfo = true;
+                                    })
+                                }
+                            }
+                            repeat_images();
+
+                        }, function(error) {
+                            //Processor API call failed
+                            self.loading = false;
+                            self.failedToGetDeviceInfo = true;
+                        })
+                    }
+                }
+                repeat_procs()
+
+                return prom;
+            },
+
+            /**
+             * Generates final JS object which is then passed to 
+             * @param  {[type]} data [description]
+             * @return {[type]}      [description]
+             */
+            processTableRows: function (data) {
+                var deviceData = data[0],
+                    codePackProducts = data[1];
+
+                for (var i = 0; i < deviceData.length; i++) {
+                    var currentDeviceData = deviceData[i];
+                    for (var j = 0; j < codePackProducts.length; j++) {
+                        var currentCodePackProduct = codePackProducts[j];
+                        if (Array.isArray(currentCodePackProduct.Processor)) {
+                            for (var l = 0; l < currentCodePackProduct.Processor.length; l++) {
+                                var codepackProcessorGuid = currentCodePackProduct.Processor[l].Guid;
+                                if (currentDeviceData['processorGuid'] === codepackProcessorGuid) {
+                                    if (currentCodePackProduct.Processor[l].Image.length != undefined) {
+                                        currentCodePackProduct.Processor[l].Image.forEach(function (img, index) {
+                                            var imageId = img['Guid'];
+                                            if (currentDeviceData['imageGuid'] === imageId) {
+                                                currentDeviceData['filever'] = img['Ver'];
+                                                currentDeviceData['bindata'] = img['BinData'];
+                                                currentDeviceData.order = index;
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        if (currentDeviceData['imageGuid'] === currentCodePackProduct.Processor[l].Image['Guid']) {
+                                            currentDeviceData['filever'] = currentCodePackProduct.Processor[l].Image['Ver'];
+                                            currentDeviceData['bindata'] = currentCodePackProduct.Processor[l].Image['BinData'];
+                                            currentDeviceData.order = 0;
+                                        }
+                                    }
+
+                                }
+                            }
+
+                        } else {
+                            var codepackProcessorGuid = currentCodePackProduct.Processor.Guid;
+                            if (currentDeviceData['processorGuid'] === codepackProcessorGuid) {
+                                if (currentCodePackProduct.Processor.Image.length != undefined) {
+                                    currentCodePackProduct.Processor.Image.forEach(function (img, index) {
+                                        var imageId = img['Guid'];
+                                        if (currentDeviceData['imageGuid'] === imageId) {
+                                            currentDeviceData['filever'] = img['Ver'];
+                                            currentDeviceData['bindata'] = img['BinData'];
+                                            currentDeviceData.order = index;
+                                        }
+                                    });
+                                }
+                                else {
+                                    if (currentDeviceData['imageGuid'] === currentCodePackProduct.Processor.Image['Guid']) {
+                                        currentDeviceData['filever'] = currentCodePackProduct.Processor.Image['Ver'];
+                                        currentDeviceData['bindata'] = currentCodePackProduct.Processor.Image['BinData'];
+                                        currentDeviceData.order = 0;
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+                deviceData.sort(function (a, b) {
+                    if (a.order === undefined) { a.order = 99 };
+                    if (b.order === undefined) { b.order = 99 };
+                    return a.order - b.order;
+                });
+                return deviceData;
+            },
+
+            sendChunks: function (sessionID, totalChunkCount, binaryData, binXLink, counter, currentItem) {
+                var dfd = jQuery.Deferred();
+                if (binaryData.length > 0) {
+                    var url = binXLink;
+                    var currentChunk = binaryData[0];
+                    var data = '<DataPUT SessionID="' + sessionID + '"><ChunkTotal>' + totalChunkCount + '</ChunkTotal><ChunkNumber>'
+                        + counter + '</ChunkNumber><Data address="' + currentChunk.address + '" size="' + currentChunk.value.length + '">'
+                        + currentChunk.value + '</Data></DataPUT>';
+
+                    self.percentage = Math.round((counter / totalChunkCount) * 100);
+                    self.currentPackageCount++;
+                    self.processorPercentage = Math.round((self.currentPackageCount / self.totalPackets) * 100);
+
+                    PB.JQhttp("PUT", url, data, 10000, 4).done(function (data) {
+                        var jsonData = PB.parseXML(data);
+                        var waitTime = parseInt(jsonData.DataPUT.Wait) + 0;
+                        binaryData = binaryData.slice(1);
+                        setTimeout(function () {
+                            self.sendChunks(sessionID, totalChunkCount, binaryData, binXLink, counter + 1, currentItem)
+                                .then(function (data) {
+                                    dfd.resolve(counter); //resolved with emtpty data.
+                                }, function () {
+                                    dfd.reject("Error in sendchunks");
+                                });
+                        }, waitTime);
+                    }
+                    ).fail(function (jqXHR, textStatus, errorThrown) {
+                        PB.cancelClicked = false;
+                        PB.firmwareUpgradeInProgress = false;
+                        self.updateComplete = true;
+                        if (textStatus == "error") {
+                            self.updatedMessage = "Error occurred - Firmware upgrade unsuccessful.";
+                            var message = jqXHR.status + " - " + jqXHR.statusText;
+                            self.pushToUpdateLog(message);
+                            dfd.reject("Error occurred - Firmware upgrade unsuccessful.");
+                        }
+                        else if (textStatus == "timeout") {
+                            self.updatedMessage = "Session timeout - Firmware upgrade unsuccessful.";
+                            self.pushToUpdateLog("Device communication failure, please retry.");
+                            dfd.reject(textStatus);
+                        }
+                        else if(jqXHR.status ==  0 && jqXHR.statusText == "canceled") {
+                            var message = "Firmware upgrade for " + currentItem.processorName + " - " +
+                            currentItem.imageName + " from "
+                            + currentItem.imageVer + " to " + currentItem.filever+ " is aborted.";
+                            self.pushToUpdateLog(message);
+                            self.updatedMessage = "Firmware upgrade unsuccessful"
+                            dfd.reject(textStatus);
+                        }
+                        else {
+                            var message = jqXHR.status + " - " + jqXHR.statusText;
+                            self.pushToUpdateLog(message);
+                            self.updatedMessage = "Error occurred - Firmware upgrade unsuccessful.";
+                            dfd.reject(textStatus);
+                        }
+                    });
+                }
+                else {
+                    //console.log("last req resolved");
+                    dfd.resolve("last"); //resolve with emtpy data.
+                }
+                return dfd.promise();
+            },
+
+            pushChunks: function (updateArray, session, counter) {
+                var binXLink = updateArray[counter].binXLink;
+                var binaryData = updateArray[counter].bindata.Data
+                var totalChunkCount = binaryData.length;
+                var currentItem = updateArray[counter];
+                var sessionID = session.SessionResp.SessionID;
+                console.group("data");
+                self.updateItem = updateArray[counter].processorName + ' - ' + updateArray[counter].imageName;
+                var dfd = jQuery.Deferred();
+                self.sendChunks(sessionID, totalChunkCount, binaryData, binXLink, 0, currentItem).then(function (data) {
+                    dfd.resolve("success");
+                }, function () {
+                    //failed case. On any error we should call delete session call.
+                    //sending resolve to keep next chain working (with .then api call) 
+                    //so Validate and Delete Session works.
+                    dfd.reject("Error In Pushchunks");
+                });
+                console.groupEnd();
+                return dfd.promise();
+            },
+            uploadFirmware: function (updateArray, counter) {
+                var dfd = jQuery.Deferred();
+                var self = this;
+                this.processChunkValidation(updateArray).then(function (isCRCValid) {
+                    if (isCRCValid) {
+                        self.imageUpload(updateArray, 0).then(function () {
+                            dfd.resolve();
+                        }, function () {
+                            dfd.reject();
+                        });
+                    } else {
+                        var logMessage = "Codepack integrity check for " + updateArray[imgCount].processorName + " - " +
+                            updateArray[imgCount].imageName + " has failed.";
+                        self.pushToUpdateLog(logMessage);
+                        self.updatedMessage = "Error occurred - Firmware upgrade unsuccessful.";
+                        dfd.reject();
+                    }
+                }, function (error) {
+                    // Image data for the processor not found
+                    var logMessage = "Image data for " + updateArray[imgCount].processorName + " - " +
+                        updateArray[imgCount].imageName + " is missing.";
+                    self.pushToUpdateLog(logMessage);
+                    dfd.reject();
+                });
+                return dfd.promise();
+            },
+
+             updateProgressMsg: function (message) {
+                switch (message) {
+                    case 'crcValidation':
+                        this.progressMsg = "Validating Codepack:";
+                        break;
+                    case 'startSession':
+                        this.progressMsg = "Starting Session:";
+                        break;
+                    case 'updateImage':
+                        this.progressMsg = "Updating:";
+                        break;
+                    case 'validate':
+                        this.progressMsg = "Validating:";
+                        break;
+                    case 'commit':
+                        this.progressMsg = "Committing:";
+                        break;
+                    default:
+                        console.log(message);
+                }
+            },
+            cancel: function () {
+                this.enableAbort = true;
+                PB.cancelClicked = true;
+            },
+
+            imageUpload: function (updateArray, counter) {
+                var dfd = jQuery.Deferred();
+                if (updateArray.length > counter) {
+                    self.startSession(updateArray, counter).then(function (sessionData) {
+                        PB.firmwareUpgradeInProgress = true;
+                        self.enableAbort = false;
+                        var sessionId = sessionData.SessionResp.SessionID;
+                        var sessionString = '<Session SessionID="' + sessionId + '"/>';
+                        var sessionUrl = "/rs/fw/session";
+                        self.updateProgressMsg("updateImage");
+                        self.pushChunks(updateArray, sessionData, counter)
+                            .then(function () {
+                                self.validateBin(updateArray, counter).then(function (binResponseData) {
+                                    return self.firmwareIntegrityCheck(binResponseData, updateArray, counter, sessionId);
+                                })
+                                    .then(function (data) {
+                                        // here we will get response of validate - as valid or Invalid.
+                                        // Display message and delete session after that.
+                                        //var jsonData = PB.parseXML(data);
+                                        //var isValid = jsonData.Validate.Integrity;
+                                        var isValid = "Valid";
+                                        codePackResults.push(isValid);
+                                        self.updateItem = self.updateItem + " is " + isValid;
+                                        var logMessage = "Firmware upgrade for " + updateArray[counter].processorName + " - " + updateArray[counter].imageName + " from " +
+                                            updateArray[counter].imageVer + " to " + updateArray[counter].filever + " (" + isValid + ")";
+                                        self.pushToUpdateLog(logMessage);
+                                        return PB.JQhttp('DELETE', sessionUrl, sessionString);
+                                    })
+                                    .then(function (responseDeleteSession) {
+                                        var jsonData = PB.parseXML(responseDeleteSession);
+                                        var waitTime = parseInt(jsonData.Session.Wait);
+                                        //Fixing for DELETE SESSION call. When it is "0" sometime device is not able to delete quickly.
+                                        //When waitTime is zero, we are waiting for 2 sec before we start new session (next request)
+                                        if (waitTime === 0) {
+                                            waitTime = 2000;
+                                        }
+                                        self.updateItem = self.updateItem + " - Please wait for a moment...";
+                                        counter = counter + 1;
+                                        setTimeout(function () {
+                                            self.imageUpload(updateArray, counter).then(function (data) {
+                                                dfd.resolve("Completed" + counter);
+                                            }, function () {
+                                                dfd.reject("Error in upload firmware.");
+                                            });
+                                        }, waitTime);
+                                    }).fail(function (errorResponse) {
+                                        PB.cancelClicked = false;
+                                        PB.firmwareUpgradeInProgress = false;
+                                        self.updateComplete = true;
+                                        var message = "";
+                                        if(errorResponse == "Checking"){
+                                            message = "Invalid image.";
+                                        }
+                                        else if(errorResponse == "Busy"){
+                                            message = "Image Copying failed.";
+                                        }
+                                        else if (errorResponse == "Invalid") {
+                                            message = "Final integrity check for " + updateArray[counter].imageName + " is " + errorResponse + ".";
+                                        } else if (errorResponse == "Busy") {
+                                            message = updateArray[counter].imageName + " image update failed."
+                                        } else if (errorResponse.status == 0 && errorResponse.statusText == "canceled") {
+                                            message = "Firmware upgrade for " + updateArray[counter].processorName + " - " + updateArray[counter].imageName + " from " +
+                                            updateArray[counter].imageVer + " to " + updateArray[counter].filever + " is aborted.";
+                                        } 
+                                        else {
+                                            message = "Error occurred while uploding the " + updateArray[counter].imageName;
+                                        }
+                                        self.pushToUpdateLog(message);
+                                        // self.updatedMessage = "Error occurred - Firmware upgrade unsuccessful.";
+                                        PB.JQhttp('DELETE', sessionUrl, sessionString);
+                                        dfd.reject("Error in upload firmware.");
+                                    });
+                            },
+                                function () {
+                                    //We need to delete session. If there is any error in pushchunks.
+                                    //This will stop further process also.
+                                    PB.JQhttp('DELETE', sessionUrl, sessionString).then(function (data) {
+                                        PB.firmwareUpgradeInProgress = false;
+                                        console.log("Error in pushchunks - Session Deleted.");
+                                    });
+                                });
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        PB.cancelClicked = false;
+                        PB.firmwareUpgradeInProgress = false;
+                        self.updateComplete = true;
+                        var message = "";
+                        if (jqXHR.status == 430) {
+                            message = "Firmware update session already in progress, please retry after sometime."
+                        } else if(jqXHR == "start_sesssion_failed"){
+                            message = "Processor is busy to do firmware upgrade."
+                        }else if(jqXHR.status == 0){
+                            message = "Device communication failure, please retry."
+                        }else {                           
+                             message = jqXHR.status + " - " + jqXHR.statusText;
+                        }
+                        self.pushToUpdateLog(message);
+                        self.updatedMessage = "Error occurred - Firmware upgrade unsuccessful.";
+                    });
+                } else {
+                    self.updateComplete = true;
+                    self.updatedMessage = "Error occurred - Firmware upgrade unsuccessful.";
+                    //console.log("last req resolved");
+                    dfd.resolve("last");
+                }
+                return dfd.promise();
+            },
+
+            processFirmware: function (updateArray) {
+                imgCount = 0;
+                self.currentPackageCount = 0;
+                var dfd = jQuery.Deferred();
+                self.uploadFirmware(updateArray, 0).then(function (data) {
+                    //if anycodepack result is failed. Display message unsuccessfull.
+                    if ($.inArray("Invalid", codePackResults) != -1) {
+                        self.updatedMessage = "Firmware upgrade unsuccessful";
+                    }
+                    else {
+                        self.updatedMessage = "Update completed successfully.";
+                    }
+                    PB.firmwareUpgradeInProgress = false;
+                    self.updateComplete = true;
+                    dfd.resolve();
+                }, function () {
+                    PB.firmwareUpgradeInProgress = false;
+                    self.updateComplete = true;
+                    self.updatedMessage = "Firmware upgrade unsuccessful";
+                }
+                );
+                return dfd.promise();
+            },
+            /**
+             * Runs firmware updates based upon which items are selected in the firmware/codepack list.
+             * @return {[type]} [description]
+             */
+            runUpdates: function () {
+                var self = this,
+                    entries = this.entries,
+                    updateArray = new Array(),
+                    updateableRows = 0;
+                self.fwUpgradeDidNotStart = false;
+                document.getElementById('submitbutton').setAttribute('disabled', 'disabled');
+                for (var i = entries.length - 1; i >= 0; i--) {
+                    if (entries[i].checked) {
+                        var processor = entries[i].processorName,
+                            image = entries[i].imageName,
+                            oldVer = entries[i].imageVer,
+                            newVer = entries[i].filever;
+                        this.debug && console.group('ITEM CHECKED FOR UPDATE');
+                        this.debug && console.log('Updating ' + processor + ' - ' + image + ' from ' + oldVer + ' to ' + newVer);
+                        if (entries[i].bindata) {
+                            this.debug && console.log(entries[i].bindata);
+                            updateableRows++;
+                            updateArray.push(entries[i]);
+                        } else {
+                            this.debug && console.warn('ERROR: Image has no data!');
+                        }
+                        this.debug && console.groupEnd();
+                    }
+                }
+                if (updateableRows) {
+                    var sessionData;
+                    var waitTime;
+                    //sort UpdateArray by order.
+                    updateArray.sort(function (a, b) {
+                        if (a.order === undefined) { a.order = 99 };
+                        if (b.order === undefined) { b.order = 99 };
+                        return a.order - b.order;
+                    });
+                    self.processFirmware(updateArray).then(function (data) {
+
+                    });
+                }
+            },
+
+            /**
+             * Creates session which is needed to update firmware
+             * @param  {number} sec Defines the timeout threshold for the created session.
+             * @return {[type]}     [description]
+             */
+            startSession: function (updateArray, counter, sec) {
+                var sec = sec || 60;
+                var dfd = jQuery.Deferred();
+                var encoding_type = updateArray[counter].bindata.encoding_type;
+                if (encoding_type.toLowerCase() === "base64") {
+                    encoding_type = 1;
+                }
+                else {
+                    encoding_type = 0;
+                }
+                var data = "<SessionDef><TimeoutSec>" + sec + "</TimeoutSec><EncodingType>" + encoding_type + "</EncodingType></SessionDef>";
+                var url = "/rs/fw/session";
+                var retryStartSessionCount = 14;
+                var repeatStartSessionCounter = 0;
+                this.startFirmwareUpdateSession = true;
+                this.updateProgressMsg("startSession");
+                var repeatStartSessionApi = function () {
+                    if ((repeatStartSessionCounter < retryStartSessionCount)) {
+                        PB.JQhttp('POST', url, data, 10000, 4).then(function (response) {
+                            var sessionResponseData = PB.parseXML(response);
+                            var waitTime = parseInt(sessionResponseData.SessionResp.Wait);
+                            if (waitTime == 0) {
+                                dfd.resolve(sessionResponseData);
+                            } else {
+                                repeatStartSessionCounter +=1
+                                PB.delay(waitTime).then(function () {
+                                    repeatStartSessionApi();
+                                })
+                            }
+                        }, function (error) {
+                            // Reject's when there is four time connection loss.
+                            dfd.reject(error);
+                        });
+                    } else {
+                        dfd.reject("start_sesssion_failed");
+                    }
+                }
+                repeatStartSessionApi()
+                return dfd.promise();
+            },
+            /**
+             * Updates Processor Percentage
+             * @param  {Number} x Current Processor number
+             * @param  {number} y Total Number of Processors
+             */
+            updateProcessorPercentage: function (current, total) {
+                this.processorPercentage = Math.round((current / total) * 100);
+            },
+
+            pushToUpdateLog: function (msg) {
+                this.updateLog.push(msg);
+            },
+
+            /**
+             * Debugging function to make the code a bit cleaner.
+             * @param  {int} index Corresponds to the case in the switch statement
+             * @param  {obj} data  Data object to be output
+             * @param  {string} title Optional title
+             */
+            debugCase: function (index, data, title) {
+                switch (index) {
+                    case 0:
+                        console.group('Case 0:' + title);
+                        console.log(data);
+                        console.groupEnd();
+                        break;
+                    case 1:
+                        console.group('Case: 1: Processor ' + data[0]);
+                        console.log(data[1][data[0]]);
+                        console.groupEnd();
+                        break;
+                    case 2:
+                        console.group('Case 2: Firmware Data Built');
+                        console.group('Device Data');
+                        console.log(data[0]);
+                        console.groupEnd();
+                        console.group('CodePack Data');
+                        console.log(data[1]);
+                        console.groupEnd();
+                        console.groupEnd();
+                        break;
+                }
+            },
+            hexToBytes: function (hex) {
+                for (var bytes = [], c = 0; c < hex.length; c += 2)
+                    bytes.push(parseInt(hex.substr(c, 2), 16));
+                return bytes;
+            },
+            crcValidator: function (data, datalength) {
+                var temp;
+                var temp_crc = 0xFFFF;
+                var temp_crc_ptr = [];
+                var dataIndex = 0;
+
+                var str = temp_crc.toString(16);
+                var byte0 = str.charAt(str.length - 2) + str.charAt(str.length - 1);
+                var byte1 = str.charAt(0) + str.charAt(1);
+                temp_crc_ptr[0] = (parseInt(byte0, 16));
+                temp_crc_ptr[1] = (parseInt(byte1, 16));
+
+                while (datalength-- > 0) {
+                    temp = data[dataIndex] ^ temp_crc_ptr[0];
+                    dataIndex++;
+                    var val1 = this.leftShiftOperation(temp, 4);
+                    temp ^= parseInt(val1, 16);
+                    var val2 = this.leftShiftOperation(temp, 3);
+                    temp_crc_ptr[0] = temp_crc_ptr[1] ^ parseInt(val2, 16) ^ (temp >> 4);
+                    temp_crc_ptr[1] = temp ^ (temp >> 5);
+
+                }
+                byte0 = temp_crc_ptr[0].toString(16).toUpperCase();
+                byte1 = temp_crc_ptr[1].toString(16).toUpperCase();
+                if (byte0.length == 1) {
+                    byte0 = '0' + byte0;
+                }
+                var str_crc = byte1 + byte0;
+                var dec_crc = (parseInt(str_crc, 16));
+
+                var bin = (~dec_crc >>> 0).toString(2);
+                var dec = parseInt(bin, 2);
+                var hex = dec.toString(16).toUpperCase();
+                return "0x" + hex.substring(hex.length, hex.length - 4);
+            },
+            leftShiftOperation: function (temp, val) {
+                var dec = (temp << val);
+                var hex = dec.toString(16).toUpperCase();
+                return hex.charAt(hex.length - 2) + hex.charAt(hex.length - 1);
+            },
+            processChunkValidation: function (updateArray) {
+                var self = this;
+                var dfd = jQuery.Deferred();
+                var chunkCounter = 0;
+                var imageData = updateArray[imgCount].bindata.Data;
+                
+                if (!imageData) {
+                    dfd.reject();
+                } else {
+                    var encodingType = updateArray[imgCount].bindata.encoding_type;
+                    var totalChunkCount = imageData.length;
+                    var repeat_loop = function (imageData, totalChunkCount, chunkCounter) {
+                        self.updateProgressMsg("crcValidation");
+                        self.updateItem = updateArray[imgCount].processorName + ' - ' + updateArray[imgCount].imageName;
+                        if (chunkCounter >= totalChunkCount) {
+                            self.totalPackets += updateArray[imgCount].bindata.Data.length;
+                            imgCount += 1;
+                            if (updateArray.length > imgCount) {
+                                imageData = updateArray[imgCount].bindata.Data;
+                                encodingType = updateArray[imgCount].bindata.encoding_type;
+                                totalChunkCount = imageData.length;
+                                repeat_loop(imageData, totalChunkCount, 0);
+                            } else {
+                                dfd.resolve(true);
+                            }
+                        } else {
+                            var stringRequired = imageData[chunkCounter].value;
+                            var chunckCRC = imageData[chunkCounter].packet_crc;
+                            var buffer;
+                            if (encodingType == "Base64") {
+                                var newString = self.asciiToHex(stringRequired);
+                                buffer = self.hexToBytes(newString);
+                            } else {
+                                buffer = self.hexToBytes(stringRequired);
+                            }           
+                            var crcValue = self.crcValidator(buffer, buffer.length);
+                            if (crcValue != chunckCRC) {
+                                dfd.resolve(false);
+                            } else {
+                                chunkCounter += 1;
+                                setTimeout(function () {
+                                    repeat_loop(imageData, totalChunkCount, chunkCounter);
+                                }, 1)
+                            }
+                        }
+                    }
+                    repeat_loop(imageData, totalChunkCount, chunkCounter);
+                }
+
+                return dfd.promise();
+            },
+            asciiToHex: function (str) {
+                var stringHexFormat = "";
+                for (var n = 0, l = str.length; n < l; n++) {
+                    var hex = Number(str.charCodeAt(n)).toString(16);
+                    stringHexFormat += hex;
+                }
+                return stringHexFormat;
+            }
+        });
+    </script>
+</dom-module>

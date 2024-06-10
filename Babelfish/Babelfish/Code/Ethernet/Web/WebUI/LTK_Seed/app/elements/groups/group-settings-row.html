@@ -1,0 +1,47 @@
+<dom-module id="group-settings-row">
+	<template>
+		<!-- For each pelem... -->
+		<template is="dom-repeat" items="[[distChildren]]">
+			<template is="dom-if" if="[[checkUserReadAccess(item)]]">
+				<px-row selectable$="{{selectable}}" selected$="{{selected}}" on-click="select">
+					<!-- Display the group name and icon, if present-->
+					<template is="dom-if" if="[[label]]">
+						<px-column icon="[[icon]]" width="0">
+							<px-title maintitle="[[label]]"></px-title>
+						</px-column>
+					</template>
+					<px-column label>[[getChildProperty(item, 'param', 'name')]]</px-column>
+					<px-column action>
+						<!-- Children Go Here -->
+						<content select$=".item[[item]]"></content>
+					</px-column>
+					<template is="dom-if" if="[[getChildProperty(item, 'param', 'desc')]]">
+						<px-column helper>[[getChildProperty(item, 'param', 'desc')]]</px-column>
+					</template>
+				</px-row>
+			</template>
+		</template>
+	</template>
+	<script>
+		Polymer({
+			is: 'group-settings-row',
+			behaviors: [
+				PB.behaviors.navElem,
+				PB.behaviors.disabled,
+				PB.behaviors.distribute,
+				PB.behaviors.selectableSidebar
+			],
+			properties: {
+				icon: String,
+				label: String
+			},
+			checkUserReadAccess: function (item) {
+				var paramsList = this.getParams();
+				if (PB.currentUserRoleLevel >= paramsList[item].r) {
+					return true;
+				}
+				return false;
+			}
+		});
+	</script>
+</dom-module>

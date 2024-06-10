@@ -1,0 +1,28 @@
+<dom-module id="param-read-only">
+    <template>
+        <span style="word-break: break-word;">{{value(param.value)}}</span> <span>{{param.units}}</span>
+    </template>
+    <script>
+    Polymer({
+        is: 'param-read-only',
+        behaviors: [
+            PB.behaviors.navElem,
+            PB.behaviors.param
+        ],
+        value: function(value) {
+            var options = this.param.enum;
+            if (options) {
+                for (var n in options) {
+                    if (options[n].value == value) {
+                        return options[n].desc;
+                    }
+                }
+            }
+            if(value !== undefined && this.param.units == 'IP') {
+                value = value.replace(/,/g, ", ");
+            }  
+            return value;
+        }
+    });
+    </script>
+</dom-module>

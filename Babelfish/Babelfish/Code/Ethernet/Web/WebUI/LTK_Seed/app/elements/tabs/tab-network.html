@@ -1,0 +1,81 @@
+<dom-module id="tab-network">
+    <template>
+        <tab-default label='Network' id='Network' icon='px-icons:network'>
+            <section-collapse label='Certificate' id='Certificate' icon='px-icons:document'>
+                <group-certificate>
+                </group-certificate>
+            </section-collapse>
+            <section-collapse label='IPv4' id='IPv4' icon='px-icons:ethernet'>
+                <group-ethernet>
+                    <param-input param='16'>
+                    </param-input>
+                    <param-read-only param='2030'>
+                    </param-read-only>
+                    <param-read-only param='2031'>
+                    </param-read-only>
+                    <param-read-only param='2032'>
+                    </param-read-only>
+                    <param-input param='2033'>
+                    </param-input>
+                    <param-input param='2034'>
+                    </param-input>
+                    <param-input param='2035'>
+                    </param-input>
+                </group-ethernet>
+            </section-collapse>
+            <section-collapse label='Modbus' id='Modbus' icon='px-icons:phoenix'>
+                <group-settings-row>
+                    <param-input param='37'>
+                    </param-input>
+                </group-settings-row>
+            </section-collapse>
+            <section-collapse label='IP Whitelist' id='IP_Whitelist' icon='px-icons:phoenix'>
+                <group-settings-row>
+                    <param-input param='10029'>
+                    </param-input>
+                </group-settings-row>
+            </section-collapse>
+            <section-collapse label='Proxy Settings' id='Proxy_Settings'>
+                <group-proxy-settings>
+                    <param-input param='10048'>
+                    </param-input>
+                    <param-input param='10049'>
+                    </param-input>
+                    <param-input param='10050'>
+                    </param-input>
+                    <param-input param='10051'>
+                    </param-input>
+                    <param-input param='10052'>
+                    </param-input>
+                </group-proxy-settings>
+            </section-collapse>
+            <section-collapse label='Connect To Eaton Hosted Services' id='Connect_To_Eaton_Hosted_Services' icon='px-icons:cloud'>
+                <group-iot-cloud>
+                    <param-input param='10053'>
+                    </param-input>
+                    <param-input param='10046'>
+                    </param-input>
+                    <param-input param='10055'>
+                    </param-input>
+                </group-iot-cloud>
+            </section-collapse>
+            <section-collapse label='Access Control' id='Access_Control' icon='px-icons:key'>
+                <group-settings-row>
+                    <param-input-action param='10076'>
+                    </param-input-action>
+                    <param-input-action param='10077'>
+                    </param-input-action>
+                    <param-input-action param='10028'>
+                    </param-input-action>
+                    <param-input-action param='10083'>
+                    </param-input-action>
+                </group-settings-row>
+            </section-collapse>
+        </tab-default>
+    </template>
+    <script>
+        Polymer({
+            is: 'tab-network'
+        });
+    </script>
+</dom-module>

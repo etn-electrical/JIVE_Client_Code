@@ -1,0 +1,102 @@
+<dom-module id="modal-failure">
+    <template>
+        <style>
+            px-modal[overlay] {
+                background: none;
+            }
+
+            table,
+            th,
+            td {
+                border: 1px solid black;
+                border-collapse: collapse;
+                color: #333;
+            }
+
+            th,
+            td {
+                padding: 5px;
+            }
+
+            .header {
+                background: #e6e6e6;
+                /* Old browsers */
+                background: -moz-linear-gradient(top, #e6e6e6 0%, #d0d0d0 100%);
+                /* FF3.6+ */
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #e6e6e6), color-stop(100%, #d0d0d0));
+                /* Chrome,Safari4+ */
+                background: -webkit-linear-gradient(top, #e6e6e6 0%, #d0d0d0 100%);
+                /* Chrome10+,Safari5.1+ */
+                background: -o-linear-gradient(top, #e6e6e6 0%, #d0d0d0 100%);
+                /* Opera 11.10+ */
+                background: -ms-linear-gradient(top, #e6e6e6 0%, #d0d0d0 100%);
+                /* IE10+ */
+                background: linear-gradient(to bottom, #e6e6e6 0%, #d0d0d0 100%);
+                /* W3C */
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#e6e6e6', endColorstr='#d0d0d0', GradientType=0);
+                /* IE6-9 */
+                color: #606060;
+                min-height: 35px;
+                height: 35px;
+                border: 0px;
+                text-shadow: 0 1px rgba(255, 255, 255, .75);
+            }
+        </style>
+        <px-modal class="visible" overlay>
+            <px-actionbar dark>
+                <px-title maintitle="[[data.title]]"></px-title>
+            </px-actionbar>
+            <px-content layout vertical center-justified style="min-height: 100px;">
+                <strong>{{data.message}}</strong>
+                <br>
+                <table style="width:100%">
+                    <tr class="header">
+                        <th>Name</th>
+                        <th>Pid</th>
+                    </tr>
+                    <template is="dom-repeat" items="{{data.list}}">
+                        <tr>
+                            <td>{{item.name}}</td>
+                            <td style="text-align: center">{{item.pid}}</td>
+                        </tr>
+                    </template>
+                </table>
+            </px-content>
+            <template is="dom-if" if="{{data.options}}">
+                <px-actionbar bottom>
+                    <span class="flex"></span>
+                    <template is="dom-repeat" items="{{data.options}}">
+                        <px-button id="{{item}}" on-click="click" primary$="{{isPrimary(item)}}">{{item}}</px-button>
+                    </template>
+                </px-actionbar>
+            </template>
+        </px-modal>
+    </template>
+    <script>
+        Polymer({
+            is: 'modal-failure',
+            properties: {
+                tab: {
+                    type: Object,
+                    notify: true
+                },
+                data: {
+                    type: Object,
+                    notify: true
+                }
+            },
+
+            isPrimary: function (item) {
+                setTimeout(function () {
+                    document.getElementById(item).focus();
+                });
+                return this.data.options.length - 1 === this.data.options.indexOf(item);
+            },
+
+            click: function (e) {
+                this.tab.promise.resolve(e.model.index);
+            }
+
+        });
+    </script>
+</dom-module>

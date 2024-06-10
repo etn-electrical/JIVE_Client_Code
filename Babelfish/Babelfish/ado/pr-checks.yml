@@ -1,0 +1,133 @@
+# Pipeline for PR checks.
+# Tries to match up a branch name in parent and check it out, if no match default to dev.
+# Stage Uncrustify_Coverity_ESP - DCI sheet compatibility, Uncrustify and Coverity checks (esp).
+# Stage Uncrustify_Coverity_IAR - DCI sheet compatibility, Uncrustify and Coverity checks (iar).
+
+name: $(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:_r)
+
+resources:
+  repositories:
+    - repository: edge-rtos-ado-templates
+      type: github
+      name: etn-ccis/edge-rtos-ado-templates
+      endpoint: etn-ccis-rtos
+      ref: dev
+    - repository: edge-rtos-app-esp32
+      type: github
+      name: etn-ccis/edge-rtos-app-esp32
+      endpoint: etn-ccis-rtos
+      ref: dev
+    - repository: edge-rtos-app-iar
+      type: github
+      name: etn-ccis/edge-rtos-app-iar
+      endpoint: etn-ccis-rtos
+      ref: dev
+
+variables:
+  - group: rtos-dev-group
+
+# no automatic CI triggers
+trigger: none
+
+pr:
+  branches:
+    include:
+    - '*' 
+
+stages:
+- stage: Uncrustify_Coverity_ESP
+  displayName: Uncrustify and Coverity check (ESP)
+  pool:
+    name: brtlr-edge-lab
+    demands:
+    - agent.os -equals Windows_NT
+  jobs:
+  - job:
+    displayName: Job, Uncrustify and Coverity check (ESP)
+    timeoutInMinutes: 60
+    cancelTimeoutInMinutes: 30
+    workspace:
+      clean: all
+
+    steps:
+    - checkout: edge-rtos-app-esp32
+      submodules: recursive
+      path: s/esp32_sample_app
+      persistCredentials: true
+      clean: true
+
+    - powershell: |
+        Write-Host "`n>>>>>>>>>> Check for same source branch name `"$(System.PullRequest.SourceBranch)`" in top level repo <<<<<<<<<<"
+        cd $(Build.SourcesDirectory)\esp32_sample_app
+        if (git show-ref "$(System.PullRequest.SourceBranch)")
+        { 
+          Write-Host "`n>>>>>>>>>> Checkout to source branch <<<<<<<<<<"
+          git -C $(Build.SourcesDirectory)\esp32_sample_app checkout "$(System.PullRequest.SourceBranch)"
+          git -C $(Build.SourcesDirectory)\esp32_sample_app submodule update --init --recursive
+        } 
+        else
+        { 
+          Write-Host "`n>>>>>>>>>> Skip as same source branch name is not present in edge-rtos-app-esp32 (esp32_sample_app) <<<<<<<<<<" 
+        }
+      ignoreLASTEXITCODE: true
+      displayName: 'Try to checkout edge-rtos-app-esp32 (esp32_sample_app) to matching branch $(System.PullRequest.SourceBranch)'
+
+    - checkout: self
+      submodules: recursive
+      path: s/esp32_sample_app/Babelfish
+      persistCredentials: true
+      clean: true
+    
+    - template: rtos-dci-uncrustify-coverity-template.yml@edge-rtos-ado-templates
+      parameters:
+        app_directory: $(Build.SourcesDirectory)\esp32_sample_app\Babelfish
+        compilerName: 'esp'
+
+- stage: Uncrustify_Coverity_IAR
+  displayName: Uncrustify and Coverity check (IAR)
+  dependsOn: []
+  pool:
+    name: brtlr-edge-lab
+    demands:
+    - agent.os -equals Windows_NT
+  jobs:
+  - job:
+    displayName: Job, Uncrustify and Coverity check (IAR)
+    timeoutInMinutes: 60
+    cancelTimeoutInMinutes: 30
+    workspace:
+      clean: all
+
+    steps:
+    - checkout: edge-rtos-app-iar
+      submodules: recursive
+      path: s/ltk_sample_app
+      persistCredentials: true
+      clean: true
+
+    - powershell: |
+        Write-Host "`n>>>>>>>>>> Check for same source branch name `"$(System.PullRequest.SourceBranch)`" in top level repo <<<<<<<<<<"
+        cd $(Build.SourcesDirectory)\ltk_sample_app
+        if (git show-ref "$(System.PullRequest.SourceBranch)")
+        { 
+          Write-Host "`n>>>>>>>>>> Checkout to source branch <<<<<<<<<<"
+          git -C $(Build.SourcesDirectory)\ltk_sample_app checkout "$(System.PullRequest.SourceBranch)" 
+          git -C $(Build.SourcesDirectory)\ltk_sample_app submodule update --init --recursive
+        } 
+        else
+        { 
+          Write-Host "`n>>>>>>>>>> Skip as same source branch name is not present in edge-rtos-app-iar (ltk_sample_app) <<<<<<<<<<" 
+        }
+      ignoreLASTEXITCODE: true
+      displayName: 'Try to checkout edge-rtos-app-iar (ltk_sample_app) matching branch $(System.PullRequest.SourceBranch)'
+    
+    - checkout: self
+      submodules: recursive
+      path: s/ltk_sample_app/RTK_Example/Babelfish
+      persistCredentials: true
+      clean: true
+    
+    - template: rtos-dci-uncrustify-coverity-template.yml@edge-rtos-ado-templates
+      parameters:
+        app_directory: $(Build.SourcesDirectory)\ltk_sample_app\RTK_Example\Babelfish
+        compilerName: 'iar'

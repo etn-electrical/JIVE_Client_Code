@@ -1,0 +1,122 @@
+<dom-module id="tab-default">
+	<template>
+		<style>
+			:host px-content {
+				background-color: #F8F8F8
+			};
+		</style>
+		<div class="layout horizontal" style="height:100%; width:100%;">
+			<div class="flex layout vertical">
+				<!--
+					The Action Bar houses action-based buttons, such as sorting.
+					By default, buttons for toggling edit mode and saving are included on a settings page 
+                -->
+				<px-actionbar>
+					<!-- Action buttons here would be on the left side of the action bar -->
+					<!-- This span fills the gap between the two sides -->
+					<span class="flex"></span>
+
+					<!-- Action objects would appear here -->
+					<content select=".action"></content>
+
+					<!-- These action buttons appear on the right side of the action bar -->
+					<template is="dom-if" if="{{canEdit}}">
+						<template is="dom-if" if="{{enableSave(editing)}}">
+							<px-button class="action" icon="px-icons:save" disabled$='[[!canSave]]' on-click='save'>Save</px-button>
+						</template>
+						<px-button class="action" icon="{{lockIcon}}" disabled$='[[!canEdit]]' positive$='{{editing}}' pressed$='[[editing]]' on-click='edit'>Edit</px-button>
+					</template>
+				</px-actionbar>
+				<!--
+					The main section of the settings page.
+					Settings are divided by group. Each group's name and icon are displayed, followed by every param in the group.
+                -->
+				<px-content id="main" class$="flex {{editClass}}" style="padding: 30px 3vw; overflow-y:auto;">
+					<template is="dom-if" if="{{cards}}">
+						<px-card-container horizontal>
+							<content></content>
+						</px-card-container>
+					</template>
+					<content></content>
+				</px-content>
+			</div>
+			<div id="sidebar"></div>
+			<!--<px-sidebar id="sidebar" dark floating closed$="[[hideSidebar]]" class="layout vertical"></px-sidebar>-->
+		</div>
+
+	</template>
+	<script>
+	Polymer({
+		is: 'tab-default',
+		properties: {
+			label: String,
+			icon: String,
+			canEdit: Boolean
+		},
+		behaviors: [
+			PB.behaviors.tabElem,		// Is a tab
+			PB.behaviors.navElem,		// Contains params (everything gets this)
+			PB.behaviors.sidebarOwner('sidebar'),	// Has a sidebar
+			PB.behaviors.disabled,		// Can be disabled
+			PB.behaviors.editSave,		// Edit / Save toggle
+			PB.behaviors.updateParam	// Updates all params at an interval
+		],
+		attached: function() {
+			var self = this;
+			var updateEditButton = function() {
+				// Search through all the effective children to determine the type of Tab this is
+				var queue = [self.getEffectiveChildren()];
+				var canEdit = false;
+				var hasSidebar = false;
+				while (queue.length) {
+					var collection = queue.pop();
+					for (var i = 0; i < collection.length; i++) {
+						var obj = collection[i];
+						if ((obj.is === "param-input" || obj.is === "param-bitfield-input") && obj.param) {
+							// This is a tab that has parameters that are editable by the current user.
+							// Set the canEdit feature, which displays the save/edit button in the upper right
+							self.set("canEdit", true);
+							break;
+						}
+						if (obj.getEffectiveChildren) {
+							var c = obj.getEffectiveChildren();
+							if (c) {
+								queue.push(c);
+							}
+						}
+					}
+				}
+				// self.set("canEdit", false);
+				if (self.updateInterval === undefined) {
+					self.set("updateInterval", 7000);
+				}
+			};
+
+			self.set("canEdit", false);
+			this.addEventListener(ENUM.EVENT.PARAMS_LIST_CHANGED, updateEditButton);
+			this.addEventListener(ENUM.EVENT.LOGIN, updateEditButton);
+
+		},
+		enableSave: function(editing) {
+			var tab = this.getTab();
+			if(tab.dataHost.localName == "tab-user_settings") {
+				return false;
+			}
+			return editing;
+		},
+		onChildren: function() {
+			// Set cards to either true or false
+			var children = this.getEffectiveChildren();
+			var cards = false;
+			for (var n in children) {
+				var child = children[n];
+				if (child.isCard) {
+					cards = true;
+					break;
+				}
+			}
+			this.set("cards", cards);
+		}
+	});
+	</script>
+</dom-module>

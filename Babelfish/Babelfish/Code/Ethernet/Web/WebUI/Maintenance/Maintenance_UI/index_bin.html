@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>LTK Maintenance Page</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<script>
+	var openFile = (function() {
+		//This file is UNCOMPRESSED
+		//  to compress it, copy the contents of this <script> tag into a javascript minifier online
+		//  and replace this code with the result
+		//  http://jscompress.com/
+		//  http://javascript-minifier.com/
+		///////////
+		// MiniQ //
+		///////////
+		//Tiny Promise implementation
+		var MiniQ = function MiniQ() {
+			var q = this.q = [];
+			var STATE_PENDING = -1;
+			var STATE_RESOLVED = 0;
+			var STATE_REJECTED = 1;
+			//Stores the arguments used when 'resolve' or 'reject' was called
+			var value;
+			var self = this;
+			self.state = STATE_PENDING;
+			this.getMiniQ = function() {
+				if (value && instanceOf(value[0], MiniQ)) {
+					return value[0].getMiniQ();
+				}
+				return self;
+			};
+			this.doQueue = function() {
+				while (q.length) {
+					var func = q.shift()[self.state];
+					var newValue;
+					if (func) {
+						newValue = func.apply(self, value);
+						if (newValue !== undefined) {
+							newValue = [newValue];
+							for (var i = 1; i < value.length; i++) {
+								newValue[i] = value[i];
+							}
+							value = newValue;
+							if (instanceOf(value[0], MiniQ)) {
+								while (q.length) {
+									value[0].q.push(q.shift());
+								}
+							}
+						}
+					}
+				}
+				if (value && instanceOf(value[0], MiniQ)) {
+					if (value[0].state !== STATE_PENDING) {
+						value[0].doQueue();
+					}
+				}
+			};
+			//When this process finishes, run the resolution or reject callback functions
+			//  These functions will run with ALL of the arguments sent by the resolve/reject function.
+			//  Providing a return value for the callback will replace the first argument in all future "then" callbacks
+			this.then = function then(resCallback, rejCallback) {
+				var mQ = self.getMiniQ();
+				if (mQ !== self) {
+					mQ.then(resCallback, rejCallback);
+					return mQ;
+				} else {
+					mQ.q.push([resCallback, rejCallback]);
+					if (mQ.state !== STATE_PENDING) {
+						mQ.doQueue();
+					}
+					return mQ;
+				}
+			};
+			//Resolve this process and send the data down its chain
+			this.resolve = function resolve() {
+				self.state = STATE_RESOLVED;
+				value = arguments;
+				self.doQueue();
+				return this;
+			};
+			//Reject this process and send the data down its chain
+			this.reject = function reject() {
+				self.state = STATE_REJECTED;
+				value = arguments;
+				self.doQueue();
+				return this;
+			};
+		};
+
+		//Helper Functions
+		//	These functions help reduce footprint
+		var instanceOf = function(a, b) {
+			return a instanceof b;
+		};
+		
+		/**
+		 * Returns the input as itself or as an array of 1
+		 */
+		var asArray = function(obj) {
+			return instanceOf(obj, Array) ? obj : [obj];
+		};
+
+		var timeout = function(f, t) {
+			return setTimeout(f, t);
+		};
+
+
+		var test;
+		if (false) {
+			test = {
+				"GET": {
+					"/rs/fw": "<Product xlink:href=\"/rs/fw\">\n<Name>Branch Circuit Monitor</Name>\n<ProductCode>0x1231</ProductCode>\n<ProductGuid>1234</ProductGuid>\n<BootSpecVer>1.0</BootSpecVer>\n<BootVer>1.0</BootVer>\n<SerialNum>3</SerialNum>\n<ProcessorCount>3</ProcessorCount>\n<ProcessorList>\n<Processor xlink:href=\"/rs/fw/0\"/>\n<Processor xlink:href=\"/rs/fw/1\"/>\n<Processor xlink:href=\"/rs/fw/2\"/>\n</ProcessorList>\n</Product>",
+					"/rs/fw/0": "<Processor xlink:href=\"/rs/fw/0\">\n<Name>Branch Main Board 0</Name>\n<FirmwareVersion>1.00</FirmwareVersion>\n<Guid>0000</Guid>\n<SerialNum>1000</SerialNum>\n<HardwareVer>1.00</HardwareVer>\n<ImageCount>2</ImageCount>\n<ImageList>\n<Image xlink:href=\"/rs/fw/0/0\" />\n<Image xlink:href=\"/rs/fw/0/1\" />\n</ImageList>\n</Processor>",
+					"/rs/fw/1": "<Processor xlink:href=\"/rs/fw/1\">\n<Name>Circuit Monitor Main Board 1</Name>\n<FirmwareVersion>1.01</FirmwareVersion>\n<Guid>1111</Guid>\n<SerialNum>1001</SerialNum>\n<HardwareVer>1.01</HardwareVer>\n<ImageCount>2</ImageCount>\n<ImageList>\n<Image xlink:href=\"/rs/fw/1/0\" />\n<Image xlink:href=\"/rs/fw/1/1\" />\n</ImageList>\n</Processor>",
+					"/rs/fw/2": "<Processor xlink:href=\"/rs/fw/2\">\n<Name>Monitor Main Board 2</Name>\n<FirmwareVersion>1.02</FirmwareVersion>\n<Guid>2222</Guid>\n<SerialNum>1002</SerialNum>\n<HardwareVer>1.02</HardwareVer>\n<ImageCount>2</ImageCount>\n<ImageList>\n<Image xlink:href=\"/rs/fw/2/0\" />\n<Image xlink:href=\"/rs/fw/2/1\" />\n</ImageList>\n</Processor>",
+					"/rs/fw/0/0": "<Image xlink:href=\"/rs/fw/0/0\">\n<Name>Application Firmware</Name>\n<Ver>1.00</Ver>\n<Guid>0000</Guid>\n<UpdateHistory>\n<Who>Admin</Who>\n<When>\n<Date>2015-10-05</Date>\n<TimeGMT>01:20</TimeGMT>\n</When>\n</UpdateHistory>\n<Bin xlink:href=\"/rs/fw/0/0/bin\" />\n<Valid xlink:href=\"/rs/fw/0/0/validate\" />\n</Image>",
+					"/rs/fw/0/1": "<Image xlink:href=\"/rs/fw/0/1\">\n<Name>UI Firmware</Name>\n<Ver>1.01</Ver>\n<Guid>0000</Guid>\n<UpdateHistory>\n<Who>Admin</Who>\n<When>\n<Date>2015-10-05</Date>\n<TimeGMT>01:20</TimeGMT>\n</When>\n</UpdateHistory>\n<Bin xlink:href=\"/rs/fw/0/1/bin\" />\n<Valid xlink:href=\"/rs/fw/0/1/validate\" />\n</Image>",
+					"/rs/fw/1/0": "<Image xlink:href=\"/rs/fw/1/0\">\n<Name>Application Firmware</Name>\n<Ver>1.00</Ver>\n<Guid>1111</Guid>\n<UpdateHistory>\n<Who>Admin</Who>\n<When>\n<Date>2015-10-05</Date>\n<TimeGMT>01:20</TimeGMT>\n</When>\n</UpdateHistory>\n<Bin xlink:href=\"/rs/fw/1/0/bin\" />\n<Valid xlink:href=\"/rs/fw/1/0/validate\" />\n</Image>",
+					"/rs/fw/1/1": "<Image xlink:href=\"/rs/fw/1/1\">\n<Name>UI Firmware</Name>\n<Ver>1.01</Ver>\n<Guid>1111</Guid>\n<UpdateHistory>\n<Who>Admin</Who>\n<When>\n<Date>2015-10-05</Date>\n<TimeGMT>01:20</TimeGMT>\n</When>\n</UpdateHistory>\n<Bin xlink:href=\"/rs/fw/1/1/bin\" />\n<Valid xlink:href=\"/rs/fw/1/1/validate\" />\n</Image>",
+					"/rs/fw/2/0": "<Image xlink:href=\"/rs/fw/2/0\">\n<Name>Application Firmware</Name>\n<Ver>1.00</Ver>\n<Guid>2222</Guid>\n<UpdateHistory>\n<Who>Admin</Who>\n<When>\n<Date>2015-10-05</Date>\n<TimeGMT>01:20</TimeGMT>\n</When>\n</UpdateHistory>\n<Bin xlink:href=\"/rs/fw/2/0/bin\" />\n<Valid xlink:href=\"/rs/fw/2/0/validate\" />\n</Image>",
+					"/rs/fw/2/1": "<Image xlink:href=\"/rs/fw/2/1\">\n<Name>UI Firmware</Name>\n<Ver>1.01</Ver>\n<Guid>2222</Guid>\n<UpdateHistory>\n<Who>Admin</Who>\n<When>\n<Date>2015-10-05</Date>\n<TimeGMT>01:20</TimeGMT>\n</When>\n</UpdateHistory>\n<Bin xlink:href=\"/rs/fw/2/1/bin\" />\n<Valid xlink:href=\"/rs/fw/2/1/validate\" />\n</Image>",
+					"/rs/fw/0/0/validate": ["<Validate>\n<Integrity>Checking</Integrity>\n<Wait>100</Wait>\n</Validate>", "<Validate>\n<Integrity>Valid</Integrity>\n</Validate>"],
+					"/rs/fw/0/1/validate": ["<Validate>\n<Integrity>Checking</Integrity>\n<Wait>100</Wait>\n</Validate>", "<Validate>\n<Integrity>Invalid</Integrity>\n</Validate>"],
+					"/rs/fw/1/0/validate": ["<Validate>\n<Integrity>Checking</Integrity>\n<Wait>100</Wait>\n</Validate>", "<Validate>\n<Good>Unknown</Good>\n</Validate>"],
+					"/rs/fw/1/1/validate": ["<Validate>\n<Integrity>Checking</Integrity>\n<Wait>100</Wait>\n</Validate>", "<Validate>\n<Integrity>Valid</Integrity>\n</Validate>"],
+					"/rs/fw/2/0/validate": ["<Validate>\n<Integrity>Checking</Integrity>\n<Wait>100</Wait>\n</Validate>", "<Validate>\n<Integrity>Valid</Integrity>\n</Validate>"],
+					"/rs/fw/2/1/validate": ["<Validate>\n<Integrity>Checking</Integrity>\n<Wait>100</Wait>\n</Validate>", "<Validate>\n<Integrity>Valid</Integrity>\n</Validate>"],
+				},
+				"PUT": {
+					"/rs/fw/0/0/bin": "<DataPUT>\n<Wait>10</Wait>\n</DataPUT>",
+					"/rs/fw/0/1/bin": "<DataPUT>\n<Wait>10</Wait>\n</DataPUT>",
+					"/rs/fw/1/0/bin": "<DataPUT>\n<Wait>10</Wait>\n</DataPUT>",
+					"/rs/fw/1/1/bin": "<DataPUT>\n<Wait>10</Wait>\n</DataPUT>",
+					"/rs/fw/2/0/bin": "<DataPUT>\n<Wait>10</Wait>\n</DataPUT>",
+					"/rs/fw/2/1/bin": "<DataPUT>\n<Wait>10</Wait>\n</DataPUT>"
+				},
+				'POST': {
+					'/rs/fw/session': '<SessionResp>\n<SessionID>789465123</SessionID>\n<Wait>10</Wait>\n</SessionResp>'
+				},
+				'DELETE': {
+					'/rs/fw/session': '<Session>\n<Wait>10</Wait>\n</Session>'
+				}
+			};
+		}
+
+		// Converts XML into a Javascript Object
+		//  - Creates a new object or appends data to an existing one
+		//  - Attributes are assigned as keys to the object
+		//  - If xml is only a value (not XML) it is assigned to parent.value
+		//    - If parent doesn't exist, xml is returned
+		var parseXML = function(xml, parent) {
+			// RegEx divides proper XML in to three parts:
+			// $1 - The node name
+			// $2 - Space-separated attributes, or a blank string
+			// $3 - The contents of the node, or undefined if self-closing
+			var regex = /<(\w+)\s*(.*?)(?:\/>|>([\S\s]*?)<\/\1>)/g
+			//Create the basic XML structure
+			var ex = regex.exec(xml);
+			if (ex === null) {
+				//This occurs when "xml" is not XML-formatted.
+				//  In this case, apply it to its parent and move on
+				if (!parent) {
+
+
+					parent = xml;
+				} else if (xml) {
+					parent.value = xml;
+
+
+
+
+				}
+				return parent;
+			}
+			var ret = parent || {};
+			while (ex !== null) {
+				// Assign each attribute as a property of the value
+				var attr = undefined;
+
+				if (ex[2]) {
+					attr = {};
+					ex[2].split(/\s/).forEach(function(n) {
+						var i = n.indexOf('=');
+						var k = n.substr(0, i);
+						var v = n.substr(i + 1).replace(/^"(.*)"$/, '$1');
+						attr[k] = v;
+					});
+				}
+				// Assign the value to the key
+				var value = parseXML(ex[3], attr);
+				var old = ret[ex[1]];
+				if (old) {
+					if (!instanceOf(old, Array)) {
+						old = ret[ex[1]] = [old];
+					}
+					old.push(value)
+				} else {
+					ret[ex[1]] = value;
+				}
+				ex = regex.exec(xml);
+			}
+			return ret;
+		};
+		// Makes an XMLHttpRequest and returns a promise that resolves (or rejects) when it is finished
+		var request = function(cmd, url, data) {
+			console.log('request', cmd, url, data && data.substr(0, 200));
+			var xmlhttp = new XMLHttpRequest();
+			var q = new MiniQ();
+			xmlhttp.onreadystatechange = function() {
+				if (xmlhttp.readyState == 4) {
+					var json = parseXML(xmlhttp.responseText);
+					console.log('response', cmd, url, data && data.substr(0, 200), json);
+					if (xmlhttp.status >= 200 && xmlhttp.status < 300) {
+						q.resolve(json);
+					} else {
+						xmlhttp.responseJSON = json;
+						q.reject(xmlhttp);
+					}
+				}
+			};
+			if (test && false) {
+				timeout(function() {
+					var text = test[cmd][url];
+					if (instanceOf(text, Array)) {
+						text.index = (text.index + 1 || 0) % text.length;
+						text = text[text.index];
+					}
+					var old = xmlhttp;
+					xmlhttp = {
+						readyState: 4,
+						status: 200,
+						responseText: text
+					};
+					old.onreadystatechange();
+				}, 10);
+				return q;
+			}
+
+			//xmlhttp.open(cmd, "https://10.234.92.136"+url);
+			xmlhttp.open(cmd, url);
+			xmlhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');			
+			if (cmd !== 'GET') {
+				xmlhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');				
+			}
+
+			if (data) {
+				xmlhttp.send(data);
+			} else {
+				xmlhttp.send();
+			}
+			return q;
+		};
+		// Creates a promise from the xmlhttp return that waits for the specified amount of time before resolving with the original xmlhttp.
+		var requestAndWait = function(cmd, url, data) {
+			return request(cmd, url, data).then(function(json) {
+				for (var n in json) {
+					var w = json[n].Wait;
+					if (w) {
+						var ret = new MiniQ();
+						timeout(ret.resolve.bind(ret, json), w);
+						return ret;
+					}
+				}
+			});
+		};
+		// Returns a promise that evaluates after the text element has been resolved
+		// 	Useful for setting a status before making a request, or setting a status upon failure
+		var setStatus = function(elem, text, arg) {
+			elem.textContent = text;
+			return (new MiniQ()).resolve(arg);
+		};
+		var xlink = 'xlink:href'
+		// Reads all the processors and images and displays them in a table
+		var updateProcessors = function() {
+			// Clear the processor element
+			var domProc = document.getElementById('processors');
+			while (domProc.firstChild) {
+				domProc.removeChild(domProc.firstChild);
+			}
+			var createDatatable = function(parent, obj, listLabel, statusCell) {
+				// Separate out the data
+				var keys = Object.keys(obj).filter(function(k) {
+					return !(k === 'Name' || k === xlink || instanceOf(obj[k], Object));
+				});
+				//Create the data table with a handle to include other elements
+				var datatable = templates.create('datatable', {
+					datarow: createDatarow(obj, obj.Name, keys, statusCell),
+				});
+				parent.appendChild(datatable);
+				if (listLabel === undefined) {
+					return datatable;
+				} else {
+					//Create the data table with a handle to include other elements
+					var listElement = document.createElement('span');
+					datatable.appendChild(createListrow(listLabel, listElement));
+					return listElement;
+				}
+			};
+			// Request the ProcesorList information
+			request('GET', '/rs/fw').then(function(json) {
+				var parent = document.getElementById('processors');
+				var product = json.Product;
+				var processorListElement = createDatatable(parent, product, 'Processors');
+				var processors = asArray(product.ProcessorList.Processor);
+				// Request info on each of the processors
+				processors.forEach(function(p) {
+					request('GET', p[xlink]).then(function(json) {
+						var processor = json.Processor;
+						var imageListElement = createDatatable(processorListElement, processor, 'Images');
+						// Request info on each of the processors
+						processor.ImageList.Image.forEach(function(p) {
+							request('GET', p[xlink]).then(function(json) {
+								var image = json.Image;
+								//Flatten image history data for display
+								var data = {};
+								var queue = [image];
+								while (queue.length) {
+									var obj = queue.shift();
+									for (var n in obj) {
+										if (instanceOf(obj[n], Object)) {
+											queue.push(obj[n]);
+										} else if (n) {
+											data[n] = obj[n];
+										}
+									}
+								}
+								// Create image's datatable
+								var statusCell = templates.create('datastatus');
+								var datatable = createDatatable(imageListElement, data, undefined, statusCell);
+								// Replace the first element with an upload button
+								var row = datatable.getElementsByTagName('tr')[0];
+								var cell = templates.create('filecell', {
+									filebutton: templates.create('filebutton', {
+										title: 'Load ' + image.Name
+									})
+								});
+								row.replaceChild(cell, row.querySelector('td.title'));
+								//Specifically set the input's properties
+								var inputElement = cell.getElementsByTagName('input')[0];
+								inputElement.image = image;
+								inputElement.statusCell = statusCell;
+							})
+						});
+					})
+				});
+			});
+		}
+		timeout(updateProcessors, 1);
+		/////////////////////////////////
+		// Library to handle templates //
+		/////////////////////////////////
+		// Runs a function on each and every node found, including itself
+		var processNodes = function(template, func) {
+			var nodes = [template];
+			while (nodes.length) {
+				var n = nodes.shift()
+				func(n);
+				for (var i = n.childNodes.length - 1; i >= 0; i--) {
+					nodes.push(n.childNodes[i]);
+				}
+			}
+			return template;
+		};
+		var templates = {
+			create: function(name, replace) {
+				var ret = templates[name].cloneNode(true);
+				processNodes(ret, function(n) {
+					if (n.nodeName === '#text') {
+						var content = n.textContent;
+						for (var k in replace) {
+							content = content.replace('{{' + k + '}}', replace[k]);
+						}
+						n.textContent = content;
+					} else {
+						for (var m in n.attributes) {
+							var attr = n.attributes[m]
+							if (attr && typeof attr.value === 'string') {
+								var value = attr.value;
+								for (var k in replace) {
+									value = value.replace('{{' + k + '}}', replace[k]);
+								}
+								attr.value = value;
+							}
+						}
+						if (n.id && n.id !== name) {
+							for (var k in replace) {
+								if (n.id === k && replace[k] !== undefined) {
+									if (!instanceOf(replace[k], Array)) {
+										replace[k] = [replace[k]];
+									}
+									for (var i = 0; i < replace[k].length; i++) {
+										n.parentNode.insertBefore(replace[k][i], n);
+									}
+									break;
+								}
+							}
+							n.parentNode.removeChild(n);
+							return;
+						}
+					}
+				});
+				return ret;
+			}
+		};
+		var createDatarow = function(obj, title, keys, statusCell) {
+			return templates.create('datarow', {
+				title: title,
+				datacell: (keys || Object.keys(obj)).map(function(k) {
+					return templates.create('datacell', {
+						title: k,
+						value: obj[k]
+					})
+				}),
+				datastatus: statusCell
+			});
+		};
+		var createListrow = function(title, list) {
+			return templates.create('listrow', {
+				row: title,
+				extra: list
+			});
+		};
+		timeout(function() {
+			var t = document.getElementById('template');
+			t.parentNode.removeChild(t);
+			processNodes(t, function(t) {
+				if (t.id) {
+					t.normalize();
+					templates[t.id] = t;
+				}
+			});
+		});
+		var sessionID;
+		var sessionTimeout;
+		var startSession = function(sec) {
+			sec = sec || 60;
+			return requestAndWait('POST', '/rs/fw/session', '<SessionDef><TimeoutSec>' + sec + '</TimeoutSec><EncodingType>0</EncodingType></SessionDef>').then(function(json) {
+				sessionID = json.SessionResp.SessionID;
+				sessionTimeout = sec * 1000 + Date.now();
+			}, function(xmlhttp) {
+				console.error('Failed to establish session', xmlhttp);
+			});
+		};
+
+		var endSession = function() {
+			return requestAndWait('DELETE', '/rs/fw/session', '<Session SessionID="'+sessionID+'" />');
+		};
+
+		var toHex = function(n) {
+			return (n < 16 ? '0' : '')+n.toString(16);
+		};
+
+		function openFile(elem) {
+			//Confirm file is valid before continuing
+			var file = elem.files[0];
+			if (!file) {
+				return;
+			}
+			//Useful values from image
+			var image = elem.image; // Image from XML
+			var binurl = image.Bin[xlink];
+			var validateurl = image.Valid[xlink];
+			var statusCell = elem.statusCell;
+			var log = setStatus.bind(this, statusCell);
+
+			function sendChunks(addr, chunks, url, index) {
+				var toSend;
+				if (index >= chunks.length) {
+					//Send complete
+					return;
+				}
+				if (chunks.length > 1) {
+					toSend = '<DataPUT SessionID="' + sessionID + '">'+ '<ChunkTotal>' + chunks.length + '</ChunkTotal>' + '<ChunkNumber>' + index + '</ChunkNumber>'  + '<Data address="' + addr + '" size="' + chunks[index].length + '">' + chunks[index] + '</Data>' + '</DataPUT>';
+				} else {
+					toSend = '<DataPUT SessionID="' + sessionID + '">' + '<Data address="' + addr + '" size="' + chunks[0].length + '">' + chunks[0] + '</Data>' + '</DataPUT>';
+				}
+				return log('Sending chunk ' + (index + 1) + ' of ' + chunks.length).then(function() {
+					return requestAndWait('PUT', url, toSend);
+				}).then(function() {
+					return sendChunks(addr, chunks, url, index + 1);
+				});
+			}
+
+			function validate(url) {
+				log('Validating...');
+				var checkValid = function() {
+					return requestAndWait('GET', url).then(function(json) {
+						var state = json.Validate.Integrity;
+						switch (state) {
+							case 'Checking':
+								return checkValid();
+							case 'Valid':
+								return log('Valid');
+							case 'Invalid':
+								return log('Invalid');
+							default:
+								return log('Validation Not Recognized: '+ state);
+						}
+					});
+				};
+				return checkValid();
+			}
+			var reader = new FileReader();
+			reader.onload = function(e) {
+				var arrBuf = e.target.result;
+
+				// Incoming buffer is either an XML codepack, or binary file
+				// First, convert the array to a string and attempt to parse as an XML
+				var uintArray = new Uint8Array(arrBuf);
+				var arrayLen = uintArray.length;
+				var xmlString = '';
+
+				var parseSize = 20;
+				var i;
+				for (i = 0; i < arrayLen; i+=parseSize) {
+					var s = String.fromCharCode.apply(null, uintArray.subarray(i, i+parseSize));
+					if (s.match(/[^\w\s`1234567890\-=~!@#$%^&*()_+[\]\\{}|;':",.\/<>?]/)) {
+						xmlString = null;
+						break;
+					}
+					xmlString += s;
+				}
+
+				var address = 0;
+				var chunksize = 2048; // Chunksize, in characters (two per byte)
+				var chunks = [];
+
+
+				//RegEx check the XML string
+				if (xmlString) {
+					//parse the XML file and pull out the chunks
+					console.error('XML file not supported yet!');
+				}
+				//else
+				{
+					//xmlString contains invalid characters
+					// Convert to HEX strings
+					var hexString = '';
+					for (i = 0; i < arrayLen; i++) {
+						hexString += toHex(uintArray[i]);
+					}
+					for (i = 0; i < (arrayLen*2); i+= chunksize) {
+						if(((arrayLen*2) - i) < chunksize)
+						{
+							chunksize = (arrayLen*2) - i;
+						}
+						chunks.push(hexString.substr(i, chunksize));
+					}
+				}
+				
+				var ret;
+				var callback = sendChunks.bind(this, address, chunks, binurl, 0);
+				if (sessionID === undefined || Date.now() > sessionTimeout) {
+					ret = log('Starting Session...').then(startSession).then(callback);
+				} else {
+					ret = callback();
+				}
+				ret.then(validate.bind(this, validateurl)).then(endSession);
+			};
+			reader.readAsArrayBuffer(file);
+			elem.value = '';
+		};
+
+		return openFile;
+	})();
+	</script>
+</head>
+
+<body>
+	<div class="container">
+		<h1>LTK Maintenance Page</h1> The firmware for this device has not been installed properly.
+		<br /> Click the button below to select and install firmware.
+
+		<h2 id="failure" style="color: red"></h2>
+		<h2 id="success" style="color: green"></h2>
+
+		<div id="processors"></div>
+
+		<style>
+		table,
+		th,
+		td {
+			border: 0px solid black;
+			border-collapse: collapse;
+			/*padding: 0px;*/
+		}
+		
+		tr {
+			border: 1px solid black;
+		}
+		
+		tr:nth-child(2) {
+			background: #FFFFFF;
+		}
+		
+		tr:nth-child(1) {
+			background: #EEEEEE;
+		}
+		</style>
+
+		<div id="template" style="display: none">
+			<table id="datatable" width='100%'>
+				<tr id="datarow">
+					<td width='100px' id='datastatus' class="status"></td>
+					<td width='100px' id='filecell'>
+						<span id="filebutton">
+							<input type="file" style="display: none" onchange="openFile(this)">
+							<button onclick="this.previousElementSibling.click()">{{title}}</button>
+						</span>
+					</td>
+					<td width='100px' class="title">{{title}}</td>
+					<td width='100px' id="datacell">
+						<strong class="value">{{value}}</strong>
+						<br /><small class="title">{{title}}</small>
+					</td>
+				</tr>
+				<tr id="listrow" style="border: 0px">
+					<td></td>
+					<td colspan=100>
+						<span id="extra"></span>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+</body>
+
+</html>

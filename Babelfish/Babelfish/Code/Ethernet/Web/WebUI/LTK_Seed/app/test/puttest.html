@@ -1,0 +1,340 @@
+<!doctype html>
+<html>
+
+<head>
+    <script>
+    var selected;
+
+    ///////////////
+    //Credentials//
+    ///////////////
+    var cred = {
+        urlBase: (location.href.indexOf('localhost') < 0) ? '' : 'http://10.130.14.199:8083',
+        username: 'admin',
+        password: 'admin'
+    }
+    console.log(cred);
+
+    /////////////////////
+    //Library functions//
+    /////////////////////
+
+    //XHR Read; can be replaced by $.ajax or $http
+    function http(method, path, data) {
+        if (!window.MiniQ) {
+            //Tiny Promise implementation
+            window.MiniQ = function MiniQ() {
+                var q = this.q = [];
+                var state = -1;
+                var value = undefined;
+
+                var doQueue = function() {
+                    while (q.length) {
+                        var func = q.shift()[state];
+                        if (func) {
+                            value = func(value);
+                            if (value instanceof window.MiniQ) {
+                                while (q.length) {
+                                    value.q.push(q.shift());
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                this.then = function then(res, rej) {
+                    q.push([res,rej]);
+                    if (state >= 0) {
+                        doQueue();
+                    }
+                    return this;
+                };
+
+                this.resolve = function resolve(v) {
+                    state = 0;
+                    value = v;
+                    doQueue();
+                };
+
+                this.reject = function reject(v) {
+                    state = 1;
+                    value = v;
+                    doQueue();
+                };
+            };
+        }
+
+        var q = new MiniQ();
+        var xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+        xhr.open(method, path, true);
+        xhr.setRequestHeader("Authorization", "Basic " + btoa(cred.username + ":" + cred.password));
+        xhr.onreadystatechange = function(evt) {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    q.resolve(xhr);
+                } else {
+                    q.reject(xhr);
+                }
+            }
+        }
+        try {
+            xhr.send(data);
+        } catch (e) {
+            q.reject(xhr);
+        }
+        return q;
+    };
+
+    //Get DCI.json file and stores it in window.DCI
+    //  Also defines each Param as its own object
+    function readDCI() {
+        var Param = function Param(obj) {
+            //Shallow copy the object
+            for (var n in obj) {
+                this[n] = obj[n];
+            }
+        };
+
+        Object.defineProperties(Param.prototype, {
+            read: {
+                value: function read() {
+                    return http('GET', cred.urlBase + '/rs/param/' + this.pid + '/value', null).then(function(xhr) {
+                        var str = xhr.responseXML.firstChild.innerHTML;
+                        if (!this.format) {
+                            switch (this.type) {
+                                case 'DCI_DTYPE_STRING8':
+                                    break;
+                                default:
+                                    str = Number(str);
+                            }
+                        }
+                        return this.value = str;
+                    }.bind(this), function(xhr) {
+                        delete this.value;
+                        this.response = "Error!";
+                    }.bind(this));
+                }
+            },
+            write: {
+                value: function write(value) {
+                    var data = value;
+                    switch (this.type) {
+                        case 'DCI_DTYPE_STRING8':
+                            data = '"' + data + '"';
+                            break;
+                        default:
+                    }
+                    data = "<Value pid=\"" + this.pid + "\">" + data + "</Value>";
+                    return http('PUT', cred.urlBase + '/rs/param/' + this.pid + '/value', data);
+                }                
+            }
+        });
+
+        //Method 1: Use dci.json
+        return http('GET', '../scripts/dci.json', null).then(function(xhr) {
+            console.log('Method 1: Reading from dci.json');
+            window.DCI = JSON.parse(xhr.responseText).DCI;
+            var queue = [DCI];
+            while (queue.length > 0) {
+                var obj = queue.shift();
+                for (var n in obj) {
+                    var item = obj[n];
+                    if (item.pid) {
+                        obj[n] = new Param(item);
+                    } else {
+                        queue.push(item);
+                    }
+                }
+            }
+        }, function() {
+            //Method 2: Parse '/rs/param'
+            return http('GET', cred.urlBase+'/rs/param', null).then(function(xhr) {
+                console.log('Method 2: Parse /rs/param');
+                window.DCI = {};
+                var n = xhr.responseXML.firstElementChild.firstElementChild;
+                while (n) {
+                    var name = n.getAttribute('name');
+                    var pid = n.getAttribute('pid');
+                    DCI[name] = new Param({
+                        name: name,
+                        pid: pid
+                    });
+                    n = n.nextElementSibling;
+                }
+            });
+        });
+    };
+
+    // End Library Functions
+
+
+    ////////////////////////
+    // Put Test Functions //
+    ////////////////////////
+
+    function display(param) {
+        document.getElementById('value').value = param.value;
+        var details = document.getElementById('param-details');
+        while (details.firstChild) {
+            details.removeChild(details.firstChild);
+        }
+        for (var i in param) {
+            var row = document.createElement('tr');
+            var cell = document.createElement('td');
+            cell.appendChild(document.createTextNode(i));
+            row.appendChild(cell);
+
+            var cell = document.createElement('td');
+            cell.appendChild(document.createTextNode(param[i]));
+            row.appendChild(cell);
+
+            details.appendChild(row);
+        }
+    }
+
+    function getPath(obj, header) {
+        if (!header) {
+            if (obj === DCI) {
+                return 'DCI';
+            }
+            header = [];
+        }
+        var haystack = DCI;
+        for (var n in header) {
+            haystack = haystack[header[n]];
+        }
+
+        for (n in haystack) {
+            if (haystack[n] instanceof Object) {
+                header.push(n);
+                if (haystack[n] === obj) {
+                    header.unshift('DCI');
+                    var path = header.join('.');
+                    return path;
+                }
+                var v = getPath(obj, header);
+                if (v) {
+                    return v;
+                }
+                header.pop();
+            }
+        }
+        return undefined;
+    }
+
+    //Render the data table
+    function select(obj, noPath) {
+        var path = getPath(obj);
+        if (!noPath) {
+            document.getElementById('param').value = path;
+        }
+        selected = obj;
+        if (obj.pid) {
+            //Specific parameter
+            display(obj);
+            obj.read().then(function() {
+                display(obj);
+                document.getElementById('write').disabled = false;
+                document.getElementById('value').value = obj.value;
+            }, function() {
+                display(obj);
+                document.getElementById('write').disabled = false;
+                document.getElementById('value').value = '';
+            });
+        } else {
+            //Family of parameters
+            var details = document.getElementById('param-details');
+            while (details.firstChild) {
+                details.removeChild(details.firstChild);
+            }
+            for (var i in obj) {
+                var row = document.createElement('tr');
+                var cell = document.createElement('td');
+                var link = document.createElement('a');
+                link.href = "#";
+                link.appendChild(document.createTextNode(path + '.' + i));
+                link.onclick = function(sel) {
+                    window.event.preventDefault();
+                    select(sel);
+                }.bind(this, obj[i]);
+                cell.appendChild(link);
+                row.appendChild(cell);
+                details.appendChild(row);
+            }
+        }
+    }
+
+    function back() {
+        var list = [DCI];
+        while (list.length > 0) {
+            var obj = list.shift();
+            for (var i in obj) {
+                if (obj[i] instanceof Object) {
+                    if (obj[i] === selected) {
+                        return select(obj);
+                    } else {
+                        list.push(obj[i]);
+                    }
+                }
+            }
+        }
+        return select(DCI);
+    }
+
+    function writeParam() {
+        var param = selected;
+        var cb = select.bind(param, param, true);
+        selected.write(document.getElementById('value').value).then(cb, cb);
+    }
+
+    function search() {
+        var text = document.getElementById('param').value;
+        var pieces = text.split('.');
+        var obj = DCI;
+        if (pieces[0] === 'DCI') {
+            pieces.shift();
+        }
+        for (var i = 0; i < pieces.length; i++) {
+            if (obj[pieces[i]]) {
+                obj = obj[pieces[i]];
+            } else {
+                break;
+            }
+        }
+        if (obj !== selected) {
+            select(obj, true);
+        }
+    }
+
+    /////////////////////////////
+    // Put Test initialization //
+    ///////////////////////////// 
+    readDCI().then(function() {
+        var status;
+        if (Object.keys(DCI)[0].indexOf(' ') >= 0) {
+            status = '/rs/param';
+        } else {
+            status = '../scripts/dci.json';
+        }
+
+        document.getElementById('method').appendChild(document.createTextNode(status));
+        select(DCI);
+    });
+    </script>
+</head>
+
+<body>
+    <div>
+        <h2>Put Test</h2>
+        <h3>From <span id='method'></span> <button onclick='back()'>Back</button></h3>
+        <input id="param" onkeyup='search()' type="text" style="width: 100%" placeholder="pid or DCI">
+        <table id="param-details"></table>
+        <h3>Value</h3>
+        <input id="value" type="text" style="width: 100%" placeholder="">
+        <button id="write" onclick='writeParam()'>Write</button>
+    </div>
+</body>
+
+</html>

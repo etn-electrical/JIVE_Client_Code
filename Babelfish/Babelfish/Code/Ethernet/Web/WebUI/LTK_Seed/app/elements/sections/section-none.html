@@ -1,0 +1,19 @@
+<dom-module id="section-none">
+    <template>
+		<span icon="{{icon}}">{{label}}</span>
+		<content></content>
+    </template>
+    <script>
+    Polymer({
+        is: 'section-none',
+        behaviors: [
+            PB.behaviors.navElem,
+            PB.behaviors.disabled,
+        ],
+        properties: {
+            icon: String,
+            label: String
+        }
+    });
+    </script>
+</dom-module>

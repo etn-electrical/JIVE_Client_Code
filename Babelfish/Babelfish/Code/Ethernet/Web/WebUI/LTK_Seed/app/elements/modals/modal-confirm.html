@@ -1,0 +1,54 @@
+<dom-module id="modal-confirm">
+    <template>
+        <style>
+            px-modal[overlay] {
+                background: none;
+            }
+            :host /deep/ .content {
+                transform: translateX(-50%) translateY(-50%);
+                -webkit-transform: translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px)) !important;
+            }
+        </style>
+        <px-modal class="visible" overlay>
+            <px-actionbar dark>
+                <px-title maintitle="[[data.title]]"></px-title>
+            </px-actionbar>
+            <px-content layout vertical center-justified borderlessRows style="min-height: 100px;"><strong>{{data.message}}</strong></px-content>
+            <template is="dom-if" if="{{data.options}}">
+                <px-actionbar bottom>
+                    <span class="flex"></span>
+                    <template is="dom-repeat" items="{{data.options}}">
+                        <px-button id="{{item}}" on-click="click" primary$="{{isPrimary(item)}}">{{item}}</px-button>
+                    </template>
+                </px-actionbar>
+            </template>
+        </px-modal>
+    </template>
+    <script>
+    Polymer({
+        is: 'modal-confirm',
+        properties: {
+            tab: {
+                type: Object,
+                notify: true
+            },
+            data: {
+                type: Object,
+                notify: true
+            }
+        },
+
+        isPrimary: function(item) {
+            setTimeout(function () {
+               document.getElementById(item).focus();
+            });
+            return this.data.options.length - 1 === this.data.options.indexOf(item);
+        },
+
+        click: function(e) {
+            this.tab.promise.resolve(e.model.index);
+        }
+        
+    });
+    </script>
+</dom-module>

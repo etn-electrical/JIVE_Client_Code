@@ -1,0 +1,67 @@
+<dom-module id="group-certificate">
+	<template>
+		<style>
+		:host px-button {
+			width: 200px !important;
+		}
+		</style>
+		<px-row>
+			<px-column label> CA Certificate</px-column>
+			<px-column action>
+				<px-button icon="px-icons:export" on-click='openCertificate'>Download Certificate</px-button>
+			</px-column>
+			<px-column helper>CA Cert is used to authenticate Device certificate for TLS Communication. Run "Certificate Import Wizard" to install CA Cert in "Trusted Root Certification Authorities" Store.</px-column>
+		</px-row>
+	</template>
+	<script>
+	(function() {
+		Polymer({
+			is: 'group-certificate',
+			behaviors: [
+				PB.behaviors.navElem
+			],
+			openCertificate: function() {
+				var filename, certificate, blob, link;
+				PB.http.priorityGet("/rs/certstore/cacert").then(function(xhr) {
+					filename = "cert.cer";
+					certificate = xhr.response
+					blob = new Blob([certificate], {
+						type: 'application/x-x509-ca-cert'
+					});
+					if (PB.isIE()) {
+						navigator.msSaveBlob(blob, filename);
+					} else {
+						link = document.createElement("a");
+						link.download = filename;
+						link.href = window.URL.createObjectURL(blob);
+						document.body.appendChild(link);
+						link.click();
+						document.body.removeChild(link)
+					}
+				}, function(error) {
+					if (error.status == 404) {
+						navbar.modals.confirm.go({
+							message: 'Certificate is not currently available.',
+							title: 'Alert',
+							options: ["Ok"]
+						});
+					}else if(error.status === 422 && error.statusText == "SFU Session in Progress"){
+						navbar.modals.confirm.go({
+							message: 'Firmware update session in progress, please retry after sometime.',
+							title: 'Alert',
+							options: ["Ok"]
+						});
+					}
+					 else {
+						navbar.modals.confirm.go({
+							message: error.statusText,
+							title: 'Alert',
+							options: ["Ok"]
+						});
+					}
+				});
+			}
+		});
+	})()
+	</script>
+</dom-module>

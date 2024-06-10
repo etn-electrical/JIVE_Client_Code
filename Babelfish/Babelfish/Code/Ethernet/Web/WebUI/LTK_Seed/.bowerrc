@@ -1,0 +1,10 @@
+{
+  "directory": "bower_components",
+  "registry": "https://registry.bower.io",
+  "proxy": "http://proxy.apac.etn.com:8080",
+  "https-proxy": "http://proxy.apac.etn.com:8080",
+  "strict-ssl": false,
+  "resolvers": [
+  	"px-blue-resolver"
+  ]
+}

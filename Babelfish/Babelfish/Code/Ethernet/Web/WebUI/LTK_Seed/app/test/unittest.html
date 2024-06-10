@@ -1,0 +1,256 @@
+<!doctype html>
+<html>
+
+<head>
+    <script>
+    ///////////////
+    //Credentials//
+    ///////////////
+    var cred = {
+        urlBase: (location.href.indexOf('localhost') < 0) ? '' : 'http://10.130.14.199:8083',
+        username: 'admin',
+        password: 'admin'
+    }
+    console.log(cred);
+
+    /////////////////////
+    //Library functions//
+    /////////////////////
+
+    //XHR Read; can be replaced by $.ajax or $http
+    function http(method, path, data) {
+        if (!window.MiniQ) {
+            //Tiny Promise implementation
+            window.MiniQ = function MiniQ() {
+                var q = this.q = [];
+                var state = -1;
+                var value = undefined;
+
+                var doQueue = function() {
+                    while (q.length) {
+                        var func = q.shift()[state];
+                        if (func) {
+                            value = func(value);
+                            if (value instanceof window.MiniQ) {
+                                while (q.length) {
+                                    value.q.push(q.shift());
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                this.then = function then(res, rej) {
+                    q.push([res,rej]);
+                    if (state >= 0) {
+                        doQueue();
+                    }
+                    return this;
+                };
+
+                this.resolve = function resolve(v) {
+                    state = 0;
+                    value = v;
+                    doQueue();
+                };
+
+                this.reject = function reject(v) {
+                    state = 1;
+                    value = v;
+                    doQueue();
+                };
+            };
+        }
+
+        var q = new MiniQ();
+        var xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+        xhr.open(method, path, true);
+        xhr.setRequestHeader("Authorization", "Basic " + btoa(cred.username + ":" + cred.password));
+        xhr.onreadystatechange = function(evt) {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    q.resolve(xhr);
+                } else {
+                    q.reject(xhr);
+                }
+            }
+        }
+        try {
+            xhr.send(data);
+        } catch (e) {
+            q.reject(xhr);
+        }
+        return q;
+    };
+
+    //Get DCI.json file and stores it in window.DCI
+    //  Also defines each Param as its own object
+    function readDCI() {
+        var Param = function Param(obj) {
+            //Shallow copy the object
+            for (var n in obj) {
+                this[n] = obj[n];
+            }
+        };
+
+        Object.defineProperties(Param.prototype, {
+            read: {
+                value: function read() {
+                    return http('GET', cred.urlBase + '/rs/param/' + this.pid + '/value', null).then(function(xhr) {
+                        var str = xhr.responseXML.firstChild.innerHTML;
+                        if (!this.format) {
+                            switch (this.type) {
+                                case 'DCI_DTYPE_STRING8':
+                                    break;
+                                default:
+                                    str = Number(str);
+                            }
+                        }
+                        return this.value = str;
+                    }.bind(this), function(xhr) {
+                        delete this.value;
+                        this.response = "Error!";
+                    }.bind(this));
+                }
+            },
+            write: {
+                value: function write(value) {
+                    var data = value;
+                    switch (this.type) {
+                        case 'DCI_DTYPE_STRING8':
+                            data = '"' + data + '"';
+                            break;
+                        default:
+                    }
+                    data = "<Value pid=\"" + this.pid + "\">" + data + "</Value>";
+                    return http('PUT', cred.urlBase + '/rs/param/' + this.pid + '/value', data);
+                }                
+            }
+        });
+
+        //Method 1: Use dci.json
+        return http('GET', '../scripts/dci.json', null).then(function(xhr) {
+            console.log('Method 1: Reading from dci.json');
+            window.DCI = JSON.parse(xhr.responseText).DCI;
+            var queue = [DCI];
+            while (queue.length > 0) {
+                var obj = queue.shift();
+                for (var n in obj) {
+                    var item = obj[n];
+                    if (item.pid) {
+                        obj[n] = new Param(item);
+                    } else {
+                        queue.push(item);
+                    }
+                }
+            }
+        }, function() {
+            //Method 2: Parse '/rs/param'
+            return http('GET', cred.urlBase+'/rs/param', null).then(function(xhr) {
+                console.log('Method 2: Parse /rs/param');
+                window.DCI = {};
+                var n = xhr.responseXML.firstElementChild.firstElementChild;
+                while (n) {
+                    var name = n.getAttribute('name');
+                    var pid = n.getAttribute('pid');
+                    DCI[name] = new Param({
+                        name: name,
+                        pid: pid
+                    });
+                    n = n.nextElementSibling;
+                }
+            });
+        });
+    };
+
+    // End Library Functions
+
+
+    /////////////////////////
+    // Unit Test Functions //
+    /////////////////////////
+    
+    var params = [];
+    //Populate param
+    readDCI().then(function() {
+        params = [];
+        var q = [DCI];
+        while (q.length) {
+            var obj = q.pop();
+            for (var n in obj) {
+                if (obj[n].pid !== undefined) {
+                    params.push(obj[n]);
+                } else {
+                    q.push(obj[n]);
+                }
+            }
+        }
+        print('Read '+params.length+' params');
+    });
+
+    function print(text, style) {
+        var span = document.createElement('span');
+        span.appendChild(document.createTextNode(text));
+        if (style) {
+            span.style = style;
+        }
+        document.getElementById('log').appendChild(span);
+    }
+
+    function paramTest() {
+        print('Running paraTest()...');
+        return http('GET', cred.urlBase+'/rs/param', null).then(function(xhr) {
+            var arr = params.concat([]);
+            var n = xhr.responseXML.firstElementChild.firstElementChild;
+            while (n) {
+                var pid = n.getAttribute('pid');
+                var elem = undefined;
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i]) {
+                        elem = arr.splice(i,1);
+                        break;
+                    }
+                }
+                if (!elem) {
+                    print('Could not find pid='+pid+' ('+n.getAttribute('name')+')');
+                }
+            }
+        });
+    }
+
+
+    </script>
+
+    <style>
+    table {
+        border-collapse: collapse;
+    }
+    td {
+        border: 1px solid black;
+    }
+    </style>
+</head>
+<body>
+    <div>
+        <h2>Unit Test</h2>
+        <table width="100%">
+            <tr><td width="50%">
+                <div>
+                    <button onclick='paramTest()'>Param Test</button>
+                    Compares dci.json to param details<br />
+                </div>
+                <div>
+                    <button onclick='readTest()'>Read Test</button>
+                    Performs a read on all values<br />
+                </div>
+            </td>
+            <td id='log'>
+
+            </td></tr>
+        </table>
+    </div>
+</body>
+
+</html>

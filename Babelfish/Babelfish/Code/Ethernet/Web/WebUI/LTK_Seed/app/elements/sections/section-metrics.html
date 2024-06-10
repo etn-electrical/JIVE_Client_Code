@@ -1,0 +1,136 @@
+<dom-module id="section-metrics">
+	<template>
+		<style>
+		:host {
+			-webkit-flex: inherit;
+			-ms-flex: inherit;
+			flex: inherit;
+			-webkit-flex-basis: inherit;
+			-ms-flex-preferred-size: inherit;
+			flex-basis: 60%;
+		}
+		</style>
+		<px-card>
+			<!-- Display the section name and icon-->
+			<px-actionbar>
+				<template is="dom-if" if="{{icon}}">
+					<iron-icon icon="[[icon]]"></iron-icon>
+				</template>
+				<px-title maintitle="[[label]]"></px-title>
+				<span class="flex"></span>
+				<!-- Display the buttons name and icon-->
+				<px-button-group style="margin:15px; align-content: right" dark class="x-scope px-button-group">
+	                <px-button pressed id="btnCurrent" role="button" class="x-scope px-button"  icon='px-icons:demand' on-click="loadCurrentParmaters">Current</px-button>
+    	            <px-button id="btnPower" role="button" class="x-scope px-button" icon='px-icons:demand-stacked' on-click="loadPowerParmaters">Power</px-button>
+        	        <px-button id="btnEnergy"  role="button" class="x-scope px-button" icon='px-icons:energy' on-click="loadEnergyParmaters">Energy</px-button>
+           		 </px-button-group>
+				
+				<content select=".action"></content>
+			</px-actionbar>
+			<content></content>
+		</px-card>
+	</template>
+	<script>
+	Polymer({
+		is: "section-metrics",
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.disabled
+		],
+		properties: {
+			icon: String,
+			label: String,
+			isCard: {
+				type: Boolean,
+				value: true
+			}
+		},        
+			attached : function(){
+				this.loadCurrentParmaters();                
+			},
+			// Function which gets called on click of Current button. 
+			// This will slect the Current button and unselect the Power and Energy buttons and loads current parameters
+			 loadCurrentParmaters : function(){   				                      
+                document.getElementById("btnCurrent").pressed=true;
+                document.getElementById("btnPower").pressed=false;
+                document.getElementById("btnEnergy").pressed=false;    
+                 this.showCurrentParmaters();
+				 this.hideEnergyParmaters();
+                 this.hidePowerParmaters();
+                 setTimeout(function() {
+                      // Static values for the fields with no data 
+					  if($('#curPhaseUB')[0]!= undefined){
+						$('#curPhaseUB')[0].innerText = "25 %"; 
+					  }
+					  if($('#voltPhaseUB')[0]!= undefined){
+                 		 $('#voltPhaseUB')[0].innerText ="33 %"; 
+					  }
+                 }, 2000);
+                 
+            },
+			// Function which gets called on click of Power button. 
+			// This will slect the Power button and unselect the Current and Energy buttons and loads power parameters
+            loadPowerParmaters : function(){  				                       
+                document.getElementById("btnCurrent").pressed=false;
+                document.getElementById("btnPower").pressed=true;  
+                document.getElementById("btnEnergy").pressed=false;                            
+                 this.showPowerParmaters();
+                 this.hideEnergyParmaters();
+                 this.hideCurrentParmaters();
+            },
+			// Function which gets called on click of Energy button. 
+			// This will slect the Energy button and unselect the Power and current buttons and loads Energy parameters
+            loadEnergyParmaters : function(){ 				                        
+                document.getElementById("btnCurrent").pressed=false;
+                document.getElementById("btnPower").pressed=false;  
+                document.getElementById("btnEnergy").pressed=true;
+                             
+                this.showEnergyParmaters();
+                 this.hidePowerParmaters();
+                 this.hideCurrentParmaters();
+            },
+			// Function which gets called on click of Energy button. 
+			// This will display all Energy parameters
+             showEnergyParmaters : function(){  
+                 $("[data-metric-type='Energy']").show();   
+                 // Static values for the fields with no data    
+				 if($('#reactiveFwdEnergy')[0] != undefined){
+					$('#reactiveFwdEnergy')[0].innerText ="0 kWh";
+				 }               
+                 if($('#reactiveRevEnergy')[0] != undefined){      
+                 $('#reactiveRevEnergy')[0].innerText ="0 kWh";  
+				 }
+
+				 if($('#reactiveNetEnergy')[0] != undefined){   
+                 $('#reactiveNetEnergy')[0].innerText ="0 kWh"; 
+				 }
+				if($('#reactiveTotalEnergy')[0] != undefined){   
+                 $('#reactiveTotalEnergy')[0].innerText ="0 kWh";    
+				} 
+                   
+            },
+			// Function to hide Energy related parameters.
+             hideEnergyParmaters : function(){    
+                 $("[data-metric-type='Energy']").hide();
+            },
+			// Function which gets called on click of Power button. 
+			// This will display all Power parameters
+             showPowerParmaters : function(){
+                 $("[data-metric-type='Power']").show();                                
+            },
+			// Function to hide Power related parameters.
+             hidePowerParmaters : function(){
+                 $("[data-metric-type='Power']").hide();               
+            },
+			// Function which gets called on click of Current button. 
+			// This will display all Current parameters
+             showCurrentParmaters : function(){
+                 $("[data-metric-type='Current']").show();  
+            },
+			// Function to hide Current related parameters.
+             hideCurrentParmaters : function(){
+                 $("[data-metric-type='Current']").hide();  
+            }
+        });
+	</script>
+</dom-module>

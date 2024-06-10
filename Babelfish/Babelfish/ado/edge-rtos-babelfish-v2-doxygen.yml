@@ -1,0 +1,101 @@
+# Build pipeline to create release doxygen reports for RTOS
+
+name: $(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:_r)
+
+resources:
+  repositories:
+    - repository: edge-rtos-babelfish-v2
+      type: github
+      name: etn-ccis/edge-rtos-babelfish-v2
+      endpoint: etn-ccis-rtos
+      ref: dev
+    - repository: edge-rtos-ado-templates
+      type: github
+      name: etn-ccis/edge-rtos-ado-templates
+      endpoint: etn-ccis-rtos   
+      ref: dev
+    - repository: edge-rtos-doxygen
+      type: github
+      name: etn-ccis/edge-rtos-doxygen
+      endpoint: etn-ccis-rtos
+      ref: edge-rtos-babelfish-v2
+
+variables:
+  - group: rtos-dev-group
+  - name: branchName
+    value: 'edge-rtos-babelfish-v2'
+  - name: destFolder
+    value: $(Build.SourceBranchName) 
+
+trigger: none
+pr: none
+
+jobs:
+- job:
+  displayName: Job, Generate Doxygen Documentation
+  timeoutInMinutes: 120
+  cancelTimeoutInMinutes: 10
+  pool:
+    name: brtlr-edge-lab
+    demands:
+    - agent.os -equals Windows_NT
+  workspace:
+    clean: all
+  
+  steps:
+  - checkout: edge-rtos-babelfish-v2
+    fetchDepth: 1
+    submodules: recursive
+    path: s/edge-rtos-babelfish-v2
+    clean: true 
+  - checkout: edge-rtos-doxygen
+    fetchDepth: 1
+    path: s/edge-rtos-doxygen
+    clean: true 
+  
+
+  - script: |
+        call Doxygen_Package_Main.bat
+
+    workingDirectory: $(Build.SourcesDirectory)\edge-rtos-babelfish-v2\Tools\DoxygenStuff
+    failOnStderr: false
+    displayName: 'step, Call to Babelfish doxygen generation'
+
+  - powershell: |
+      #prepare and configure repository--
+      Write-Host "Setup git to use creds when pulling during from private repos, linux-legacy-regression"
+      git config --global url."https://$(GITHUB_USERNAME):$(GITHUB_TOKEN)@github.com/".insteadOf "https://github.com/"
+      Write-Host "git config --local --replace-all user.name \"$(GITHUB_USERNAME)\""
+      git config --local --replace-all user.name "$(GITHUB_USERNAME)"
+      git config --local --replace-all user.email "$(GITHUB_USER_EMAIL)"
+      New-Item -Force -ItemType directory -Path ${{ variables.destFolder }}
+      Copy-Item -Path $(Build.SourcesDirectory)\edge-rtos-babelfish-v2\Docs\Generated\edge-rtos-app-Babelfish-doxygen\* -Destination .\${{ variables.destFolder }} -Recurse -Force
+      if(Select-String -Quiet -Path .\index.html -Pattern './${{ variables.destFolder }}/Babelfish_index.html'){
+        Write-Host "index.html is already having link to ${{ variables.branchName }} Doxygen documentation"
+      } else {
+        Write-Host "adding ${{ variables.branchName }} version to index.html"
+        (Get-Content .\index.html) | Foreach-Object { if ($_ -match "</body>")
+        {
+          "<p><a href=`"./${{ variables.destFolder }}/Babelfish_index.html`">${{ variables.destFolder }}</a></p>"
+        }
+        $_
+        } | Set-Content .\index.html
+      }
+
+      #publish to ${{ variables.branchName }}
+      Write-Host "git checkout  ${{ variables.branchName }} origin/${{ variables.branchName }}"
+      git checkout -B  ${{ variables.branchName }} origin/${{ variables.branchName }}
+      Write-Host "git add --all ."
+      git add --all .
+      Write-Host "git commit --message="Upadting doxygen documentation""
+      git commit -m "Upadting doxygen documentation"
+      Write-Host "git push origin HEAD:${{ variables.branchName }}"
+      git push origin HEAD:${{ variables.branchName }}
+    workingDirectory: $(Build.SourcesDirectory)\edge-rtos-doxygen
+    displayName: 'Copy doxygen reports to edge-rtos-doxygen repo and update index.html in it'
+  
+  #- template: git-publish-template.yml@edge-rtos-ado-templates
+  #  parameters:
+  #    gitBranch: ${{ variables.branchName }}
+  #    commitMessage: "Moving doxygen documentation"
+  #    working_directory: '$(Build.SourcesDirectory)\edge-rtos-doxygen'  

@@ -1,0 +1,3 @@
+default.html
+index.html
+not_found.html

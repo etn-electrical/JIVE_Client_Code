@@ -1,0 +1,72 @@
+<dom-module id="modal-session-expired">
+    <template>
+        <style>
+            px-modal[overlay] {
+                background: none;
+            }
+
+            :host /deep/ .content {
+                transform: translateX(-50%) translateY(-50%);
+                -webkit-transform: translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px)) !important;
+            }
+
+        </style>
+        <px-modal class="visible" overlay>
+            <px-actionbar dark>
+                <px-title maintitle="[[data.title]]"></px-title>
+            </px-actionbar>
+            <px-content layout vertical center-justified borderlessRows style="min-height: 100px;">
+                <template is="dom-repeat" items="{{data.message}}">
+                    <strong>{{item}}</strong>
+                </template>
+            </px-content>
+            <template is="dom-if" if="{{data.options}}">
+                <px-actionbar bottom>
+                    <span class="flex"></span>
+                    <template is="dom-repeat" items="{{data.options}}">
+                        <px-button id="{{item}}" primary$="{{isPrimary(item)}}" on-click="click">{{item}}</px-button>
+                    </template>
+                </px-actionbar>
+            </template>
+        </px-modal>
+    </template>
+    <script>
+        Polymer({
+            is: 'modal-session-expired',
+            properties: {
+                tab: {
+                    type: Object,
+                    notify: true
+                },
+                data: {
+                    type: Object,
+                    notify: true
+                }
+            },
+            attached: function () {
+                var self = this;
+                self.timer = setInterval(function () {
+                    if (PB.checkIfLocalStorageExists()) {
+                        var obj = PB.retrieveFromLocalStorage();
+                        if (obj.nonce != undefined && obj.nonce != PB.oldNonce) {
+                            clearInterval(self.timer);
+                            clearTimeout(PB.sessionLogoutTimer);
+                            PB.continueFlag = false;
+                            PB.deleteSessionInProgress = false;
+                            self.tab.promise.resolve();
+                        }
+                    }
+                }, 10)
+            },
+            detached: function () {
+                clearInterval(this.timer);
+            },
+            isPrimary: function (item) {
+                return this.data.options.indexOf(item) === 0;
+            },
+            click: function (e) {
+                this.tab.promise.resolve(e.model.index);
+            }
+        });
+    </script>
+</dom-module>

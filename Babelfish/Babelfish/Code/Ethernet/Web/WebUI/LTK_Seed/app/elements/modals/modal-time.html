@@ -1,0 +1,221 @@
+<dom-module id="modal-time">
+    <template>
+        <style>
+            px-modal[overlay] {
+                background: none;
+            }
+        </style>
+        <px-modal class="visible" mobile overlay>
+            <px-actionbar dark>
+                <px-title maintitle="Set Clock" subtitle="[[name]]"></px-title>
+            </px-actionbar>
+            <px-content nopadding layout vertical center-justified style="min-height: 120px;">
+                <!-- Option to use system time -->
+                <px-row>
+                    <px-column action>
+                        <px-radio label='Set using system time' checked="{{useSystem}}" group="timeModalRadioGroup"></px-radio>
+                    </px-column>
+                    <px-column right>
+                        <span>{{systemTimeString}}</span>
+                        <span>{{systemDateString}}</span>
+                    </px-column>
+                </px-row>
+                <!-- Option to set time manually -->
+                <px-row>
+                    <px-column action>
+                        <px-radio label='Set manually' checked="{{!useSystem}}" group="timeModalRadioGroup"></px-radio>
+                    </px-column>
+                </px-row>
+                <px-row style="border-bottom: none">
+                    <px-column>
+                        <span>Year</span>
+                        <br>
+                        <px-dropdown id="year" placeholder="Year" items="[[yearList]]" value="{{selectedYear}}" title="{{selectedYear}}"
+                            disabled={{useSystem}}>
+                        </px-dropdown>
+                    </px-column>
+                    <px-column>
+                        <span>Month</span>
+                        <br>
+                        <px-dropdown id="month" placeholder="Month" items="[[monthList]]" value="{{selectedMonth}}" title="{{selectedMonth}}"
+                            disabled={{useSystem}}>
+                        </px-dropdown>
+                    </px-column>
+                    <px-column>
+                        <span>Date</span>
+                        <br>
+                        <px-dropdown id="day" placeholder="Date" items="[[dayList]]" value="{{selectedDay}}" title="{{selectedDay}}"
+                            disabled={{useSystem}}>
+                        </px-dropdown>
+                    </px-column>
+                </px-row>
+                <px-row>
+                    <!-- Hour, Minute and Second dropdowns -->
+                    <template is="dom-repeat" items="{{manual}}" as="field">
+                        <px-column>
+                            <span>{{field.name}}</span>
+                            <br>
+                            <px-dropdown disabled={{useSystem}} placeholder="{{field.name}}" items="{{field.options}}"
+                                value="{{field.value}}" title="{{field.value}}">
+                            </px-dropdown>
+                        </px-column>
+                    </template>
+                </px-row>
+            </px-content>
+            <px-actionbar stackable bottom secondary>
+                <span class="flex"></span>
+                <px-button on-click="cancel">Cancel</px-button>
+                <px-button positive on-click="save">Ok</px-button>
+                <span class="flex"></span>
+            </px-actionbar>
+        </px-modal>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                is: 'modal-time',
+                behaviors: [
+                    PB.behaviors.navElem,
+                ],
+                properties: {
+                    useSystem: {
+                        type: Boolean,
+                        value: true
+                    },
+                    systemTimeString: String,
+                    systemDateString: String
+                },
+                observers: [
+                    'adjustDays(selectedYear, selectedMonth)'
+                ],
+                updateTime: function () {
+                    var self = this;
+                    var today = new Date();
+                    var dateFormat = PB.dateFormatType(PB.DCI.get("DCI_DATE_FORMAT").value);
+                    var timeFormat = PB.timeFormatType(PB.DCI.get("DCI_TIME_FORMAT").value);
+                    this.systemDateString = PB.formatDate(today, dateFormat);
+                    this.systemTimeString = PB.formatDate(today, timeFormat);
+                    this.timeout = setTimeout(function () {
+                        self.updateTime();
+                    }, 1000);
+                },
+
+                ready: function () {
+                    this.name = navbar.timeParam.name;
+                    //Timer function that updates the local time
+                    this.updateTime();
+                    //Helper function that creates an array of numbers for a dropdown
+                    var makeRange = function (low, high) {
+                        var ret = [];
+                        for (var i = 0; i <= high - low; i++) {
+                            ret[i] = i + low;
+                        }
+                        return ret;
+                    };
+                    //All the dropdown options for the manual date chooser
+                    var manualDate = new Date();
+                    //Function to populate Year, Month and Date manual dropdowns
+                    this.createYearMonthDatePicker();
+                    //All the dropdown selection options for setting the time manually
+                    this.set('manual', [{
+                        name: 'Hour',
+                        options: makeRange(0, 23),
+                        value: manualDate.getHours(),
+                    }, {
+                        name: 'Minute',
+                        options: makeRange(0, 59),
+                        value: manualDate.getMinutes(),
+                    }, {
+                        name: 'Second',
+                        options: makeRange(0, 59),
+                        value: manualDate.getSeconds(),
+                    }]);
+                },
+
+                detached: function () {
+                    //Cancel the update timer
+                    clearTimeout(this.timeout);
+                },
+
+                cancel: function () {
+                    //Close the modal
+                    this.tab.promise.reject();
+                },
+
+                //Saves the time change by writing all the params
+                save: function () {
+
+                    //Use system or manual time
+                    var date;
+                    if (!this.useSystem) {
+                        date = new Date(
+                            this.selectedYear, //Year
+                            this.monthList.indexOf(this.selectedMonth), //Month
+                            this.selectedDay, //Date
+                            this.manual[0].value, //Hour
+                            this.manual[1].value, //Minute
+                            this.manual[2].value //Second
+                        );
+                    } else {
+                        date = new Date();
+                    }
+
+                    var param = navbar.timeParam;
+                    var customDate = new Date(date.getYear() + 1900, date.getMonth(),
+                        date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
+                    var ephoc = customDate.valueOf();
+                    param.value = ephoc / 1000;
+
+                    //Close the modal
+                    this.tab.promise.resolve();
+                },
+                createYearMonthDatePicker: function () {
+                    const monthNames = ["January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"
+                    ];
+                    var qntYears = 10;
+                    var d = new Date();
+                    var currentYear = d.getFullYear();
+                    var currentMonth = d.getMonth();
+                    var currentDay = d.getDate();
+                    var tempArry = [];
+
+                    this.monthList = monthNames;
+                    this.selectedYear = currentYear;
+                    this.selectedMonth = monthNames[currentMonth];
+
+                    //Populate 10 future and 10 past (including current) year values in yearList
+                    var tenYearsAhead = currentYear + qntYears; 
+                    for (var y = tenYearsAhead; y > currentYear; y--) {
+                        tempArry.push(y);
+                    }
+                    var tenYearsBehind = currentYear - qntYears; 
+                    for (var z = currentYear; z >= tenYearsBehind; z--) {
+                        tempArry.push(z);
+                    }
+
+                    this.yearList = tempArry;                
+                    this.adjustDays(this.selectedYear, this.selectedMonth);
+                    this.selectedDay = currentDay;                  
+                },
+                adjustDays: function (year, month) {
+                    //Populate days in dayList based on year and month selected
+                    if (year != null && month != null) {
+                        var year = year;
+                        var month = parseInt(this.monthList.indexOf(month)) + 1;
+
+                        //To get the last day correct, populate the number of days in that month
+                        var days = new Date(year, month, 0).getDate();
+                        var tempArry = [];
+                        //Create the days of that month
+                        for (var d = 1; d <= days; d++) {
+                            tempArry.push(d);
+                        }
+                        this.dayList = tempArry;
+                        this.selectedDay = this.dayList[0];
+                    }
+                }
+            });
+        })();
+    </script>
+</dom-module>

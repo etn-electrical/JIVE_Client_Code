@@ -1,0 +1,101 @@
+<dom-module id="param-input-action">
+	<style>
+		:host px-button.buttonArray {
+			display: inline-block;
+		}
+		:host px-input {
+			width: 90%;
+		}
+		:host px-button[disabled]{
+			opacity: 1.5;
+		}
+	</style>
+	<template>
+		<template is="dom-if" if="{{checkUserWriteAccess(param)}}">
+			<template is="dom-if" if="[[param.enum]]" restamp="true">
+				<template is="dom-if" if="[[isButtonArray()]]" restamp="true">
+					<template is="dom-repeat" items="[[param.enum]]">
+						<px-button class="buttonArray" value="[[item.value]]"
+							pressed$='[[isEnabled(param.value, item.value)]]'
+							disabled$='[[isEnabled(param.value, item.value)]]' fixedwidth on-tap="buttonClick">
+							{{item.desc}}</px-button>
+					</template>
+					<template is="dom-if" if="{{param.saveFailed}}">
+						<iron-icon icon="px-icons:alert"
+							style="width: 16px; height: 16px; padding-left: 10px; color:#a94442"
+							title="[[param.saveFailureMsg]]"></iron-icon>
+					</template>
+				</template>
+			</template>
+		</template>
+	
+		<template is="dom-if" if="{{!checkUserWriteAccess(param)}}">
+			<param-read-only param="{{param}}"></param-read-only>
+		</template>
+	</template>
+    <script>
+	Polymer({
+		is: 'param-input-action',
+		behaviors: [
+			PB.behaviors.navElem,
+			PB.behaviors.param,
+			PB.behaviors.disabled
+		],
+		properties: {
+			onchange: {
+				type: Function
+			},
+		},
+		checkUserWriteAccess: function(param) {
+			if(PB.currentUserRoleLevel >= param.w) {
+                return true;
+            } else {
+				return false;
+			}
+		},
+		_onChange: function(e) {
+			if (this.onchange) {
+				this.onchange(e);
+			}
+		},
+		isEnabled: function (pValue, iValue) {
+			//Convert boolean pValue to 1's & 0's
+			if (typeof pValue === 'boolean') {
+				var tValue;
+				if (pValue) {
+					tValue = 1;
+				} else {
+					tValue = 0;
+				}
+				//Button pressed logic
+				if (iValue === tValue) {
+					return true;
+				}
+			} else if (pValue === iValue) {
+				return true;
+			} else {
+				return false;
+			}
+		},
+		isButtonArray: function() {
+			return this.param.enum && this.param.enum.length === 2;
+		},
+		buttonClick: function(elem) {
+            var self = this;
+            var title = elem.target.textContent;
+            navbar.modals.confirm.go({
+                message: 'Are you sure you want to continue this operation?',
+                title: title + ' Alert',
+                options: ["Cancel", "Yes"]
+            }).then(function (response) {
+                if (response == 1) {
+					self.set("param.value", elem.model.item.value);
+					self.param.write();
+                } else {
+                    self.param.revert();
+                }
+            });
+		}
+	});
+	</script>
+</dom-module>

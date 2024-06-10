@@ -1,0 +1,2 @@
+This public folder should have the copy of the server sign public keys which was used earlier for code signing. This public keys will be used only for cross signing a scenario in which RVK 
+key used for code signing is going to expired and a new RVK key is going to be used for code signing

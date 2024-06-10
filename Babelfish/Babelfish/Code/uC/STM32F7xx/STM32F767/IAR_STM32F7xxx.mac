@@ -1,0 +1,73 @@
+
+execUserSetup()
+{
+  // REMAP command
+  // Writing 1 to MC_RCR (MC Remap Control Register)
+  // will toggle remap bit.
+    __message("-I- User Setup - Disable The IWDG in Debug Config!");
+  __writeMemory32(0x00001000, 0xE0042008, "Memory");
+}
+
+execUserPreload()
+{
+  // REMAP command
+  // Writing 1 to MC_RCR (MC Remap Control Register)
+  // will toggle remap bit.
+    __message("-I- Preload - Disable The IWDG in Debug Config!");
+  __writeMemory32(0x00001000, 0xE0042008, "Memory");
+}
+
+execUserFlashInit()
+{
+  // REMAP command
+  // Writing 1 to MC_RCR (MC Remap Control Register)
+  // will toggle remap bit.
+    __message("-I- Flash Init - Disable The IWDG in Debug Config!");
+  __writeMemory32(0x00001000, 0xE0042008, "Memory");
+}
+
+execUserPreReset()
+{
+  // REMAP command
+  // Writing 1 to MC_RCR (MC Remap Control Register)
+  // will toggle remap bit.
+    __message("-I- Pre Reset - Disable The IWDG in Debug Config!");
+  __writeMemory32(0x00001000, 0xE0042008, "Memory");
+}
+
+execUserFlashReset()
+{
+    __message("-I- execUserFlashInit!");
+    __writeMemory32(0x00000000, 0xE0042004, "Memory");
+    __writeMemory32(0x00000000,  0x40013808, "Memory"); 
+   __writeMemory32(0x00000000,  0x4001380C, "Memory");
+   __writeMemory32(0x00000000,  0x40013810, "Memory"); 
+   __writeMemory32(0x00000000,  0x40013814, "Memory");
+   __writeMemory32(0x20000000, 0x50000010, "Memory");
+   __writeMemory32(0x00000001, 0x50000000, "Memory");
+    __message("-I- Flash Reset 1 - Disable The IWDG in Debug Config!");
+    __writeMemory32(0x00001000, 0xE0042008, "Memory");
+    __writeMemory32(0x00000000, 0xE004200C, "Memory");
+    __writeMemory32(0x00000000, 0x40023830, "Memory"); // RCC_CFGR = 0
+    __writeMemory32(0x00000000, 0x40023810, "Memory"); // RCC_CFGR = 0
+     __writeMemory32(0x00000000, 0x40023814, "Memory"); // RCC_CFGR = 0
+      __writeMemory32(0x00000000, 0x40023818, "Memory"); // RCC_CFGR = 0
+    __writeMemory32(0x00000000, 0x40023834, "Memory"); // RCC_CFGR = 0
+    __writeMemory32(0x00000000, 0x40023838, "Memory"); // RCC_CFGR = 0
+    __writeMemory32(0x00000000, 0x40023808, "Memory"); // RCC_CFGR = 0
+    __writeMemory32(0x000000F1, 0x40023854, "Memory"); // RCC_CFGR = 0
+    __writeMemory32(0x00000001, 0x40023858, "Memory"); // RCC_CFGR = 0
+    __writeMemory32(0x7E6791FF, 0x40023850, "Memory"); // RCC_CFGR = 0
+     __writeMemory32(0x00010083, 0x40023800, "Memory"); // RCC_CR   = 0x83
+     __writeMemory32(0x00000000, 0x4002380C, "Memory"); // RCC_CIR  = 0;
+      __writeMemory32(0x24003010, 0x40023804, "Memory"); // RCC_pllcfgr  = 0;
+    // unlock flash
+    __message("-I- Flash Reset 2 - Disable The IWDG in Debug Config!");
+    __writeMemory32(0x00001000, 0xE0042008, "Memory");
+    __writeMemory32(0x45670123, 0x40023C04, "Memory"); // FLASH->FKEYR = FLASH_KEY1;
+    __writeMemory32(0xCDEF89AB, 0x40023C04, "Memory"); // FLASH->FKEYR = FLASH_KEY2;
+    __writeMemory32(0x00000000, 0x40023C00, "Memory"); // Flash 0 wait state
+    __writeMemory32(0x00000000, 0x40023C10, "Memory"); // FLASH->CR = 0;
+    __writeMemory32(0x000000F0, 0x40023C0C, "Memory"); // FLASH->FLASH_SR = EOP | WRPRTERR | PGERR;
+    
+}

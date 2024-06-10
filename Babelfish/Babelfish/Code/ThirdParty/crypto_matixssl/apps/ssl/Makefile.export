@@ -1,0 +1,46 @@
+#
+#   Makefile for MatrixSSL example apps "client" and "server"
+#
+#   Copyright (c) 2017 INSIDE Secure Oy. All Rights Reserved.
+#
+
+-include Makefile.config
+
+DIR_PREFIX=../../
+LIB_DIR=$(DIR_PREFIX)lib
+INCLUDE_DIR=$(DIR_PREFIX)include
+
+# Build flags: include directories
+CPPFLAGS+=-I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/osdep/include \
+ -I$(INCLUDE_DIR)/internal -I$(INCLUDE_DIR)/internal/sfzcl \
+ -I$(INCLUDE_DIR)/internal/crypto -I$(INCLUDE_DIR)/CL
+OBJS=client.o http.o
+LDFLAGS+=-L$(LIB_DIR)
+LDLIBS+=-lssl_s -lcrypt_s -lcore_s -ldl -lrt -lpthread
+VPATH=../common
+
+# Link with C++ linker (allows some of objects to be compiled with C++)
+LINK.o=$(LINK.cc)
+
+.PHONY: all compile clean
+
+all: compile
+
+# Only compile client if MatrixSSL configuration allows
+ifeq '$(USE_CLIENT_SIDE_SSL)' '1'
+OPTIONAL_CLIENT=client
+client: client.o http.o client_common_s.a
+
+endif
+
+# Only compile server if MatrixSSL configuration allows
+ifeq '$(USE_SERVER_SIDE_SSL)' '1'
+OPTIONAL_SERVER=server
+server: server.o http.o
+
+endif
+
+compile: $(OPTIONAL_CLIENT) $(OPTIONAL_SERVER)
+
+clean:
+	rm -f client client.o server server.o http.o

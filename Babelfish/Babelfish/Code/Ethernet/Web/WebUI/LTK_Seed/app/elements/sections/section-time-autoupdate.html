@@ -1,0 +1,35 @@
+<dom-module id="section-time-autoupdate">
+	<script>
+	Polymer({
+		is: "section-time-autoupdate",
+        attached: function(){
+            var dciEpoch = PB.DCI.get("DCI_UNIX_EPOCH_TIME")
+			PB.JQhttp('GET', "/rs/param/" + dciEpoch.pid + "/value").then(function (data) {
+				var json = PB.parseXML(data);
+				var deviceTime = parseInt(json.Value.value);
+				var systemTime = Math.floor(new Date() / 1000);
+				var param = PB.DCI.get("DCI_AUTO_UPDATE_TIME_DIFF_SEC");
+				if (param) {
+					PB.JQhttp('GET', "/rs/param/" + param.pid + "/value").then(function (data) {
+						var json = PB.parseXML(data);
+						var timeDifference = parseInt(json.Value.value);
+						if (timeDifference > 0) {
+							//Checking the time difference.
+							//To update the system time only when the device time is not correct.
+							if (systemTime - deviceTime > timeDifference) {
+								var currentEpoch = Math.floor(new Date().getTime() / 1000.0);
+								var data = "<Value pid=\"" + dciEpoch.pid + "\">" + currentEpoch + "</Value>";
+								PB.http.put("/rs/param/" + dciEpoch.pid + "/value", data).then(function () {
+									PB.getDeviceTime();
+								}, function () {
+									console.warn("Failed to Write the system time");
+								})
+							}
+						}
+					})
+				}
+			})
+        },
+	});
+	</script>
+</dom-module>

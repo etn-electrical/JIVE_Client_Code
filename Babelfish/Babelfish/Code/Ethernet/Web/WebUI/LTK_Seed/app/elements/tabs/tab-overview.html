@@ -1,0 +1,71 @@
+<dom-module id="tab-overview">
+    <template>
+        <tab-default label='Overview' id='Overview' icon='px-icons:overview'>
+            <section-card label='Device Up Count' id='Device_Up_Count'>
+                <group-cells-row>
+                    <param-read-only param='10139'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-card>
+            <section-card label='Current' id='Current'>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-card>
+            <section-card label='Voltage' id='Voltage'>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-card>
+            <section-card label='Power & Energy' id='Power_&_Energy'>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-card>
+            <section-card label='Health' id='Health'>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+                <group-cells-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-card>
+            <section-card label='Unix Epoch Time 64bit' id='Unix_Epoch_Time_64bit'>
+                <group-cells-row>
+                    <param-read-only param='10045[0]'>
+                    </param-read-only>
+                </group-cells-row>
+                <group-cells-row>
+                    <param-read-only param='10045[1]'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-card>
+        </tab-default>
+    </template>
+    <script>
+        Polymer({
+            is: 'tab-overview'
+        });
+    </script>
+</dom-module>

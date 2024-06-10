@@ -1,0 +1,66 @@
+<dom-module id="modal-connection-loss">
+        <template>
+            <style>
+                px-modal[overlay] {
+                    background: none;
+                }
+                :host /deep/ .content {  
+                    transform: translateX(-50%) translateY(-50%);
+                    -webkit-transform: translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px)) !important;
+                }
+            </style>
+            <px-modal class="visible" overlay >
+                <px-actionbar dark>
+                    <px-title maintitle="[[data.title]]"></px-title>
+                </px-actionbar>
+                <px-content layout vertical center-justified borderlessRows style="min-height: 100px;"><strong>{{data.message}}</strong></px-content>
+                <px-actionbar bottom>
+                    <span class="flex"></span>
+                        <template is="dom-repeat" items="{{data.options}}">
+                                <px-button id="{{item}}" on-click="click">{{item}}</px-button>
+                        </template>                                                      
+                </px-actionbar>
+            </px-modal>
+        </template>
+        <script>
+        Polymer({
+            is: 'modal-connection-loss',
+            properties: {
+                tab: {
+                    type: Object,
+                    notify: true
+                },
+                data: {
+                    type: Object,
+                    notify: true
+                }
+            },
+
+
+            isButtonVisible: function (item) {
+                if (item === "Retry") {
+                    this.isVisible = false;
+                } else {
+                    this.isVisible = true;
+                }
+                return this.isVisible
+            },
+    
+            click: function(e) {
+                this.tab.promise.resolve(e.model.index);    
+            },
+
+            attached: function () {
+                var self = this;
+                self.timer = setInterval(function () {
+                    if (PB.connectionLossCounter == 0) {
+                        clearInterval(self.timer);
+                        self.tab.promise.resolve();
+                    }
+                }, 10)
+            }
+    
+        });
+        </script>
+    </dom-module>
+    

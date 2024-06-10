@@ -1,0 +1,524 @@
+/**
+ *****************************************************************************************
+ *	@file		uC_Base_HW_IDs_ESP32.cpp
+ *	@details	See header file for module overview.
+ *	@copyright	2018 Eaton Corporation. All Rights Reserved.
+ *
+ *****************************************************************************************
+ */
+
+/**
+ * @remark Coding Standard Deviation:
+ * @n MISRA-C++[2008] Rule: 5-2-4
+ * @n PCLint: Note 1924: Violates MISRA C++ 2008 Required Rule 5-2-4, C-style casts and notation
+ * casts shall not be used
+ * @n Justification: The ST supplied includes are written for both C and C++ therefore C-style casts
+ * are required for all headers used
+ * @n in the HAL. The note is re-enabled at the end of this file
+ */
+/**
+ * @remark Coding Standard Deviation:
+ * @n MISRA-C++[2008] Rule: 5-0-4
+ * @n PCLint: Note 1924: Violates MISRA C++ 2008 Required Rule 5-0-4, Implicit integral conversions
+ * shall not change the signedness of the underlying type
+ * @n Justification: The ST supplied includes are needed for the HAL - The includes will be used as
+ * is The note is re-enabled at the end of this file
+ */
+
+#include "uC_Base.h"
+#include "uC_IO_Define_ESP32.h"
+#include "uC_Base_HW_IDs_ESP32.h"
+#include "driver/timer.h"
+#include "driver/i2c.h"
+#include "driver/twai.h"
+#include "driver/gpio.h"
+
+/**
+ **************************************
+ * @brief PIO Ctrl Definition Structure
+ **************************************
+ */
+
+const uC_BASE_PIO_CTRL_STRUCT uC_Base::m_pio_ctrls[uC_BASE_MAX_PIO_CTRLS] =
+{
+	{
+		GPIO_IO_0,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_1,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_2,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_3,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_4,
+		GPIO_MODE_INPUT,
+		GPIO_PULLUP_ENABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_POSEDGE
+	},
+
+	{
+		GPIO_IO_5,
+		GPIO_MODE_INPUT,
+		GPIO_PULLUP_ENABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_POSEDGE
+	},
+	{
+		GPIO_IO_6,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+
+	{
+		GPIO_IO_7,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_8,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_9,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_10,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_11,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_12,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_13,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_14,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_15,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_16,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_17,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_18,
+		GPIO_MODE_OUTPUT,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_19,
+		GPIO_MODE_OUTPUT,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_20,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_21,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_22,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_23,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_24,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_25,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_26,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_27,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_28,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_29,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_30,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_31,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_32,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_33,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_34,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_35,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_36,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_37,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_38,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	},
+	{
+		GPIO_IO_39,
+		GPIO_MODE_DISABLE,
+		GPIO_PULLUP_DISABLE,
+		GPIO_PULLDOWN_DISABLE,
+		GPIO_PIN_INTR_DISABLE
+	}
+};
+/**
+ ***********************************************************************************
+ * @brief		Timer IO Ctrl Definition Structure
+ ***********************************************************************************
+ */
+const uC_BASE_TIMER_IO_STRUCT uC_Base::m_timer_io[uC_BASE_MAX_TIMER_CTRLS] =
+{
+	{
+		TIMER_ALARM_EN,
+		TIMER_PAUSE,
+		TIMER_INTR_LEVEL,
+		TIMER_COUNT_UP,
+		TIMER_AUTORELOAD_DIS,
+		TIMER_DIVIDER,
+		TIMER_GROUP_0,
+		TIMER_0,
+		0x00000000ULL,
+		( uint64_t ) ( TIMER_INTERVAL0_SEC * TIMER_SCALE )
+	},
+	{
+		TIMER_ALARM_EN,
+		TIMER_PAUSE,
+		TIMER_INTR_LEVEL,
+		TIMER_COUNT_UP,
+		TIMER_AUTORELOAD_EN,
+		TIMER_DIVIDER,
+		TIMER_GROUP_0,
+		TIMER_1,
+		0x00000000ULL,
+		( uint64_t ) ( TIMER_INTERVAL1_SEC * TIMER_SCALE )
+	},
+	{
+		TIMER_ALARM_DIS,
+		TIMER_PAUSE,
+		TIMER_INTR_LEVEL,
+		TIMER_COUNT_UP,
+		TIMER_AUTORELOAD_DIS,
+		TIMER_DIVIDER,
+		TIMER_GROUP_1,
+		TIMER_0,
+		0x00000000ULL,
+		( uint64_t ) ( TIMER_INTERVAL1_SEC * TIMER_SCALE )
+	},
+	{
+		TIMER_ALARM_DIS,
+		TIMER_PAUSE,
+		TIMER_INTR_LEVEL,
+		TIMER_COUNT_UP,
+		TIMER_AUTORELOAD_DIS,
+		TIMER_DIVIDER,
+		TIMER_GROUP_1,
+		TIMER_1,
+		0x00000000ULL,
+		( uint64_t ) ( TIMER_INTERVAL1_SEC * TIMER_SCALE )
+	}
+};
+
+/**
+ ***********************************************************************************
+ * @brief		ADC IO Ctrl Definition Structure
+ ***********************************************************************************
+ */
+const uC_BASE_ATOD_IO_STRUCT uC_Base::m_atod_io[uC_BASE_ATOD_MAX_CTRLS] =
+{
+	{
+		uC_BASE_ATOD_CTRL_1,
+		ADC1_CHANNEL_MAX,
+		ADC_ATTEN_DB_11,
+		DEFAULT_VREF
+	},
+};
+
+/**
+ ***********************************************************************************
+ * @brief		I2C IO Ctrl Definition Structure
+ ***********************************************************************************
+ */
+const uC_BASE_I2C_IO_STRUCT uC_Base::m_i2c_io[uC_BASE_I2C_MAX_CTRLS] =
+{
+	{
+		I2C_MODE_MASTER,
+		GPIO_NUM_5,
+		GPIO_PULLUP_ENABLE,
+		GPIO_NUM_18,
+		GPIO_PULLUP_ENABLE,
+		I2C_EXAMPLE_MASTER_FREQ_HZ
+	},
+	{
+		I2C_MODE_MASTER,
+		GPIO_NUM_5,
+		GPIO_PULLUP_ENABLE,
+		GPIO_NUM_18,
+		GPIO_PULLUP_ENABLE,
+		I2C_EXAMPLE_MASTER_FREQ_HZ
+	},
+};
+
+/**
+ ***********************************************************************************
+ * @brief		CAN IO Ctrl Definition Structure
+ ***********************************************************************************
+ */
+const uC_BASE_CAN_IO_STRUCT uC_Base::m_can_io[uC_BASE_CAN_MAX_CTRLS] =
+{
+	{
+		CAN_NO_ACK,
+		5,
+		5,
+		TWAI_ALERT_NONE,
+		0,
+		CAN_BAUD_RATE_25KBPS,
+		{
+			CAN_STANDARD_MSG_ID,
+			CAN_STANDARD_MASK_ID,
+			true,
+		},
+		{
+			{
+				GPIO_MODE_OUTPUT,
+				GPIO_NUM_25,
+				GPIO_PIN_INTR_POSEDGE
+			},
+			{
+				GPIO_MODE_INPUT,
+				GPIO_NUM_26,
+				GPIO_PIN_INTR_POSEDGE
+			}
+		},
+		{
+			{
+				GPIO_MODE_DISABLE,
+				// Clock pin is undefined in example code so random GPIO num is used for initialization purpose
+				GPIO_NUM_0,
+				GPIO_PIN_INTR_POSEDGE
+			},
+			{
+				GPIO_MODE_DISABLE,
+				// Bus status is undefined in example code so random GPIO num is used for initialization purpose
+				GPIO_NUM_0,
+				GPIO_PIN_INTR_POSEDGE
+			}
+		}
+	}
+};
+
+/**
+ ***********************************************************************************
+ * @brief		PWM IO Ctrl Definition Structure
+ ***********************************************************************************
+ */
+
+const uC_PERIPH_IO_STRUCT UNIT1_GPIO_PWM1_PORT_A = { GPIO_MODE_OUTPUT, GPIO_NUM_16, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT1_GPIO_PWM1_PORT_B = { GPIO_MODE_OUTPUT, GPIO_NUM_17, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT1_GPIO_PWM2_PORT_A = { GPIO_MODE_OUTPUT, GPIO_NUM_18, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT1_GPIO_PWM2_PORT_B = { GPIO_MODE_OUTPUT, GPIO_NUM_19, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT1_GPIO_PWM3_PORT_A = { GPIO_MODE_OUTPUT, GPIO_NUM_15, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT1_GPIO_PWM3_PORT_B = { GPIO_MODE_OUTPUT, GPIO_NUM_14, GPIO_PIN_INTR_POSEDGE};
+
+const uC_PERIPH_IO_STRUCT UNIT2_GPIO_PWM1_PORT_A = { GPIO_MODE_OUTPUT, GPIO_NUM_13, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT2_GPIO_PWM1_PORT_B = { GPIO_MODE_OUTPUT, GPIO_NUM_12, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT2_GPIO_PWM2_PORT_A = { GPIO_MODE_OUTPUT, GPIO_NUM_11, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT2_GPIO_PWM2_PORT_B = { GPIO_MODE_OUTPUT, GPIO_NUM_9, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT2_GPIO_PWM3_PORT_A = { GPIO_MODE_OUTPUT, GPIO_NUM_8, GPIO_PIN_INTR_POSEDGE};
+const uC_PERIPH_IO_STRUCT UNIT2_GPIO_PWM3_PORT_B = { GPIO_MODE_OUTPUT, GPIO_NUM_7, GPIO_PIN_INTR_POSEDGE};
+
+
+uC_BASE_PWM_STRUCT uC_Base::m_pwm_ctrls[uC_BASE_PWM_MAX_CTRLS] =
+{
+	{
+		uC_BASE_PWM_CTRL_1,
+		1,
+		1,
+		1,
+		{
+			&UNIT1_GPIO_PWM1_PORT_A,
+			&UNIT1_GPIO_PWM1_PORT_B,
+			&UNIT1_GPIO_PWM2_PORT_A,
+			&UNIT1_GPIO_PWM2_PORT_B,
+			&UNIT1_GPIO_PWM3_PORT_A,
+			&UNIT1_GPIO_PWM3_PORT_B
+		}
+
+	},
+
+	{
+		uC_BASE_PWM_CTRL_2,
+		1,
+		1,
+		1,
+		&UNIT2_GPIO_PWM1_PORT_A,
+		&UNIT2_GPIO_PWM1_PORT_B,
+		&UNIT2_GPIO_PWM2_PORT_A,
+		&UNIT2_GPIO_PWM2_PORT_B,
+		&UNIT2_GPIO_PWM3_PORT_A,
+		&UNIT2_GPIO_PWM3_PORT_B
+
+	}
+};

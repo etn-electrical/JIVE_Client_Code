@@ -1,0 +1,92 @@
+<dom-module id="modal-license-information">
+    <template>
+        <style>
+            px-modal[overlay] {
+                background: none;
+            }
+
+            a:active {color:#000000;}
+
+            :host /deep/ .content {
+                transform: translateX(-50%) translateY(-50%);
+                -webkit-transform: translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px)) !important;
+            }
+
+            :host /deep/ .actionbar {
+                transform: translateX(-50%) translateY(-50%);
+                -webkit-transform: translateX(calc(-50% - .5px)) translateY(calc(-50% - .5px)) !important;
+            }
+        </style>
+        <px-modal overlay class="visible">
+            <px-actionbar dark>
+                <px-title maintitle="[[data.title]]" flex></px-title>
+            </px-actionbar>
+            <px-content>
+                <table style="border-collapse: collapse;">
+                    <template is="dom-repeat" items="{{licenseList}}">
+                        <tr>
+                            <td style="padding-bottom: 20px;"><a href$="[[getLicense(index)]]"
+                                    target="_blank">[[getLicense(index)]]</a></td>
+                        </tr>
+                    </template>
+                </table>
+            </px-content>
+            <px-actionbar bottom>
+                <span class="flex"></span>
+                <template is="dom-repeat" items="{{data.options}}">
+                    <px-button id="{{item}}" on-click="click" primary$="{{isPrimary(item)}}">{{item}}</px-button>
+                </template>
+                <span class="flex"></span>
+            </px-actionbar>
+        </px-modal>
+    </template>
+    <script>
+        var licenseLinks = [];
+        Polymer({
+            is: 'modal-license-information',
+            properties: {
+                tab: {
+                    type: Object,
+                    notify: true
+                },
+                data: {
+                    type: Object,
+                    notify: true
+                },
+                licenseList: {
+                    type: Array,
+                    notify: true
+                }
+            },
+
+            isPrimary: function (item) {
+                setTimeout(function () {
+                    document.getElementById(item).focus();
+                });
+                return this.data.options.length - 1 === this.data.options.indexOf(item);
+            },
+
+            click: function (e) {
+                this.tab.promise.resolve(e.model.index);
+            },
+
+            attached: function () {
+                var self = this;
+                licenseLinks = [];
+                paramLicenseInformation = PB.DCI.get("DCI_LICENSE_INFORMATION");
+                PB.JQhttp('GET', "/rs/param/" + paramLicenseInformation.pid + "/value",'', 0, 0).then(function (data) {
+                var json = PB.parseXML(data);
+                licenseInformation = json.Value.value.replace(/\"/g, "").split(";")
+                for (i = 0; i < licenseInformation.length; i++) {
+                    licenseLinks.push(licenseInformation[i])
+                }         
+                self.set("licenseList", licenseLinks);
+                });
+            },
+
+            getLicense: function (index) {
+                return licenseLinks[index]
+            },
+        });
+    </script>
+</dom-module>

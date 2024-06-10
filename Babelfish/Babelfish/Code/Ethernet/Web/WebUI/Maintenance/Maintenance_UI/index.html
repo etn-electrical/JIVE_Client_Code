@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Device Maintenance Page</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<script>
+		var upload, cancel, openFile = (function () {
+			var win = window, doc = document, con = console;
+			var appendChild = 'appendChild';
+			var disabled = 'disabled', Guid = 'Guid', ProductGuid = 'ProductGuid', GET = 'GET', classList = 'classList', remove = 'remove', firstChild = 'firstChild', setTimeout = 'setTimeout', checked = 'checked', selected = 'selected', hidden = 'hidden', datatable = 'datatable', removeAttribute = 'removeAttribute', setAttribute = 'setAttribute', removeChild = 'removeChild', length = 'length', bind = 'bind', validationMsg = '';
+
+			var xlink = 'xlink:href';
+			var TYPE_DEVICE = 'device';
+			var TYPE_FILE = 'file';
+
+			var PATH_PROCESSOR = 'processor';
+			var PATH_IMAGE = 'image';
+			win.sessionId = undefined;
+			var cancelClicked = false;
+
+
+
+			//This file is UNCOMPRESSED
+			//  to compress it, copy the contents of this <script> tag into a javascript minifier online
+			//  and replace this code with the result
+			//  http://jscompress.com/
+			//  http://javascript-minifier.com/
+			///////////
+			// MiniQ //
+			///////////
+			//Tiny Promise implementation
+			var MiniQ = function MiniQ() {
+				var q = this.q = [];
+				var STATE_PENDING = -1;
+				var STATE_RESOLVED = 0;
+				var STATE_REJECTED = 1;
+				//Stores the arguments used when 'resolve' or 'reject' was called
+				var value;
+				var self = this;
+				self.state = STATE_PENDING;
+				this.getMiniQ = function () {
+					if (value && instanceOf(value[0], MiniQ)) {
+						return value[0].getMiniQ();
+					}
+					return self;
+				};
+				this.doQ = function () {
+					while (q[length]) {
+						var func = q.shift()[self.state];
+						var newValue;
+						if (func) {
+							newValue = func.apply(self, value);
+							if (newValue !== undefined) {
+								newValue = [newValue];
+								for (var i = 1; i < value[length]; i++) {
+									newValue[i] = value[i];
+								}
+								value = newValue;
+								if (instanceOf(value[0], MiniQ)) {
+									while (q[length]) {
+										value[0].q.push(q.shift());
+									}
+								}
+							}
+						}
+					}
+					if (value && instanceOf(value[0], MiniQ)) {
+						if (value[0].state !== STATE_PENDING) {
+							value[0].doQ();
+						}
+					}
+				};
+				//When this process finishes, run the resolution or reject callback functions
+				//  These functions will run with ALL of the arguments sent by the resolve/reject function.
+				//  Providing a return value for the callback will replace the first argument in all future "then" callbacks
+				this.then = function (resCallback, rejCallback) {
+					var mQ = self.getMiniQ();
+					if (mQ !== self) {
+						mQ.then(resCallback, rejCallback);
+					} else {
+						mQ.q.push([resCallback, rejCallback]);
+						if (mQ.state !== STATE_PENDING) {
+							mQ.doQ();
+						}
+					}
+					return mQ;
+				};
+				//Resolve this process and send the data down its chain
+				this.resolve = function () {
+					self.state = STATE_RESOLVED;
+					value = arguments;
+					self.doQ();
+					return this;
+				};
+				//Reject this process and send the data down its chain
+				this.reject = function () {
+					self.state = STATE_REJECTED;
+					value = arguments;
+					self.doQ();
+					return this;
+				};
+			};
+
+			//Helper Functions
+			/**
+			 * Compression helper for instanceof
+			 */
+			var instanceOf = function (a, b) {
+				return a instanceof b;
+			};
+
+			/**
+			 * Returns the input as itself or as an array of 1
+			 */
+			var asArray = function (obj) {
+				return instanceOf(obj, Array) ? obj : [obj];
+			};
+
+			var getElement = function (id) {
+				return doc.getElementById(id);
+			};
+
+			var createElement = function (tag, parent, innerText, title) {
+				var ret = doc.createElement(tag);
+				if (parent) {
+					parent[appendChild](ret);
+				}
+				if (innerText) {
+					ret.innerText = innerText;
+				}
+				if (title) {
+					ret.title = title;
+				}
+				return ret;
+			};
+
+			var replaceElement = function (parent, newElem, oldElem) {
+				if (oldElem) {
+					parent.replaceChild(newElem, oldElem);
+				} else {
+					parent[appendChild](newElem);
+				}
+			}
+
+			var getSetAttribute = function (elem, attribute, value) {
+				if (value === undefined) {
+					return elem.getAttribute(attribute);
+				} else {
+					return elem.setAttribute(attribute, value);
+				}
+			};
+
+			var getText = function (obj) {
+				var a = arguments;
+				var i = 1;
+				while (obj) {
+					obj = obj[a[i++]];
+					if (obj && i == a[length]) {
+						return obj;
+					}
+				}
+				return '--';
+			}
+
+			// Converts XML into a Javascript Object
+			//  - Creates a new object or appends data to an existing one
+			//  - Attributes are assigned as keys to the object
+			//  - If xml is only a value (not XML) it is assigned to parent.value
+			//    - If parent doesn't exist, xml is returned
+			var parseXML = function (xml, parent) {
+				// RegEx divides proper XML in to three parts:
+				// $1 - The node name
+				// $2 - Space-separated attributes, or a blank string
+				// $3 - The contents of the node, or undefined if self-closing
+				var regex = /<(\w+)\s*(.*?)(?:\/>|>([\S\s]*?)<\/\1>)/g
+				//Create the basic XML structure
+				var ex = regex.exec(xml);
+				if (ex === null) {
+					//This occurs when "xml" is not XML-formatted.
+					//  In this case, apply it to its parent and move on
+					if (!parent) {
+						parent = xml;
+					} else if (xml) {
+						parent.value = xml;
+					}
+					return parent;
+				}
+				var ret = parent || {};
+				while (ex !== null) {
+					// Assign each attribute as a property of the value
+					var attr = undefined;
+					if (ex[2]) {
+						attr = {};
+						ex[2].split(/\s/).forEach(function (n) {
+							var i = n.indexOf('=');
+							var k = n.substr(0, i);
+							var v = n.substr(i + 1).replace(/^"(.*)"$/, '$1');
+							attr[k] = v;
+						});
+					}
+					// Assign the value to the key
+					var value = parseXML(ex[3], attr);
+					var old = ret[ex[1]];
+					if (old) {
+						if (!instanceOf(old, Array)) {
+							old = ret[ex[1]] = [old];
+						}
+						old.push(value)
+					} else {
+						ret[ex[1]] = value;
+					}
+					ex = regex.exec(xml);
+				}
+				return ret;
+			};
+			// Makes an XMLHttpRequest and returns a promise that resolves (or rejects) when it is finished
+			var request = function (cmd, url, data) {
+				con.log('request', cmd, url, data && data.substr(0, 200));
+
+				var q = new MiniQ();
+				var retries = 3;
+				run();
+				return q;
+
+				function run() {
+					var xmlhttp = new XMLHttpRequest();
+				    // xmlhttp.open(cmd, "http://192.168.1.254"+url);
+				    xmlhttp.open(cmd, url);
+					if (cmd !== GET) {
+						xmlhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+					}
+
+					xmlhttp.onreadystatechange = function () {
+						if (xmlhttp.readyState == 4) {
+							var json = parseXML(xmlhttp.responseText);
+							con.log('response', cmd, url, data && data.substr(0, 200), json);
+							if (xmlhttp.status >= 200 && xmlhttp.status < 300) {
+								q.resolve(json);
+							} else if (xmlhttp.status == 420 || xmlhttp.status == 0) {
+								window.setTimeout(function () {
+									if (retries--) {
+										run();
+									} else {
+										xmlhttp.responseJSON = json;
+										q.reject(xmlhttp);
+									}
+								}, 7000);
+							} else {
+								xmlhttp.responseJSON = json;
+								q.reject(xmlhttp);
+							}
+						}
+					};
+
+					if (url != '/rs/fw' & url != '/rs/fw/session') {
+						xmlhttp.timeout = 10000; // time in milliseconds
+					}
+
+					if (cancelClicked && url != '/rs/fw/session') {
+						xmlhttp.abort();
+						q.reject(xmlhttp);
+					} else if (data != null) {
+						xmlhttp.send(data);
+					} else {
+						xmlhttp.send();
+					}
+				}
+			};
+			// Creates a promise from the xmlhttp return that waits for the specified amount of time before resolving with the original xmlhttp.
+			var requestAndWait = function (cmd, url, data, row) {
+				return request(cmd, url, data).then(function (json) {
+					for (var n in json) {
+						var w = json[n].Wait;
+						//Fixing for DELETE SESSION call. When it is "0" sometime device is not able to delete quickly.
+						//When waitTime is zero, we are waiting for 2 sec before we start new session (next request)
+						if (url.indexOf('/rs/fw/session') >= 0 && w === "0") {
+							w = parseInt(w) + 2000;
+						}
+						if (w) {
+							var ret = new MiniQ();
+							win[setTimeout](ret.resolve[bind](ret, json), w);
+							return ret;
+						}
+					}
+				}, function (xmlhttpError) {
+					if(win.sessionId != undefined){
+					deleteSession(win.sessionId, row);
+					}
+					else if (xmlhttpError.status == 0){
+						log(row, "Device communication failure, please retry.");
+					}else{
+						log(row, xmlhttpError.statusText);
+					}
+					resetActionBtns()
+				});
+			};
+
+			/**
+			 * The File's parsed XML, in JSON format
+			 */
+			var file;
+
+			/**
+			 * The product information of the device (not the file)
+			 */
+			var product;
+
+			/**
+			 * Rows contain all the information between a paired processor and image between the device and file
+			 * rows = [{
+			 * 		device: {
+			 * 			processor: (processor info)
+			 * 			image: (image info)
+			 * 		},
+			 * 		file: {
+			 * 			processor: (processor info)
+			 * 			image: (image info)
+			 * 		},
+			 * 		checkbox: (checkbox object),
+			 * 		statusCell: (status cell object) 		
+			 * }]
+			 */
+			var rows = [];
+
+			/**
+			 * Columns refers to the name of the specific processor or image information that is required to match
+			 * columns = [{
+			 * 		type: (device | file),
+			 * 		path: (processor | image),
+			 * 		key: (key)
+			 * }]
+			 */
+			var columns = [];
+
+			var setRowStatus = function (index, message) {
+				rows[index].statusCell.textContent = message;
+			};
+
+			var inArray = function (needle, haystack) {
+				haystack = asArray(haystack);
+				for (var i = haystack.length - 1; i >= 0; i--) {
+					if (haystack[i] == needle) {
+						return true;
+					}
+				}
+			};
+            /**
+             * Returns appropriate status message for each item within the table based on the output of the version compare function which compares the version of what is on the device with the image coming from the codepack.
+             * @param  {entry} entry Full Entry
+             * @return {string}       Status message.
+             */
+			var getStatusMessage = function (entry) {
+				var message = " "
+				if (entry.file.image.Ver) {
+					var v = versionCompare(entry.file.image.Ver, entry.device.image.Ver);
+					if (v > 0) {
+						if (entry.imageValidated) {
+							message = "Upgrade Disabled."
+						}
+						else {
+							message = "Update Recommended.";
+						}
+					}
+					else if (v < 0) {
+						if (entry.imageValidated) {
+							message = "Rollback Disabled."
+						}
+						else {
+							message = "Rollback Not Recommended."
+						}
+					}
+					else if (v === 0) {
+						message = "Version Is Same."
+					}
+				}
+				else {
+					message = "Not in file.";
+				}
+				return message
+			}
+			/**
+				* Simply compares two string version values.
+				* 
+				* Example:
+				* versionCompare('1.1', '1.2') => -1
+				* versionCompare('1.1', '1.1') =>  0
+				* versionCompare('1.2', '1.1') =>  1
+				* versionCompare('2.23.3', '2.22.3') => 1
+				* 
+				* Returns:
+				* -1 = left is LOWER than right
+				*  0 = they are equal
+				*  1 = left is GREATER = right is LOWER
+				*  And FALSE if one of input versions are not valid
+				*
+				* @function
+				* @param {String} left  Version #1
+				* @param {String} right Version #2
+				* @return {Integer|Boolean}
+				* @author Alexey Bass (albass)
+				* @since 2011-07-14
+				*/
+			var versionCompare = function (left, right) {
+				if (typeof left + typeof right != 'stringstring')
+					return false;
+
+				var a = left.split('.'),
+					b = right.split('.'),
+					i = 0, len = Math.max(a.length, b.length);
+
+				for (; i < len; i++) {
+					if ((a[i] && !b[i] && parseInt(a[i]) > 0) || (parseInt(a[i]) > parseInt(b[i]))) {
+						return 1;
+					} else if ((b[i] && !a[i] && parseInt(b[i]) > 0) || (parseInt(a[i]) < parseInt(b[i]))) {
+						return -1;
+					}
+				}
+				return 0;
+			}
+			/**
+			 * Updates the row at the specified index, adding a new one if necessary
+			 */
+			var displayRows = function (index) {
+				var TD = 'TD';
+				var TH = 'TH';
+
+				var table = getElement(datatable);
+				var oldHeader = table[firstChild];
+				if (!oldHeader || oldHeader.childElementCount !== 4 + columns[length]) {
+					//No children, create the thead
+					var head = createElement('THEAD');
+					replaceElement(table, head, oldHeader);
+					createElement(TH, head);
+					createElement(TH, head, 'Component');
+					createElement(TH, head, 'Image');
+					for (var i = 0; i < columns[length]; i++) {
+						var c = columns[i];
+						if (c.type === TYPE_DEVICE) {
+							createElement(TH, head, 'Device ' + c.key);
+						} else {
+							createElement(TH, head, 'File ' + c.key);
+						}
+					}
+					createElement(TH, head, 'Compatibility');
+					createElement(TH, head, 'Status');
+				}
+
+				var device = rows[index][TYPE_DEVICE];
+				var file = rows[index][TYPE_FILE];
+				var either = device || file;
+
+				var status;
+				var newRow = createElement('TR');
+				var td = createElement(TD, newRow);
+				var checkbox = createElement('INPUT', td);
+				getSetAttribute(checkbox, 'type', 'checkbox');
+				rows[index].checkbox = checkbox;
+				rows[index].imageValidated = false;
+
+				//Generated by restrict-analysis
+				var allowed = {};
+				var title = {};
+				title[PATH_IMAGE] = {};
+				title[PATH_PROCESSOR] = {};
+
+				if (device && file) {
+					var selectedStatus;
+					var unselectedStatus;
+					var handleClick = function () {
+						var buttons = doc.getElementsByTagName('BUTTON');
+						var uploadFilesBtn = buttons[1];
+						if (checkbox.checked) {
+							newRow[classList].add(selected);
+							setRowStatus(index, selectedStatus);
+						} else {
+							newRow[classList][remove](selected);
+							setRowStatus(index, unselectedStatus);
+						}
+
+						// To enable/disable the Upload Files button
+						for (var i = 0; i < rows[length]; i++) {
+							var row = rows[i];
+							if (row.checkbox.checked) {
+								uploadFilesBtn[disabled] = false;
+								break;
+							} else {
+								uploadFilesBtn[disabled] = true;
+							}
+						}
+
+					}
+
+					// Check device vs file to determine if they are allowed
+					var reason;
+					[PATH_PROCESSOR, PATH_IMAGE].forEach(function (path) {
+						var restrict = file[path].Restrict;
+						if (restrict) {
+							for (var key in restrict) {
+								var rules = restrict[key];
+								if (rules) {
+									var value = device[path][key];
+
+									//Excluded is true only when Exclude exists AND the Device's value is listed
+									var exclude = rules.Exclude;
+									var excluded = (exclude && inArray(value, exclude));
+
+									//Included is false only when Include exists AND the Device's value is not listed
+									var include = rules.Include;
+									var included = !include || inArray(value, include);
+
+									var t = key + ' ' + value + ' is ';
+									if (excluded) {
+										t = t + 'excluded';
+										reason = key;
+										allowed[key] = false;
+									} else if (!included) {
+										t = t + 'not included';
+										reason = key;
+										allowed[key] = false;
+									} else if (include) {
+										t = t + 'included';
+										allowed[key] = true;
+									} else if (exclude) {
+										t = t + 'not excluded';
+									} else {
+										t = '';
+									}
+
+									title[path][key] = t;
+								}
+							}
+						}
+					});
+
+					if (reason) {
+						selectedStatus = getStatusMessage(rows[index]);
+						unselectedStatus = getStatusMessage(rows[index]);
+						status = unselectedStatus;
+					} else {
+						selectedStatus = getStatusMessage(rows[index]);
+						unselectedStatus = getStatusMessage(rows[index]);
+						win[setTimeout](handleClick);
+						status = selectedStatus;
+					}
+					rows[index].checkbox.onclick = handleClick;
+				} else {
+					getSetAttribute(checkbox, disabled, disabled);
+					newRow[classList].add(disabled);
+					status = 'Not Available in File';
+				}
+
+				createElement(TD, newRow, either[PATH_PROCESSOR].Name);
+				createElement(TD, newRow, either[PATH_IMAGE].Name);
+
+				for (var i = 0; i < columns[length]; i++) {
+					var c = columns[i];
+					var path = c.path;
+					var key = c.key;
+					var t = title[path][key] || key + ' is unrestricted';
+					var td;
+					if (c.type === TYPE_DEVICE) {
+						td = createElement(TD, newRow, getText(device, path, key), t);
+					} else {
+						td = createElement(TD, newRow, getText(file, path, key), t);
+					}
+					getSetAttribute(td, 'allowed', allowed[key]);
+				};
+				createElement(TD, newRow, either[PATH_IMAGE].Compatibility);
+				rows[index].statusCell = createElement(TD, newRow, status);
+				replaceElement(table, newRow, table.children[index + 1]);
+			};
+
+			/**
+			 * Columns are only added from the File, not from Device
+			 * @param {[type]} path The Path (processor | image)
+			 * @param {[type]} obj  The processor or image object being processed
+			 */
+			var addColumns = function (path, obj) {
+				var restrict = obj.Restrict
+				if (!restrict) {
+					return;
+				}
+				var keys = Object.keys(restrict);
+				for (var i = keys[length] - 1; i >= 0; i--) {
+					for (var j = columns[length] - 1; j >= 0; j--) {
+						if (columns[j].key === keys[i]) {
+							i = -1;
+							break;
+						}
+					};
+					if (i !== -1) {
+						if (obj[keys[i]]) {
+							columns.push({
+								type: TYPE_FILE,
+								path: path,
+								key: keys[i]
+							});
+						}
+						columns.push({
+							type: TYPE_DEVICE,
+							path: path,
+							key: keys[i]
+						});
+					}
+				};
+			}
+
+			/**
+			 * Attempts to match the incoming type, processor, and image to an existing row, or adds a new one
+			 * In either case, the result will have its opposite value populated
+			 */
+			var createRow = function (addType, processor, image) {
+				var findType;
+				if (addType === TYPE_FILE) {
+					findType = TYPE_DEVICE;
+					//Add any restrict columns
+					addColumns(PATH_PROCESSOR, processor);
+					addColumns(PATH_IMAGE, image);
+				} else {
+					findType = TYPE_FILE;
+				}
+
+				var row, add = {};
+				add[PATH_PROCESSOR] = processor;
+				add[PATH_IMAGE] = image;
+				for (var i = 0; i < rows[length]; i++) {
+					row = rows[i];
+					var prod = row[findType];
+					if (!prod) {
+						continue;
+					}
+					var proc = prod[PATH_PROCESSOR];
+					var img = prod[PATH_IMAGE];
+					if (proc[Guid] === processor[Guid] && img[Guid] === image[Guid]) {
+						if (row[addType]) {
+							con.warn('Duplicate row', proc, img);
+						}
+						row[addType] = add;
+						displayRows(i);
+						return row;
+					}
+				}
+
+				//Match not found, add the row
+				row = {};
+				row[addType] = add;
+				rows.push(row);
+				displayRows(rows[length] - 1);
+				return row;
+			};
+
+			// Reads all the processors and images and displays them in a table
+			var updateRows = function (file) {
+				// Clear the processor element
+				var domProc = getElement(datatable);
+				while (domProc[firstChild]) {
+					domProc[removeChild](domProc[firstChild]);
+				}
+				domProc[classList][remove](hidden);
+				getElement('upload')[classList][remove](hidden);
+				getElement('cancel')[classList][remove](hidden);
+
+				var productCell = domProc.previousElementSibling;
+				if (domProc.previousElementSibling.id === 'product') {
+					productCell.parent[removeChild](productCell);
+				}
+
+				rows = [];
+				columns = [];
+
+				if (file.FWPackage) {
+				// Request the ProcesorList information
+				request(GET, '/rs/fw').then(function (json) {
+					var spin = doc.getElementById("spin");
+					spin.style.display = "block";
+					product = json.Product;
+					// Request info on each of the processors
+					var procs = asArray(product.ProcessorList.Processor);
+					var procs_counter = 0;
+					var matchedProductCodepack;
+					var fileProductData = asArray(file.FWPackage.Product);
+					for (var x = 0; x < fileProductData.length; x++) {
+						if (fileProductData[x].ProductGuid === json.Product.ProductGuid) {
+							matchedProductCodepack = fileProductData[x];
+							break;
+						}
+					}
+
+				
+					if (matchedProductCodepack) {
+						var deviceAllProcessorAndImagesData = [];
+						var repeat_device_call_loop = function (procs, procs_counter) {
+							if (procs_counter >= procs.length) {
+								//Create all the rows from the File and Product
+								var fileProcessorList = asArray(matchedProductCodepack.Processor)
+								//Only list the processor/images found for the product
+								for (var m = 0; m < deviceAllProcessorAndImagesData[length]; m++) {
+									for (var i = 0; i < fileProcessorList[length]; i++) {
+										if (deviceAllProcessorAndImagesData[m].Guid == fileProcessorList[i].Guid) {
+											var imageList = asArray(fileProcessorList[i].Image);
+											for (var y = 0; y < imageList[length]; y++) {
+											  //you will check for if each processor images info are having the correct guid
+												for (var v = 0; v < deviceAllProcessorAndImagesData[m].ImageList[length]; v++) {
+													if (deviceAllProcessorAndImagesData[m].ImageList[v].Guid == imageList[y].Guid) {
+														createRow(TYPE_FILE, fileProcessorList[i], imageList[y]);
+													}
+												}
+											}
+										}
+									}
+									for (var z = 0; z < deviceAllProcessorAndImagesData[m].ImageList[length]; z++) {
+										createRow(TYPE_DEVICE, deviceAllProcessorAndImagesData[m], deviceAllProcessorAndImagesData[m].ImageList[z]);
+									}
+								}
+								spin.style.display = "none";
+							} else {
+								request(GET, procs[procs_counter][xlink]).then(function (
+									procjson
+								) {
+									var deviceProcessor = procjson.Processor;
+									var images = asArray(deviceProcessor.ImageList.Image);
+									// Request info on each of the images
+									var image_counter = 0;
+									var processorImageData = [];
+									var repeat_image_loop = function (images, image_counter) {
+										if (image_counter >= images.length) {
+											procs_counter++;
+											deviceProcessor.ImageList = processorImageData
+											deviceAllProcessorAndImagesData.push(deviceProcessor);
+											repeat_device_call_loop(procs, procs_counter);
+										} else {
+											request(GET, images[image_counter][xlink]).then(
+												function (imgjson) {
+													processorImageData.push(imgjson.Image);
+													image_counter++;
+													repeat_image_loop(images, image_counter);
+												}
+											);
+										}
+									};
+									repeat_image_loop(images, image_counter);
+								});
+							}
+						};
+						repeat_device_call_loop(procs, procs_counter);
+					}
+					else {
+						alert("Invalid Product");
+						spin.style.display = "none";
+					}		
+				}, function (response) {
+					if (response.status == 422 && response.statusText == "SFU Session in Progress") {
+							alert("Firmware update session in progress, please retry after sometime.");
+						} else {
+							alert(response.statusText)
+						}
+				});
+				} else {
+					alert("Invalid file selected");
+				}
+			};
+
+			var sessionID;
+			var sessionData;
+			var sessionUrl;
+			var startSession = function (encodingType, row,sec) {
+				sec = sec || 60;
+				if (encodingType.toLowerCase() === "base64") {
+					encodingType = 1;
+				}
+				else {
+					encodingType = 0;
+				}
+				sessionUrl = '/rs/fw/session';
+				sessionData = '<SessionDef><TimeoutSec>' + sec + '</TimeoutSec><EncodingType>' + encodingType + '</EncodingType></SessionDef>'
+				return startFirmwareUpdateSession(sessionUrl,sessionData,0,row).then(function (json) {
+					sessionID = json.SessionResp.SessionID;
+					win.sessionId = sessionID;
+				}, function (xmlhttp) {
+					con.error('Failed to establish session', xmlhttp);
+					for (var i = 0; i < rows[length]; i++) {
+						var row = rows[i];
+						if (row.checkbox.checked) {
+							if (xmlhttp == "Start_Firmware_Update_Fail") {
+								log(row, "Processor is busy to do firmware upgrade now.");
+							} else if (xmlhttp.status == 430) {
+								log(row, "Firmware update session already in progress, please retry after sometime.");
+							}
+							else {
+								log(row, xmlhttp.statusText);
+							}
+						}
+					}
+				});
+			};
+
+			var deleteSession = function (sessionId, row) {
+				var sessionData = '<Session SessionID="' + sessionId + '" />';
+				var msg = 'Update failed';
+				request('DELETE', '/rs/fw/session', sessionData).then(function (response) {
+					console.log("FW session aborted", response);
+					if (cancelClicked) {
+						log(row, 'Upgrade Aborted');
+					} else {
+						log(row, msg);
+					}
+				}, function (error) {
+					console.log("FW session abort failed to execute", error);
+					if (cancelClicked) {
+						log(row, 'Upgrade Aborted');
+					} else {
+						log(row, msg);
+					}
+				});
+			};
+
+			var deleteUserSession = function () {
+				request('DELETE', '/rs/users/session').then(function (response) {
+					console.log("Deleted user session", response);
+				}, function (error) {
+					console.log("Delete request failed to execute", error);
+				});
+			};
+
+			var hexToBytes = function (hex) {
+				for (var bytes = [], c = 0; c < hex.length; c += 2)
+					bytes.push(parseInt(hex.substr(c, 2), 16));
+				return bytes;
+			};
+
+			var asciiToHex = function (str) {
+				var stringHexFormat = "";
+				for (var n = 0, l = str.length; n < l; n++) {
+					var hex = Number(str.charCodeAt(n)).toString(16);
+					stringHexFormat += hex;
+				}
+				return stringHexFormat;
+			};
+
+			var crcValidator = function (data, datalength) {
+				var temp;
+				var temp_crc = 0xFFFF;
+				var temp_crc_ptr = [];
+				var dataIndex = 0;
+
+				var str = temp_crc.toString(16);
+				var byte0 = str.charAt(str.length - 2) + str.charAt(str.length - 1);
+				var byte1 = str.charAt(0) + str.charAt(1);
+				temp_crc_ptr[0] = (parseInt(byte0, 16));
+				temp_crc_ptr[1] = (parseInt(byte1, 16));
+
+				while (datalength-- > 0) {
+					temp = data[dataIndex] ^ temp_crc_ptr[0];
+					dataIndex++;
+					var val1 = leftShiftOperation(temp, 4);
+					temp ^= parseInt(val1, 16);
+					var val2 = leftShiftOperation(temp, 3);
+					temp_crc_ptr[0] = temp_crc_ptr[1] ^ parseInt(val2, 16) ^ (temp >> 4);
+					temp_crc_ptr[1] = temp ^ (temp >> 5);
+
+				}
+				byte0 = temp_crc_ptr[0].toString(16).toUpperCase();
+				byte1 = temp_crc_ptr[1].toString(16).toUpperCase();
+				if (byte0.length == 1) {
+					byte0 = '0' + byte0;
+				}
+				var str_crc = byte1 + byte0;
+				var dec_crc = (parseInt(str_crc, 16));
+
+				var bin = (~dec_crc >>> 0).toString(2);
+				var dec = parseInt(bin, 2);
+				var hex = dec.toString(16).toUpperCase();
+
+				return "0x" + hex.substring(hex.length, hex.length - 4);
+			};
+
+			var leftShiftOperation = function (temp, val) {
+				var dec = (temp << val);
+				var hex = dec.toString(16).toUpperCase();
+				return hex.charAt(hex.length - 2) + hex.charAt(hex.length - 1);
+			}
+
+			var processChunkValidation = function (updateArray) {
+				var q = new MiniQ();
+				var counter = 0;
+				var imageData = updateArray[counter].file.image.BinData.Data;
+
+				if (!imageData) {
+					q.reject(counter);
+				} else {
+					var encodingType = updateArray[counter].file.image.BinData.encoding_type;
+					var totalChunkCount = imageData.length;
+					var repeat_loop = function (imageData, totalChunkCount, chunkCounter) {
+						log(updateArray[counter], 'Validating codepack...');
+						if (chunkCounter >= totalChunkCount) {
+							log(updateArray[counter], 'Codepack integrity check success');
+							counter += 1;
+							if (updateArray.length > counter) {
+								imageData = updateArray[counter].file.image.BinData.Data;
+								encodingType = updateArray[counter].file.image.BinData.encoding_type;
+								totalChunkCount = imageData.length;
+
+								repeat_loop(imageData, totalChunkCount, 0);
+							} else {
+								q.resolve(true);
+							}
+						} else {
+							var stringRequired = imageData[chunkCounter].value;
+							var chunckCRC = imageData[chunkCounter].packet_crc;
+							var buffer;
+							if (encodingType == "Base64") {
+								var newString = asciiToHex(stringRequired);
+								buffer = hexToBytes(newString);
+							} else {
+								buffer = hexToBytes(stringRequired);
+							}
+							var crcValue = crcValidator(buffer, buffer.length);
+							if (crcValue != chunckCRC) {
+								log(updateArray[counter], 'Codepack integrity check failed');
+								q.resolve(false);
+							} else {
+								chunkCounter += 1;
+								window.setTimeout(function () {
+									repeat_loop(imageData, totalChunkCount, chunkCounter);
+								}, 1)
+							}
+						}
+					}
+					repeat_loop(imageData, totalChunkCount, 0);
+				}
+
+				return q;
+			}
+
+			var log = function (row, message, arg) {
+				row.statusCell.textContent = message;
+				return (new MiniQ()).resolve(arg);
+			};
+
+			var validate = function (row,validateCount) {
+				var q = new MiniQ();
+			    var validateUrl = row[TYPE_DEVICE][PATH_IMAGE].Valid[xlink];
+				log(row, 'Validating...');
+				row.imageValidated = true;
+				var repeatValidateApi = function (vUrl,vCount) {
+					requestAndWait(GET, validateUrl,null,row).then(function (json) {
+						var state = json.Validate.Integrity;
+							vCount += 1
+							var waitTime = json.Validate.Wait
+							if (state == "Checking" && vCount < 14) {
+								window.setTimeout(function () {
+									repeatValidateApi(vUrl, vCount);
+								}, waitTime);
+							} else if (state == "Valid") {
+								q.resolve("Complete");
+							} else if(state == "Invalid") {
+								q.resolve("Final integrity check is Invalid.");
+							}else{
+								q.reject("Invalid image")
+							}
+						});
+					}
+				repeatValidateApi(validateUrl,validateCount);
+				return q
+			};
+
+			var sendRow = function (row, index) {
+				var arr = row[TYPE_FILE][PATH_IMAGE].BinData.Data;
+				var count = arr[length];
+				var crcInvalid = false;
+
+				//Validate when complete
+				if (index >= count) {
+					//Send complete
+					log(row, 'Upload Complete');
+					return validate(row,0).then(function (value) {
+						return firmwareIntegrityCheck(value, row, sessionID)
+					},function (error) {
+						log(row, error);
+						}).then(function (result) {
+						return requestAndWait('DELETE', '/rs/fw/session', '<Session SessionID="' + sessionID + '" />').then(function () {
+							sessionID = undefined;
+							log(row, result);
+						});
+					}
+						, function (error) {
+							log(row, error);
+							return requestAndWait('DELETE', '/rs/fw/session', '<Session SessionID="' + sessionID + '" />').then(function () {
+								sessionID = undefined;
+								log(row, error);
+							})
+						});
+				}
+
+
+				//Start Session if not started
+				if (sessionID === undefined) {
+					log(row, 'Starting Session...');
+					var encodingType = row.file.image.BinData.encoding_type;
+					return startSession(encodingType,row).then(sendRow[bind](this, row, index));
+				};
+
+				var toSend;
+				var url = row[TYPE_DEVICE][PATH_IMAGE].Bin[xlink];
+				var data = arr[index];
+				var value = data.value || data;
+				var address = data.address || '';
+				if (address) {
+					address = ' address="' + address + '"';
+				}
+				if (count > 1) {
+					toSend = '<DataPUT SessionID="' + sessionID + '"><ChunkTotal>' + count + '</ChunkTotal><ChunkNumber>' + index + '</ChunkNumber><Data' + address +
+						' size="' + value[length] + '">' + value + '</Data></DataPUT>';
+				} else {
+					toSend = '<DataPUT SessionID="' + sessionID + '"><Data' + address + ' size="' + value[length] + '">' + value + '</Data></DataPUT>';
+				}
+				if (!cancelClicked) {
+					var percent = Math.round((index / count) * 100);
+					log(row, 'In Progress - ' + percent + '%');
+				}
+				return requestAndWait('PUT', url, toSend, row).then(sendRow[bind](this, row, index + 1));
+			};
+
+			firmwareIntegrityCheck = function (isValid, row, sessionId) {
+				var statusCount = 0;
+				var statusUrl = '';
+				if (isValid == "Complete") {
+					log(row, 'Copying image to the destination');
+					var commitUrl = row[TYPE_DEVICE][PATH_IMAGE].Bin[xlink];
+					// 		var commitUrl = updateArray[counter].binXLink;
+					var data = "<Commit><SessionID>" + sessionId + "</SessionID></Commit>";
+					commitUrl = commitUrl.replace('bin', 'commit');
+					// 		commitUrl = commitUrl.replace('bin', 'commit');
+					return requestAndWait('POST', commitUrl, data,row)
+						.then(function (commitResponseData) {
+							var waitTime = parseInt(commitResponseData.CommitResp.Wait);
+							statusUrl = commitUrl.replace('commit', 'status');
+							return delay(waitTime)
+						}).then(function () {
+							return firmwareStatusCheck(statusUrl, statusCount,row);
+						});
+				}
+			},
+
+				delay = function (t) {
+					var q = new MiniQ();
+					window.setTimeout(q.resolve(), t);
+					return q;
+				},
+               
+				startFirmwareUpdateSession = function (sessionUrl, sessionData,sessionCounter,row) {
+					var q = new MiniQ();
+					var repeatStartSessionApi = function (sUrl, sData,sCount) {
+						requestAndWait('POST', sUrl, sData,row).then(function (sessionResponseData) {
+							sCount += 1
+							var waitTime = sessionResponseData.SessionResp.Wait
+							if (waitTime == 0) {
+								q.resolve(sessionResponseData)
+							} else if (sCount < 14) {
+								window.setTimeout(function () {
+									repeatStartSessionApi(sUrl, sData,sCount);
+								}, waitTime);
+							} else {
+								q.reject("Start_Firmware_Update_Fail");
+							}
+						});
+					}
+					repeatStartSessionApi(sessionUrl,sessionData,sessionCounter);
+					return q
+				}
+
+				firmwareStatusCheck = function (statusUrl, statusCount,row) {
+					var q = new MiniQ();
+					var repeatStatusApi = function (sUrl, sCount) {
+						requestAndWait('GET', sUrl,null,row).then(function (StatusResponseData) {
+							sCount += 1
+							var waitTime = StatusResponseData.Status.Wait
+							if (StatusResponseData.Status.State == "Busy" && sCount < 14) {
+								window.setTimeout(function () {
+									repeatStatusApi(sUrl, sCount);
+								}, waitTime);
+							} else if (StatusResponseData.Status.State == "Idle") {
+								q.resolve("Complete");
+							} else {
+								q.reject("Image Copying failed");
+							}
+						});
+					}
+					repeatStatusApi(statusUrl, statusCount);
+					return q
+				}
+
+				var resetActionBtns = function () {
+					var buttons = doc.getElementsByTagName('BUTTON');
+					var b0 = buttons[0], b1 = buttons[1]; b2 = buttons[2];
+					b0[disabled] = false;
+					b1[disabled] = false;
+					b2[disabled] = true;
+					checkEnabled();
+			}
+
+			upload = function uploadFile(elem) {
+				var buttons = doc.getElementsByTagName('BUTTON');
+				var b0 = buttons[0], b1 = buttons[1]; b2 = buttons[2];
+				cancelClicked = false;
+				b0[disabled] = true;
+				b1[disabled] = true;
+				var updateArray = [];
+				var q = new MiniQ();
+				q.resolve();
+
+				for (var i = 0; i < rows[length]; i++) {
+					var row = rows[i];
+					row.checkbox.disabled = true;
+					if (row.checkbox.checked) {
+						b2[disabled] = false;
+						updateArray.push(row);
+					}
+				}
+
+				processChunkValidation(updateArray).then(function (crcValid) {
+					if (crcValid) {
+						var rowCounter = 0;
+						var repeat_row = function () {
+							if (rowCounter >= updateArray.length) {
+								deleteUserSession();
+								resetActionBtns();
+							} else {
+								var row = updateArray[rowCounter];
+								if (row.checkbox.checked) {
+									sessionID = undefined;
+									q.then(sendRow[bind](this, row, 0)).then(function () {
+										rowCounter += 1;
+										repeat_row();
+									}, function () {
+										resetActionBtns();
+									});
+								}
+							}
+						}
+						repeat_row();
+					} else {
+						resetActionBtns();
+					}
+				}, function (row) {
+					log(updateArray[row], 'Image data is missing');
+					resetActionBtns();
+				});
+			};
+
+			cancel = function cancelOperation(elem) {
+				cancelClicked = true;
+				for (var i = 0; i < rows[length]; i++) {
+					var row = rows[i];
+					if (row.checkbox.checked && !row.imageValidated) {
+						log(row, 'Upgrade Aborted');
+					}
+				}
+			};
+			var checkEnabled = function () {
+				for (var i = 0; i < rows[length]; i++) {
+					var row = rows[i];
+					if (row.file && row.file.image) {
+						row.checkbox.disabled = false;
+					}
+				}
+			};
+
+			//var openfile =
+			return function (elem) {
+				//Confirm file is valid before continuing
+				var myFile = elem.files[0];
+				cancelClicked = false;
+				if (myFile && myFile.type != "text/xml") {
+					alert("Please select the correct file type and try again.")
+					return;
+				}
+				var reader = new FileReader();
+				reader.onload = function (e) {
+					file = parseXML(e.target.result);
+					document.getElementById("upload").disabled = true;
+				    updateRows(file);
+				};
+				reader.readAsText(myFile);
+				elem.value = '';
+			};
+		})();
+	</script>
+</head>
+
+<body>
+	<div class="container">
+		<style>
+			.hidden {
+				display: none;
+			}
+
+			.spinner {
+				border: 16px solid #f3f3f3;
+				border-radius: 50%;
+				border-top: 16px solid #3498db;
+				width: 110px;
+				height: 110px;
+				-webkit-animation: spin 2s linear infinite;
+				animation: spin 2s linear infinite;
+			}
+
+			.loader {
+				position: fixed;
+				text-align: center;
+				top: 50%;
+				left: 55%;
+				width: 300px;
+				transform: translate(-50%, -50%);
+				z-index: 9999;
+			}
+
+			.mask {
+				position: fixed;
+				left: 0px;
+				top: 0px;
+				width: 100%;
+				height: 100%;
+				z-index: 9999;
+				background: rgb(0, 0, 0, 0.65);
+				opacity: 0.8;
+			}
+
+			@-webkit-keyframes spin {
+				0% {
+					-webkit-transform: rotate(0deg);
+				}
+
+				100% {
+					-webkit-transform: rotate(360deg);
+				}
+			}
+
+			@keyframes spin {
+				0% {
+					transform: rotate(0deg);
+				}
+
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+
+			table,
+			th,
+			td {
+
+				border: 0px solid black;
+				border-collapse: collapse;
+				padding: 2px 14px;
+			}
+
+			tr {
+				border: 1px solid black;
+			}
+
+			tr.selected {
+				background: #CCCCFF;
+			}
+
+			tr.disabled {
+				background: #F8F8F8;
+				color: #AAAAAA;
+			}
+
+			tr:not(.disabled):hover {
+				background: #E0E0E0;
+				cursor: pointer;
+			}
+
+			tr.selected:hover {
+				background: #E0E0F0;
+				cursor: pointer;
+			}
+
+			td[allowed=false] {
+				background: #FFAAAA;
+			}
+
+			tr td:nth-child(7) {
+				text-align: center;
+			}
+
+			/*		td[allowed=true] {
+						background: #AAFFAA;
+					}
+			*/
+		</style>
+
+		<h1>Device Maintenance Page</h1> The firmware for this device has not been installed properly.
+		<br /> Click the button below to select and install firmware.
+		<br />
+		<div id="spin" class="mask" style="display: none">
+			<div class="loader">
+				<div class="spinner"></div>
+			</div>
+		</div>
+
+		<input type="file" class="hidden" onchange="openFile(this)">
+		<button onclick="this.previousElementSibling.click()">Open Code Pack</button>
+		<button class="hidden" id="upload" onclick="upload(this)">Update Files</button>
+		<button class="hidden" id="cancel" disabled onclick="cancel(this)">Abort</button>
+		<table class="hidden" id="datatable">
+		</table>
+	</div>
+
+</body>
+
+</html>

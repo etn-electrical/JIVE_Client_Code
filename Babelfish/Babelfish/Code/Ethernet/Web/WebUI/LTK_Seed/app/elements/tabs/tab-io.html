@@ -1,0 +1,47 @@
+<dom-module id="tab-io">
+    <template>
+        <tab-default label='I/O' id='I/O' icon='px-icons:in-out'>
+            <section-collapse label='Inputs' id='Inputs'>
+                <group-settings-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-settings-row>
+            </section-collapse>
+            <section-collapse label='Outputs' id='Outputs'>
+                <group-settings-row>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                    <param-read-only param='10014'>
+                    </param-read-only>
+                </group-settings-row>
+            </section-collapse>
+            <section-collapse label='Device Info' id='Device_Info'>
+                <group-cells-row>
+                    <param-read-only param='30'>
+                    </param-read-only>
+                    <param-read-only param='31'>
+                    </param-read-only>
+                    <param-read-only param='32'>
+                    </param-read-only>
+                    <param-read-only param='33'>
+                    </param-read-only>
+                    <param-read-only param='34'>
+                    </param-read-only>
+                    <param-read-only param='35'>
+                    </param-read-only>
+                    <param-read-only param='36'>
+                    </param-read-only>
+                </group-cells-row>
+            </section-collapse>
+        </tab-default>
+    </template>
+    <script>
+        Polymer({
+            is: 'tab-io'
+        });
+    </script>
+</dom-module>

@@ -1,0 +1,29 @@
+<dom-module id="tab-firmware">
+    <template>
+        <tab-default label='Firmware' id='Firmware' icon='px-icons:key'>
+            <section-collapse label='Firmware' id='Firmware'>
+                <group-firmware-upgrade label='Firmware' id='Firmware'>
+                </group-firmware-upgrade>
+            </section-collapse>
+            <section-collapse label='Information' id='Information'>
+                <group-settings-row>
+                    <param-read-only param='29'>
+                    </param-read-only>
+                    <param-read-only param='31'>
+                    </param-read-only>
+                    <param-read-only param='34'>
+                    </param-read-only>
+                    <param-read-only param='35'>
+                    </param-read-only>
+                    <param-input param='36'>
+                    </param-input>
+                </group-settings-row>
+            </section-collapse>
+        </tab-default>
+    </template>
+    <script>
+        Polymer({
+            is: 'tab-firmware'
+        });
+    </script>
+</dom-module>
