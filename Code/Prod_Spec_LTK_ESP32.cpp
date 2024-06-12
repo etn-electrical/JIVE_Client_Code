@@ -76,7 +76,7 @@ extern DRAM_ATTR Device_Info_str DeviceInfo;
 void PROD_SPEC_Target_Main_Init( void )
 {
 //Ahmed
-//#define AHMED_FAKE_CONNECTION
+
     //Intiate EE
     InitEE();
 	PROD_SPEC_SERVICES_Setup();
@@ -99,12 +99,7 @@ void PROD_SPEC_Target_Main_Init( void )
 #if defined ( WIFI_STATION_MODE ) || defined ( WIFI_ACCESS_POINT_MODE )
        //Ahmed
 	//PROD_SPEC_WIFI_Init();
-#ifdef AHMED_FAKE_CONNECTION
-DeviceInfo.DeviceInNetworkStatus = DEVICE_IS_IN_A_NETWORK;
-#endif
-
-	if ( (DeviceInfo.DeviceInNetworkStatus == DEVICE_IS_IN_A_NETWORK)
-			&& (DeviceInfo.StartReProvisioning != RE_START_PROVISIONING))
+    if (DeviceInfo.DeviceInNetworkStatus == DEVICE_IS_IN_A_NETWORK)
     {
         WiFi_Connect();
     } 

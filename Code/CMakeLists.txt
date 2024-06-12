@@ -1,28 +1,27 @@
 #Set source files 
 set( srcs "app_main.cpp"
 		  "Main.cpp"
+		  "udp_client_for_GUI.c"	#Jonathan
 #Ahmed
-                    "Breaker.c" 
-                    "EventManager.c"
-                    "KeyManager.c"
-                    "Led.c"
-                    "DeviceGPIO.c"
-                    "Flash.c"
-                    "Device_IOT_DCI_Interface.cpp"
-  		     "BLE_Provisioning.c"
-			"uart_events.c"
-			"SBLCP/sblcp.c"
+                    "Breaker.c" #
+                    "EventManager.c" #
+                    "KeyManager.c" #
+                    "Led.c" #
+                    "DeviceGPIO.c" #
+                    "Flash.c" #
+                    "Device_IOT_DCI_Interface.cpp" #
+  		     "BLE_Provisioning.c" #
+			"uart_events.c" #
+			"SBLCP/sblcp.c" #
 			"../Babelfish/Code/ThirdParty/crypto_matixssl/crypto/digest/hmac.c"
-     	   "Log.c"
-           "ErrorLog.c"
-		   "Metrology/metro.c"
-		   "Metrology/metrology_hal.c"
-		   "Metrology/metrology.c"
-		   "Metrology/spi_comp.c"
-		   "Metrology/interrupt_comp.c"
-		   "Metrology/metro_utilities.c"
-		   "EERAM/i2c_comp.c"
-		   "EERAM/eeram_comp.c"
+     	   "Log.c" #
+           "ErrorLog.c" #
+		   "Metrology/metro.c" #
+		   "Metrology/metrology_hal.c" #
+		   "Metrology/metrology.c" #
+		   "Metrology/spi_comp.c" #
+		   "Metrology/interrupt_comp.c" #
+		   "Metrology/metro_utilities.c" #
 		  "Prod_Spec_LTK_ESP32.cpp"
 		  "Prod_Spec.cpp"
 		  "Prod_Spec_Mem.cpp"
@@ -111,9 +110,8 @@ set (include_dirs "Test_Code"
 				  "Prod_Spec_REST"
 				  "Prod_Spec_BACnet"
 				  "Prod_Spec_EIP"
-				  "EERAM"
 				  "Metrology"
-				  "SBLCP"
+				  "SBLCP" #
 				  "../Code"
 				  "../Code/BFData"
 				  "../Code/Shell"
@@ -144,12 +142,12 @@ set (include_dirs "Test_Code"
 				  "../Babelfish/Code/Ethernet/Web"
 				  "../Babelfish/Code/IOT/platform_device_sdk_v2/include"
 				  "../Babelfish/Code/ThirdParty/BACnetStack"
-				  #"../Babelfish/Code/ThirdParty/Azure_IOT"
-				  "../Babelfish/Code/ThirdParty/AzIoT_MW_Integration/Azure_ltk_adapters"
-				  #"../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/iothub_client/inc"
-				  "../Babelfish/Code/ThirdParty/AzIoT_MW_Integration/umock_c/inc"
-				  "../Babelfish/Code/ThirdParty/AzIoT_MW_Integration/c_utility/inc"
-				  "../Babelfish/Code/ThirdParty/AzIoT_MW_Integration/c_utility/src"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_ltk_adapters"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/iothub_client/inc"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/umock_c/inc"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/c_utility/inc"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/c_utility/src"
 				  "../Babelfish/Code/BF/Modbus"
 				  "../Babelfish/Code/ThirdParty/Pyramid_EIP/Code"
 				  "../Babelfish/Code/Crypt_API"
@@ -157,10 +155,10 @@ set (include_dirs "Test_Code"
 				  "../Babelfish/Code/MiscCode/FUS"
 				  "../Babelfish/Code/MiscCode/FUS/Component_Ctrls"
 				  "../Babelfish/Code/MiscCode/FUS/Images_Ctrls"
-				  #"../Babelfish/Code/ThirdParty/Azure_IOT/Azure_ltk_adapters"
-				  #"../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/iothub_client/inc"
-				  #"../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/umock_c/inc"
-				  #"../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/c_utility/inc"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_ltk_adapters"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/iothub_client/inc"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/umock_c/inc"
+				  "../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/c_utility/inc"
 				  "../Babelfish/Code/ThirdParty/crypto_matixssl"
 				  "../Babelfish/Code/ThirdParty/crypto_matixssl/matrixssl"
 				  "../Babelfish/Code/ThirdParty/crypto_matixssl/matrixssl_ltk"
@@ -266,9 +264,8 @@ list(APPEND srcs
 		"../Babelfish/Code/IOT/platform_device_sdk_v2/source/iot_device_common.c")
 list(APPEND include_dirs
 		"../Babelfish/Code/IOT"
-		#"../Babelfish/Code/ThirdParty/Azure_IOT"
-		#"../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/c_utility/src"
-		)
+		"../Babelfish/Code/ThirdParty/Azure_IOT"
+		"../Babelfish/Code/ThirdParty/Azure_IOT/Azure_repo/c_utility/src")
 endif(PX_GREEN_IOT_SUPPORT_ENABLE)
 
 
@@ -281,7 +278,8 @@ endif(CONFIG_IDF_TARGET STREQUAL "esp32")
 #Register source files and include directories
 idf_component_register( SRCS "${srcs}"
                 	    INCLUDE_DIRS "${include_dirs}"
-						REQUIRES "wifi_provisioning" "nvs_flash" "esp_common" "esp_wifi" "efuse" "cmpAzIoT_MW" "cmpAzIoT_Utils" "cmpAzureSdkForC" "cmpUmock" "cmp_c_utility"
+#Ahmed
+                	     REQUIRES "wifi_provisioning" "nvs_flash" "esp_common" "esp_wifi" "efuse" 
 					  )
 					  
 #Adding OTA partition size in FUS, It will get used to defined data_length in PXGreen Header

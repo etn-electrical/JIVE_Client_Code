@@ -45,9 +45,7 @@ static const uint8_t COMP_NAME_MAX_LENGTH = 32U;
 static const uint8_t IMAGE_NAME_MAX_LENGTH = 32U;
 
 /* FUS - Common defines */
-//Ahmed
-static const uint8_t* PRODUCT_NAME = ( const uint8_t* )"SmartBreaker-2.0";
-//end Ahmed
+static const uint8_t* PRODUCT_NAME = ( const uint8_t* )"RTOS TOOL KIT";
 static const uint8_t PRODUCT_NAME_LEN = NAME_LEN( PRODUCT_NAME );
 static const uint16_t PRODUCT_CODE = PRODUCT_GUID;
 static const uint16_t FUS_VERSION = 0;

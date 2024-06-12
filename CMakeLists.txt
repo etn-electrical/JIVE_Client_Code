@@ -87,18 +87,11 @@ set( EXTRA_COMPONENT_DIRS
 						  "Babelfish/Code/OS_FreeRTOS"
 						  "Babelfish/Code/uC/ESP32D0WD"
 						  "Babelfish/Code/IOT"
-						  "Babelfish/Code/ThirdParty/AzIoT_MW_Integration/Azure_ltk_adapters"
-						  "Babelfish/Code/ThirdParty/AzIoT_MW_Integration/cmpAzIoT_MW"
-						  "Babelfish/Code/ThirdParty/AzIoT_MW_Integration/cmpAzureSdkForC"
-						  "Babelfish/Code/ThirdParty/AzIoT_MW_Integration/cmpUmock"
-						  "Babelfish/Code/ThirdParty/AzIoT_MW_Integration/cmp_c_utility"
-						  "Babelfish/Code/ThirdParty/AzIoT_MW_Integration/cmpCoreHTTP"
-						  "Babelfish/Code/ThirdParty/AzIoT_MW_Integration/cmpAzIoT_Utils"
-						  "Babelfish/Code/ThirdParty/AzIoT_MW_Integration/cmpADU_Adapter"
-						  #"Babelfish/Code/ThirdParty/Azure_IOT"
+						  "Babelfish/Code/ThirdParty/Azure_IOT"
 						  "Babelfish/Code/ThirdParty/BACnetStack"
-						  #"Babelfish/Code/ThirdParty/Azure_IOT/Azure_ltk_adapters"
+						  "Babelfish/Code/ThirdParty/Azure_IOT/Azure_ltk_adapters"
 						  "Babelfish/Code/ThirdParty/crypto_matixssl"
+						  "Babelfish/Code/ThirdParty/crypto_matixssl/crypto"
 						  "Babelfish/Code/ThirdParty/crypto_matixssl/crypto/common"
 						  "Babelfish/Code/ThirdParty/crypto_matixssl/core/src"
 						  "Babelfish/Code/ThirdParty/crypto_matixssl/crypto/math"
@@ -165,9 +158,8 @@ add_definitions(-DPX_GREEN_IOT_SUPPORT)
 list(APPEND EXTRA_COMPONENT_DIRS
 						  "Babelfish/Code/BF/IOT"
 						  "Babelfish/Code/IOT"
-						  #"Babelfish/Code/ThirdParty/Azure_IOT"
-						  #"Babelfish/Code/ThirdParty/Azure_IOT/Azure_ltk_adapters"
-						  )
+						  "Babelfish/Code/ThirdParty/Azure_IOT"
+						  "Babelfish/Code/ThirdParty/Azure_IOT/Azure_ltk_adapters")
 endif(PX_GREEN_IOT_SUPPORT_ENABLE)
 
 #------------------ EIP Setup---------------------#
@@ -231,9 +223,7 @@ set (py_cmd "Fill_Unused_Mem.py" "${CMAKE_BINARY_DIR}/${PROJECT_BIN}" "${CODE_SI
 #            3  ->  Create Code Pack for both
 
 #The default configuration is ESP32 processor with Local sign for app image
-#Ahmed changing the code from local signing to server signing
-set (codesign_cmd "Package_Builder.bat" "1" "2" "2") 
-
+set (codesign_cmd "Package_Builder.bat" "1" "1" "2") 
 
 add_custom_command(
                   TARGET app

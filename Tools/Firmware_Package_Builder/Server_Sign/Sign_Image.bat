@@ -12,14 +12,14 @@ REM Add JAVA_HOME AND SIGNSERVER_HOME/bin path to PATH variable
 
 set infile=%1
 
-REM //Ahmed Ahmed changing the code from local signing to server signing
-if '%infile%'=='' set infile=Smart_Breaker_2_0.bin
+if '%infile%'=='' set infile=RTK_Example.bin
+
 set SIGNSERVER_HOME=C:\signserver
 set PATH=%PATH%;%SIGNSERVER_HOME%\bin
-set worker=FW-Smartbreaker2-CMS
+set worker=FW-PXGreen-CMS
 set shafile=%infile%.sha
 set outfile=%infile%.p7b
-set username="E0624432"
+set username=
 
 ECHO Input file - %infile%
 ECHO Outputfile(p7b) - %outfile%

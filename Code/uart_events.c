@@ -47,46 +47,6 @@
 #include "ErrorLog.h"
 #include "sblcp.h"
 
-extern bool ShouldForceDps;
-extern bool ShouldConnectToIot;
-/* -------------------------------------------------------------------------
- * The following details the custom parameters to be used by the 
- * test functions such as Test_AddingConnectionString(), 
- * Test_AddingWifiSSID(), ect.
- * Ensure that only one definition is commented in for each string at a time
- * ------------------------------------------------------------------------- */
-
-static char const TEST_ConnectionString[] = //Eaton - Default1
-											//"HostName=EatonProdCRDSWDeviceIothub1.azure-devices.net;DeviceId=cce3d89a-1601-4f33-a7ba-469282c9a13b;SharedAccessKey=XmXQ3rryxshOcaXVBZZRhIQl/uIZQ8MnO1oGHRdE+Po=";
-											//Eaton - Default2
-											//"HostName=EatonCRDSWDeviceIothub1.azure-devices.net;DeviceId=a1da591c-db77-4808-8fe7-67d233276477;SharedAccessKey=wWSelSch25kEOcMk0Llr187qCotmjTYLdJ3wkRLu324=";
-		                                    //"HostName=EatonCRDSWDevice4Iothub1.azure-devices.net;DeviceId=67f3b1c9-d498-4460-bcf8-811ab220be57;SharedAccessKey=/9L2MTQC+gYZC6WX3KreqJ6J/GG8LepgyBw6xAjXSnQ=";
-											//"HostName=EatonCRDSWDevice4Iothub1.azure-devices.net;DeviceId=c808196c-f40f-4721-b68c-262ac875aab4;SharedAccessKey=mDvLHR+UNU1HeeFq8vleRpwovJX7qkseDi8iEk6CNN8=";
-											"";
-
-static char const TEST_WifiSSID[] = 		//Eaton - Default1
-											"";
-
-static char const TEST_WifiPW[] = 			//Eaton - Default1
-											"";
-
-static char const TEST_BuildType[] =		//Eaton - Default1
-											"AhmedBuild";
-											
-static char const TEST_PartNumber[] = 		//Eaton - Default1
-											"AhmedDimmer";
-
-static char const TEST_DpsEndpoint[] =      "global.azure-devices-provisioning.net";
-
-static char const TEST_DpsIdScope[] =       "0ne009B3C25";
-
-static char const TEST_DpsDeviceRegId[] =	"3d5e7a78-62c2-479f-97ea-20dfc4d50b2d";
-
-static char const TEST_DpsSymmetricKey[] =  "TeuuJRjDYKs4txolrmI82WBjpFIoa9sy7dFlMhJFM94=";
-
-static char const TEST_DpsConcatenatedMessage[] = 
-											//"DpsDevRegID:bea77eeb-0850-4f94-91f0-1384b1054fb7;DpsEndpoint:global.azure-devices-provisioning.net;DpsIdScope:0ne009B3C25;DpsSymmetricKey:4JXeChuE6pjDwvMKxhago6gPW7kekWD9XBcFM1w2CAQ=";
-											"DpsDevRegID:3d5e7a78-62c2-479f-97ea-20dfc4d50b2d;DpsEndpoint:global.azure-devices-provisioning.net;DpsIdScope:0ne009B3C25;DpsSymmetricKey:TeuuJRjDYKs4txolrmI82WBjpFIoa9sy7dFlMhJFM94=";
 void send_crc_error_response();
 
 extern void StartProvisioning(void);
@@ -100,6 +60,10 @@ static const char *TAG = "COM1";
 //#define RXD_PIN (GPIO_NUM_5)
 static const char *RX_TASK_TAG = "RX_BYTES";
 static const char *TX_TASK_TAG = "TX_BYTES";
+
+
+extern DRAM_ATTR Device_Info_str DeviceInfo;
+
 static bool BuildTypeWasProgrammed = false;
 
 bool guart_recvd_err = false;
@@ -107,16 +71,7 @@ uint8_t buf[4] = { 0xFA, 0x11, 0x28, 0x33 };
 
 M2M_UART_COMMN gm2m_uart_comm = {0};
 
-uint8_t msg_counter;
-float st_temperature;
-
-xQueueHandle g_send_uart_event_queue = NULL;
-TaskHandle_t g_uart_send_task_handle;
-
-extern DRAM_ATTR Device_Info_str DeviceInfo;
-extern uint8_t gStm_Firmware_Version[];//major.minor.patch versions
-extern uint32_t gf_data;
-extern uint32_t hall_data_adc;
+M2M_UART_COMMN gm2m_uart_comm_ss_onoff = {0};
 
 void init(void) {
     const uart_config_t uart_config = {
@@ -151,19 +106,7 @@ int sendData(const char* logName, const char* data)
 int send_packet_to_m2m_uart(const char* logName, const char* data, const int len)
 {
     const int txBytes = uart_write_bytes(UART_NUM_1, data, len);
-
-#if UART_DEBUG_MESSAGE
-    ESP_LOGI(TAG, "\nWrote %d bytes\n", txBytes);
-    if(len)
-    {
-    	 const void *buffer = data;
-        for (int i=0; i<len; ++i) {
-            printf("%02x ", ((uint8_t*)buffer)[i]);
-        }
-        ESP_LOGI(TAG, "\len:[%d] bytes\n", len);
-    }
-#endif
-
+    ESP_LOGI(logName, "Wrote %d bytes", txBytes);
     ESP_LOG_BUFFER_HEXDUMP(TX_TASK_TAG, data, sizeof(M2M_UART_COMMN), ESP_LOG_INFO);
     return txBytes;
 }
@@ -207,8 +150,7 @@ static void rx_task(void *arg)
 							uart_write_bytes(UART_NUM_0,(const char *) tx_data, tx_data_len);
                             DeviceInfo.DeviceInFactoryMode = DEVICE_IS_IN_FACTORY_MODE;
                             BuildTypeWasProgrammed = false;
-							ShouldConnectToIot = false;
-					//		DeviceInfo.FLAG_WIFI_DISABLE = 1;
+
 						}
 						else
 						{
@@ -265,15 +207,15 @@ static void rx_task(void *arg)
 						temp_crc_cal_in_L = (uint8_t)(crc_cal_in&0x00ff);
 						if((temp_crc_cal_in_H == data[rxBytes-2]) && (temp_crc_cal_in_L == data[rxBytes-1]))
 						{
-                                                        GetConnectStringInfo();
-							inlen = strnlen(DeviceInfo.ConnectionString, ConnectionStringLength);
+							inlen = ConnectionStringLengthReceived;
 							uint8_t *inbuf = &tx_data[4];
+                            GetConnectStringInfo();
 							//SetConnectStringInfo();
 							tx_data[0]=UART_DEVICE_TYPE;
 							tx_data[1]=UART_GET_CONNECTION_STRING_REPLY_MESSAGE;
 							tx_data[2]=0x00;
 							tx_data[3]= inlen;
-							memcpy (inbuf,(char *)&DeviceInfo.ConnectionString, inlen);
+							memcpy (inbuf,(char *)&DeviceInfo.ConnectionString, ConnectionStringLength);
 							//tx_data[4]=0xaa;
 							tx_data_len = inlen + 4;
 							crc_cal_out = esp_crc16_le(0, tx_data, tx_data_len);
@@ -808,8 +750,6 @@ static void rx_task(void *arg)
 						temp_crc_cal_in_L = (uint8_t)(crc_cal_in&0x00ff);
 						if((temp_crc_cal_in_H == data[rxBytes-2]) && (temp_crc_cal_in_L == data[rxBytes-1]))
 						{
-							ShouldConnectToIot = true;
-							ShouldForceDps = false;
 							inlen = 0;
 							uint8_t *inbuf = &tx_data[4];
 							tx_data[0]=UART_DEVICE_TYPE;
@@ -1001,132 +941,6 @@ static void rx_task(void *arg)
 							send_crc_error_response();
 						}
 					}                    
-					else if (data[1] == UART_SET_IOT_DPS_MESSAGE) //Set the DPS (concatenated) fields
-					{
-						uint8_t temp_crc_cal_in_H, temp_crc_cal_in_L;
-						ssize_t inlen;
-						crc_cal_in = esp_crc16_le(0, data, (rxBytes-2));
-						temp_crc_cal_in_H = (uint8_t)(crc_cal_in>>8);
-						temp_crc_cal_in_L = (uint8_t)(crc_cal_in&0x00ff);
-						if((temp_crc_cal_in_H == data[rxBytes-2]) && (temp_crc_cal_in_L == data[rxBytes-1]))
-						{
-                            // Max data length is <255, so OK to ignore hi length byte in msg (data[2]) /response (tx_data[2])
-                            inlen = data[3];
-							uint8_t *inbuf = &data[4];
-							memset(DeviceInfo.DpsConcatenatedMessage, 0, sizeof(DeviceInfo.DpsConcatenatedMessage));
-							memcpy(DeviceInfo.DpsConcatenatedMessage, inbuf, inlen);
-							SetDPSConcatenatedMessageToIndividualFields();
-
-							tx_data[0]= UART_DEVICE_TYPE;
-							tx_data[1]=UART_SET_IOT_DPS_REPLY_MESSAGE;
-							tx_data[2]= 0x00;
-							tx_data[3]=inlen;
-							uint8_t i;
-							for(i=0;i<inlen;i++)
-							{
-                                tx_data[i+4] = data[i+4]; // similar to set iot connectionstring -- mirror msg data as response data
- 
-							}
-							tx_data_len = inlen + 4;
-							crc_cal_out = esp_crc16_le(0, tx_data, tx_data_len);
-							tx_data[inlen+4]=(uint8_t)(crc_cal_out>>8);
-							tx_data[inlen+5]=(uint8_t)(crc_cal_out&0x00ff);
-							tx_data_len = tx_data_len + 2;
-							uart_write_bytes(UART_NUM_0,(const char *) tx_data, tx_data_len);
-						}
-						else
-						{
-							send_crc_error_response();
-						}
-					}
-					else if (data[1] == UART_GET_IOT_DPS_MESSAGE) //Get the DPS (concatenated) fields
-					{
-						uint8_t temp_crc_cal_in_H, temp_crc_cal_in_L;
-						ssize_t inlen; // no data sent for this message type
-						crc_cal_in = esp_crc16_le(0, data, (rxBytes-2));
-						temp_crc_cal_in_H = (uint8_t)(crc_cal_in>>8);
-						temp_crc_cal_in_L = (uint8_t)(crc_cal_in&0x00ff);
-						if((temp_crc_cal_in_H == data[rxBytes-2]) && (temp_crc_cal_in_L == data[rxBytes-1]))
-						{
-							// Max field length is <255, so OK to zero out hi length byte in response (tx_data[2])
-							tx_data[0]=UART_DEVICE_TYPE;
-							tx_data[1]=UART_GET_IOT_DPS_REPLY_MESSAGE;
-							tx_data[2]=0x00;
-							GetDPSConcatenatedMessageFromIndividualFields();
-							inlen = strlen(DeviceInfo.DpsConcatenatedMessage);
-							tx_data[3]= inlen;
-							uint8_t *inbuf = &tx_data[4];
-							memcpy(inbuf, DeviceInfo.DpsConcatenatedMessage, inlen);
-							tx_data_len = inlen + 4;
-							crc_cal_out = esp_crc16_le(0, tx_data, tx_data_len);
-							tx_data[inlen+4]=(uint8_t)(crc_cal_out>>8);
-							tx_data[inlen+5]=(uint8_t)(crc_cal_out&0x00ff);
-							tx_data_len = tx_data_len + 2;
-							uart_write_bytes(UART_NUM_0,(const char *) tx_data, tx_data_len);
-						}
-						else
-						{
-							send_crc_error_response();
-						}
-					}
-					else if (data[1] == UART_CONNECT_DPS_MESSAGE)  //Connect to DPS and get IOT connection info/string
-					{
-						uint8_t temp_crc_cal_in_H, temp_crc_cal_in_L;
-						ssize_t inlen; // no data sent for this message type
-						crc_cal_in = esp_crc16_le(0, data, (rxBytes-2));
-						temp_crc_cal_in_H = (uint8_t)(crc_cal_in>>8);
-						temp_crc_cal_in_L = (uint8_t)(crc_cal_in&0x00ff);
-						if((temp_crc_cal_in_H == data[rxBytes-2]) && (temp_crc_cal_in_L == data[rxBytes-1]))
-						{
-							ShouldForceDps = true;
-							inlen = 0; // no data to be returned
-							uint8_t *inbuf = &tx_data[4];
-							tx_data[0]=UART_DEVICE_TYPE;
-							tx_data[1]=UART_CONNECT_DPS_REPLY_MESSAGE;
-							tx_data[2]=0x00;
-							tx_data[3]=inlen;
-							tx_data_len = inlen + 4;
-							crc_cal_out = esp_crc16_le(0, tx_data, tx_data_len);
-							tx_data[inlen + 4] = (uint8_t)(crc_cal_out>>8);
-							tx_data[inlen + 5] = (uint8_t)(crc_cal_out&0x00ff);
-							tx_data_len = tx_data_len + 2;
-							uart_write_bytes(UART_NUM_0,(const char *) tx_data, tx_data_len);
-							//Expected flow is to connect to WiFi and then DPS will be contacted if needed
-						}
-						else
-						{
-							send_crc_error_response();
-						}
-					}
-					else if (data[1] == UART_VERIFY_DPS_CONNECTION_MESSAGE)  // check that DPS registration succeeded and returned IOT connection info
-					{
-						uint8_t temp_crc_cal_in_H, temp_crc_cal_in_L;
-						ssize_t inlen;
-						//inlen = data[3]; // shoudl be 0 for this message
-						crc_cal_in = esp_crc16_le(0, data, (rxBytes-2));
-						temp_crc_cal_in_H = (uint8_t)(crc_cal_in>>8);
-						temp_crc_cal_in_L = (uint8_t)(crc_cal_in&0x00ff);
-						if((temp_crc_cal_in_H == data[rxBytes-2]) && (temp_crc_cal_in_L == data[rxBytes-1]))
-						{
-							inlen = 1;
-							uint8_t *inbuf = &tx_data[4];
-							tx_data[0]=UART_DEVICE_TYPE;
-							tx_data[1]=UART_VERIFY_DPS_CONNECTION_REPLY_MESSAGE;
-							tx_data[2]=0x00;
-							tx_data[3]=inlen;
-							tx_data[4]=DeviceInfo.DpsReturnedConnectionStringSaved?0x01:0x00;
-							tx_data_len = inlen + 4;
-							crc_cal_out = esp_crc16_le(0, tx_data, tx_data_len);
-							tx_data[inlen + 4] = (uint8_t)(crc_cal_out>>8);
-							tx_data[inlen + 5] = (uint8_t)(crc_cal_out&0x00ff);
-							tx_data_len = tx_data_len + 2;
-							uart_write_bytes(UART_NUM_0,(const char *) tx_data, tx_data_len);
-						}
-						else
-						{
-							send_crc_error_response();
-						}
-					}
 					else
 					{
 						uint16_t  crc_cal_out = 0;
@@ -1216,11 +1030,9 @@ uint8_t CRC8(const uint8_t *data,int length)
 */
 int prepare_uart_command(M2M_UART_COMMN *pm2m_uart_comm, UART_COMMANDS uart_cmd, uint8_t payload_1, uint8_t payload_2, uint8_t payload_3)
 {
-	msg_counter++;
 	//uint8_t packet_data = (START_BYTE + uart_cmd + sizeof(M2M_UART_COMMN) + payload_1 + payload_2 + payload_3 + END_BYTE);
 	pm2m_uart_comm->start_flag      = START_BYTE;
 	pm2m_uart_comm->cmd             = uart_cmd;
-	pm2m_uart_comm->msg_num			= msg_counter;
 	pm2m_uart_comm->len             = sizeof(M2M_UART_COMMN);
 	pm2m_uart_comm->payload_1       = payload_1;
 	pm2m_uart_comm->payload_2       = payload_2;
@@ -1229,32 +1041,6 @@ int prepare_uart_command(M2M_UART_COMMN *pm2m_uart_comm, UART_COMMANDS uart_cmd,
 	pm2m_uart_comm->end_flag        = END_BYTE;
 
 	return 0;
-}
-
-/**
-* @brief format and send an ack message for UART commands.
-*
-* @param M2M_UART_COMMN : pointer to the M2M protocol command format variable
-* @param UART_COMMANDS  : M2M UART Command Type value
-* @param payload        : M2M UART Command payload value
-* @return void
-*/
-void send_uart_ack(M2M_UART_COMMN *pm2m_uart_comm)
-{
-	static M2M_UART_COMMN m2m_uart_comm;
-
-	m2m_uart_comm.start_flag      = START_BYTE;
-	m2m_uart_comm.cmd             = PROTECTION_MCU_ACK;
-	m2m_uart_comm.msg_num			= pm2m_uart_comm->msg_num;
-	m2m_uart_comm.len             = sizeof(M2M_UART_COMMN);
-	m2m_uart_comm.payload_1       = POSITIVE_ACK;
-	m2m_uart_comm.payload_2       = NO_PAYLOAD;
-	m2m_uart_comm.payload_3       = NO_PAYLOAD;
-	m2m_uart_comm.crc             = CRC8((const uint8_t *)&m2m_uart_comm, (m2m_uart_comm.len-2));
-	m2m_uart_comm.end_flag        = END_BYTE;
-
-	send_packet_to_m2m_uart(TX_TASK_TAG, (const char*)&m2m_uart_comm, sizeof(M2M_UART_COMMN));
-
 }
 
 /**
@@ -1291,42 +1077,26 @@ int process_open_close(M2M_UART_COMMN *pm2m_uart_comm)
 //	}
 	//this flag is set to indicate SBLCP that secondary status is updated.
 //	g_handleStatusUpdate = 1;
+//	if(replyStatus.timout_command == true)
+//	{
+		replyStatusInfo.status_updated = true;
+//	}
 	return 0;
-}
-void update_temperature(M2M_UART_COMMN *pm2m_uart_comm_temp)
-{
-	// It is possible the temperature reading is negative
-	int16_t temp_int = (int16_t)(pm2m_uart_comm_temp->payload_1<< 8 | pm2m_uart_comm_temp->payload_2);
-	st_temperature= (float) temp_int;
-//	printf("Temperature converted is: [%.1f]\n",st_temperature);
-
 }
 
 void process_breaker_status(M2M_UART_COMMN *pm2m_uart_comm)
 {
 	//printf("process_breaker_status\n");
-	static uint8_t prev_secondary_state = SS_OPEN;
+
 	DeviceInfo.PrimaryContactState = pm2m_uart_comm->payload_1;
 	DeviceInfo.SecondaryContactState = pm2m_uart_comm->payload_2;
 	DeviceInfo.PathStatus = pm2m_uart_comm->payload_3;
 
-	if(prev_secondary_state != DeviceInfo.SecondaryContactState)
-	{
-		prev_secondary_state = (uint8_t)DeviceInfo.SecondaryContactState;
-		EERAM_Set_Last_State(prev_secondary_state);
-		if((DeviceInfo.SecondaryContactState == SS_OPEN) || (DeviceInfo.SecondaryContactState == SS_CLOSED))
-		{
-			//check if if status change is due to SBLCP command or not
-			//if its due to SET command from SBLCP, then only update handle status change to SBLCP;
-			if(get_SblcpCommandStatus() == true)
-			{
-				sblcp_updateReplyMsgStatus(true);
-			}
-		}
-	}
 	//ets_printf("DeviceInfo states::[%d],[%d],[%d]\n",DeviceInfo.PrimaryContactState,DeviceInfo.SecondaryContactState,DeviceInfo.PathStatus);
+
 	//ets_printf("DeviceInfo states::[%d],[%d],[%d]\n",DeviceInfo.PrimaryContactState,DeviceInfo.SecondaryContactState,DeviceInfo.PathStatus);
 }
+
 
 
 /**
@@ -1341,17 +1111,7 @@ int process_button_press_1(M2M_UART_COMMN *pm2m_uart_comm)
 	return 0;
 }
 
-void process_gf_raw_stats(M2M_UART_COMMN *pm2m_uart_comm)
-{
-	gf_data = (uint32_t)pm2m_uart_comm->payload_3 | (uint32_t)(pm2m_uart_comm->payload_2 << 8) | (uint32_t)(pm2m_uart_comm->payload_1 << 16);
-	//ets_printf("gf_data::[%d]\n",gf_data);
-}
 
-void process_HAL_raw_stats(M2M_UART_COMMN *pm2m_uart_comm)
-{
-	hall_data_adc = (uint32_t)pm2m_uart_comm->payload_3 | (uint32_t)(pm2m_uart_comm->payload_2 << 8) | (uint32_t)(pm2m_uart_comm->payload_1 << 16);
-	//ets_printf("hall_data_adc::[%d]\n",hall_data_adc);
-}
 /**
 * @brief Process switch 2 press for breaker provision
 *
@@ -1365,31 +1125,6 @@ int process_switch2_press_provision(M2M_UART_COMMN *pm2m_uart_comm)
 }
 
 /**
-* @brief Preserve Protection FW Version at Communication side
-*
-* @param M2M_UART_COMMN : pointer to the M2M protocol command format variable
-* @return void
-*/
-void process_protection_fw_version(M2M_UART_COMMN *pm2m_uart_comm)
-{
-	static uint8_t count = 0;
-	if(pm2m_uart_comm != NULL)
-	{
-		gStm_Firmware_Version[count++] = pm2m_uart_comm->payload_1;
-		gStm_Firmware_Version[count++] = pm2m_uart_comm->payload_2;
-		gStm_Firmware_Version[count++] = pm2m_uart_comm->payload_3;
-	}
-	if(count >= 7)
-	{
-		count = 0;
-		DeviceInfo.Protection_FW_Version_Read = true;
-
-		strncpy(DeviceInfo.STM_firmware_ver, (char *)gStm_Firmware_Version, sizeof(DeviceInfo.STM_firmware_ver) - 1);
-	}
-
-}
-
-/**
 * @brief Process M2M protocol UART command from protection MCU
 *
 * @param M2M_UART_COMMN : pointer to the M2M protocol command format variable
@@ -1400,12 +1135,10 @@ int process_uart_packet(M2M_UART_COMMN *pm2m_uart_comm)
 	switch(pm2m_uart_comm->cmd)
 	{
 		case BREAKER_FAULT_STATE:
-			send_uart_ack(pm2m_uart_comm);
 			process_breaker_fault_state(pm2m_uart_comm);
 			break;
 
 		case BREAKER_OPEN_CLOSE:
-			send_uart_ack(pm2m_uart_comm);
 			process_open_close(pm2m_uart_comm);
 			break;
 
@@ -1416,7 +1149,6 @@ int process_uart_packet(M2M_UART_COMMN *pm2m_uart_comm)
 			break;
 
 		case ESP_FACTORY_RESET:
-			send_uart_ack(pm2m_uart_comm);
 			ResetDevice(MANUFACTURING_RESET, true);
 			break;
 
@@ -1436,7 +1168,6 @@ int process_uart_packet(M2M_UART_COMMN *pm2m_uart_comm)
 		break;
 
 		case BUTTON_PRESS_1_STATUS:
-			send_uart_ack(pm2m_uart_comm);
 			process_button_press_1(pm2m_uart_comm);
 		break;
 
@@ -1444,32 +1175,25 @@ int process_uart_packet(M2M_UART_COMMN *pm2m_uart_comm)
 			process_breaker_status(pm2m_uart_comm);
 		break;
 
-		case BREAKER_GF_RAW:
-			process_gf_raw_stats(pm2m_uart_comm);
-		break;
-
-		case BREAKER_HAL_RAW:
-			process_HAL_raw_stats(pm2m_uart_comm);
-		break;
-
-		case UPDATE_TEMPERATURE:
-			send_uart_ack(pm2m_uart_comm);
-			update_temperature(pm2m_uart_comm);
-			break;
-
 		case SWITCH2_PRESS_PROVISION:
-			send_uart_ack(pm2m_uart_comm);
 			process_switch2_press_provision(pm2m_uart_comm);
 		break;
 
 		case READ_COMMUNICATION_MCU_CMD:
 		{
-			//if STM-ESP protection status is established, then read STM FW Version
-			if((DeviceInfo.M2MUartStatus == ESP_UART_READY)
-					&& (!DeviceInfo.Protection_FW_Version_Read))
+			if(gm2m_uart_comm_ss_onoff.cmd)
 			{
-				prepare_uart_command(pm2m_uart_comm, BREAKER_PRTOTECTION_FW_VERSION, NO_PAYLOAD, NO_PAYLOAD_2, NO_PAYLOAD_2);
-				send_packet_to_m2m_uart(TX_TASK_TAG, (const char*)pm2m_uart_comm, sizeof(M2M_UART_COMMN));
+				send_packet_to_m2m_uart(TX_TASK_TAG, (const char*)&gm2m_uart_comm_ss_onoff, sizeof(M2M_UART_COMMN));
+				memset(&gm2m_uart_comm_ss_onoff, 0x00, sizeof(gm2m_uart_comm_ss_onoff));
+			}
+			else
+			{
+				if(gm2m_uart_comm.cmd)
+				{
+					//after read cmd, send latest uart command
+					send_packet_to_m2m_uart(TX_TASK_TAG, (const char*)&gm2m_uart_comm, sizeof(M2M_UART_COMMN));
+					memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
+				}
 			}
 		}
 		break;
@@ -1480,14 +1204,6 @@ int process_uart_packet(M2M_UART_COMMN *pm2m_uart_comm)
 		case READ_ESP_STATUS:
 			break;
 
-		case ERROR_RESPONSE:
-			break;
-
-		case BREAKER_PRTOTECTION_FW_VERSION:
-		{
-			process_protection_fw_version(pm2m_uart_comm);
-		}
-		break;
 		default:
 		{
 			//Error response to user/cloud or if LED is finalized then use LED to show error
@@ -1496,9 +1212,8 @@ int process_uart_packet(M2M_UART_COMMN *pm2m_uart_comm)
 			guart_recvd_err =  true;
 			//prepare uart command for crc error response
 			prepare_uart_command(pm2m_uart_comm, ERROR_RESPONSE, INVALID_CMD_ERROR_RESPONSE, NO_PAYLOAD_2, NO_PAYLOAD_2);
-			UART_Send_Event_To_Queue((void *)pm2m_uart_comm);
 		}
-		break;
+			break;
 	}
 	return 0;
 }
@@ -1512,8 +1227,6 @@ int process_uart_packet(M2M_UART_COMMN *pm2m_uart_comm)
 static void m2m_uart_rx_task(void *arg)
 {
     static M2M_UART_COMMN m2m_uart_comm;
-    static uint8_t last_msg_num = 0xFF;
-    static uint8_t last_msg_crc = 0;
     esp_log_level_set(RX_TASK_TAG, ESP_LOG_INFO);
     uint8_t* data = (uint8_t*) malloc(2 * sizeof(M2M_UART_COMMN));
     uint8_t recv_byte = 0;
@@ -1535,37 +1248,22 @@ static void m2m_uart_rx_task(void *arg)
             if((m2m_uart_comm.start_flag == START_BYTE) && (m2m_uart_comm.end_flag == END_BYTE))
             {
             	//need to add  payload 2 when led and blinking rate code support is added
-                packet_data = (m2m_uart_comm.start_flag + m2m_uart_comm.cmd + m2m_uart_comm.msg_num + m2m_uart_comm.len + m2m_uart_comm.payload_1 + m2m_uart_comm.end_flag);
+                packet_data = (m2m_uart_comm.start_flag + m2m_uart_comm.cmd + m2m_uart_comm.len + m2m_uart_comm.payload_1 + m2m_uart_comm.end_flag);
                 //subtract 2 to ignore the crc and end flag.
                 crc8 = CRC8((const uint8_t *)&m2m_uart_comm, (m2m_uart_comm.len-2));
                 //printf("crc8 [%x]\n", crc8);
                 //crc check
                 if(crc8 != m2m_uart_comm.crc)
                 {
-                	    //read error command will send error response
+                	//read error command will send error response
           				prepare_uart_command(&m2m_uart_comm, ERROR_RESPONSE, CRC_ERROR_RESPONSE, NO_PAYLOAD_2, NO_PAYLOAD_2);
     	      			//send uart command
-    				    send_packet_to_m2m_uart(TX_TASK_TAG, (const char*)&m2m_uart_comm, sizeof(M2M_UART_COMMN));
+    				      send_packet_to_m2m_uart(TX_TASK_TAG, (const char*)&m2m_uart_comm, sizeof(M2M_UART_COMMN));
                 }
                 else
                 {
 					        //process uart cmd
-                		if((last_msg_num != m2m_uart_comm.msg_num) || (m2m_uart_comm.crc != last_msg_crc))
-                		{
 					        process_uart_packet(&m2m_uart_comm);
-					        //Should move to below code to ensure proper handling however function not setup correcty for it at this time.
-					        //if(process_uart_packet(&m2m_uart_comm) == 0)//no error
-					        //{
-					        //	last_msg_num = m2m_uart_comm.msg_num;
-							//	last_msg_crc = m2m_uart_comm.crc;
-					        //}
-                		}
-                		else
-                		{
-                			send_uart_ack(&m2m_uart_comm);
-                		}
-                		last_msg_num = m2m_uart_comm.msg_num;
-                		last_msg_crc = m2m_uart_comm.crc;
                 }
             }
             else
@@ -1578,55 +1276,6 @@ static void m2m_uart_rx_task(void *arg)
         uart_flush(UART_NUM_1);
     }
     free(data);
-}
-
-
-
-/**
- * @brief      UART send event task to send M2M commands to STM32
- * @param[in]  None
- * @retval     void
-*/
-void Uart_Event_Send_Task(void* arg)
-{
-	while(1)
-	{
-		if (xQueueReceive(g_send_uart_event_queue, &gm2m_uart_comm, portMAX_DELAY)) // Wait for an event
-		{
-			//printf("\n################### gm2m_uart_comm.cmd [%d] ##########################\n",gm2m_uart_comm.cmd);
-			//M2M command update to STM
-			if(gm2m_uart_comm.cmd)
-			{
-				//after read cmd, send latest uart command
-				send_packet_to_m2m_uart(TX_TASK_TAG, (const char*)&gm2m_uart_comm, sizeof(M2M_UART_COMMN));
-				memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
-			}
-		}
-
-
-	}
-	if (g_uart_send_task_handle != NULL)
-	{
-		vTaskDelete(g_uart_send_task_handle); 	//delete task
-		g_uart_send_task_handle = NULL;
-	}
-}
-
-/**
-* @brief      This function sends uart event to stm uart via a queue
-* @param[in]  struct M2M_UART_COMMN *pm2m_uart_comm
-* @retval     void
-*/
-void UART_Send_Event_To_Queue(void *puart_m2m_data)
-{
-	M2M_UART_COMMN *pm2m_uart_comm;
-	pm2m_uart_comm = (M2M_UART_COMMN *)puart_m2m_data;
-
-	if ((g_uart_send_task_handle != NULL) && (g_send_uart_event_queue != NULL))
-	{
-		xQueueSend(g_send_uart_event_queue, pm2m_uart_comm, 0);
-	}
-	return;
 }
 
 
@@ -1665,50 +1314,48 @@ void initial_Uart(void)
 		xTaskCreate(rx_task, "uart_rx_task", (DEFAULT_TASK_STACK_SIZE*2), NULL, configMAX_PRIORITIES, NULL);
 	}
 
-	//M2M Uart Send Event Queue
-	if ((g_send_uart_event_queue = xQueueCreate(UART_CMD_MAX_QUEUE_SIZE, sizeof(M2M_UART_COMMN))) != NULL)
-	{
-		//M2M UART communication module init
-	   	init_m2m_uart();
-
-	   	//create a task to process UART M2M protocol commands
-	   	xTaskCreate(m2m_uart_rx_task, "m2m_uart_rx_task", (DEFAULT_TASK_STACK_SIZE*4), NULL, 20, NULL);
-
-	   	//create a task to process UART send event M2M quwuw
-		xTaskCreate(Uart_Event_Send_Task, "Uart_Event_Send_Task", (DEFAULT_TASK_STACK_SIZE*2), NULL, tskIDLE_PRIORITY+2, &g_uart_send_task_handle);
-	}
-
+	//need to discuss, if UART communication needs to be up before the device is
+	//provisioned at client location
+    if(DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
+    {
+    	init_m2m_uart();
+    	//create a task to process UART M2M Protocol commands
+    	xTaskCreate(m2m_uart_rx_task, "m2m_uart_rx_task", (DEFAULT_TASK_STACK_SIZE*4), NULL, configMAX_PRIORITIES, NULL);
+    }
 }
 
 
 void Test_AddingConnectionString()
 {
-    memset(DeviceInfo.ConnectionString, 0, sizeof(DeviceInfo.ConnectionString));
-	TRY_STATIC_ASSERT(sizeof(TEST_ConnectionString)<=sizeof(DeviceInfo.ConnectionString),"TEST_ConnectionString Too Large");
-	memcpy(DeviceInfo.ConnectionString, TEST_ConnectionString, sizeof(TEST_ConnectionString));
+    char ValidConnectionString[]= //"HostName=EatonCRDSWDeviceIothub1.azure-devices.net;DeviceId=6ab907ed-31b7-4a9b-a548-7b86afecd7da;SharedAccessKey=G73Zxjg/+9XvLZOLFQKuY7mivER1dwKo7NYtdSs7B94=";
+                              "HostName=EatonProdCRDSWDeviceIothub1.azure-devices.net;DeviceId=71595f43-2009-403b-99f2-211e5d71b1bc;SharedAccessKey=oi+AwisDLztUJRUYA8icsy1E+USdUV/fy2lFCf+HZb0=";
+    
+    memset ((char *)&DeviceInfo.ConnectionString,0, sizeof (DeviceInfo.ConnectionString));
+    memcpy ((char *)&DeviceInfo.ConnectionString, (char *)&ValidConnectionString,sizeof (ValidConnectionString));
     SetConnectStringInfo();    
 
 }
     
 void Test_AddingWifiSSID()
 {
-    memset(DeviceInfo.Ssid, 0, sizeof(DeviceInfo.Ssid));
-	TRY_STATIC_ASSERT(sizeof(TEST_WifiSSID)<=sizeof(DeviceInfo.Ssid),"TEST_WifiSSID Too Large");
-    memcpy(DeviceInfo.Ssid, TEST_WifiSSID, sizeof(TEST_WifiSSID));
+    char WifiSSID[] = ""; //TP-LINK_2.4GHz_EC03D5
+    //Ahmed's phone
+    memset ((char *)&DeviceInfo.Ssid,0, sizeof (DeviceInfo.Ssid));
+    memcpy ((char *)&DeviceInfo.Ssid, (char *)&WifiSSID, sizeof(WifiSSID));
 //    DCI_Update_SSID();
-//    GetDimSsid();
+//    GetDeviceSsid();
     ets_printf("WifiSSID %s\n",DeviceInfo.Ssid);
 }
-
 void Test_AddingWifiPWD()
 {
-    memset(DeviceInfo.PassWord, 0, sizeof(DeviceInfo.PassWord));
-	TRY_STATIC_ASSERT(sizeof(TEST_WifiPW)<=sizeof(DeviceInfo.PassWord),"TEST_WifiPW Too Large");
-    memcpy(DeviceInfo.PassWord, TEST_WifiPW, sizeof(TEST_WifiPW));
+    char WifiPW[] = "";
+    //Letmein1
+    memset ((char *)&DeviceInfo.PassWord,0, sizeof (DeviceInfo.PassWord));
+    memcpy ((char *)&DeviceInfo.PassWord, WifiPW, sizeof(WifiPW));
 //    DCI_Update_DimPW();
 //    GetDimPW();
     //ets_printf("Wifi Password %s\n",DeviceInfo.PassWord);    
-    ets_printf("Wifi Password *******\n");
+    
     
 }
 
@@ -1724,24 +1371,24 @@ void Test_ConnectWiFi()
 
 void Test_WritingBuildType()
 {
-    memset(DeviceInfo.BuildType, 0, sizeof(DeviceInfo.BuildType));
-	TRY_STATIC_ASSERT(sizeof(TEST_BuildType)<=sizeof(DeviceInfo.BuildType),"TEST_BuildType Too Large");
-    memcpy(DeviceInfo.BuildType, TEST_BuildType, sizeof(TEST_BuildType));
+	char Buff[]= "AhmedBuild";
+    memset ((char *)&DeviceInfo.BuildType,0, sizeof (DeviceInfo.BuildType));
+    memcpy ((char *)&DeviceInfo.BuildType,(char *)&Buff, sizeof(Buff));
     WriteDataToFlash(EEOFFSET_BUILD_TYPE_LABEL,DeviceInfo.BuildType,sizeof(DeviceInfo.BuildType));
     WriteByteToFlash(EEOFFSET_BUILD_TYPE_SAVED_LABEL,BUILD_TYPE_SAVED );
 }
     
 void Test_WritingNewPartNumber()
 {
-    memset(DeviceInfo.NewProgramedPartNumber, 0, sizeof(DeviceInfo.NewProgramedPartNumber));
-	TRY_STATIC_ASSERT(sizeof(TEST_PartNumber)<=sizeof(DeviceInfo.NewProgramedPartNumber),"TEST_PartNumber Too Large");
-    memcpy(DeviceInfo.NewProgramedPartNumber, TEST_PartNumber, sizeof(TEST_PartNumber));
+	char Buff[]= "AhmedDimmer";
+    memset ((char *)&DeviceInfo.NewProgramedPartNumber,0, sizeof (DeviceInfo.NewProgramedPartNumber));
+    memcpy ((char *)&DeviceInfo.NewProgramedPartNumber,(char *)&Buff, sizeof(Buff));
     WriteDataToFlash(EEOFFSET_PROGRAMED_NEW_PART_NO_LABEL,DeviceInfo.NewProgramedPartNumber,sizeof(DeviceInfo.NewProgramedPartNumber));
     WriteByteToFlash(EEOFFSET_PROGRAMED_NEW_PART_NO_SAVED_LABEL,NEW_PROGRAMMED_PART_NO_SAVED );
 }
 void sblcpSetSecondaryHandle(uint8_t secondaryHandleOnOff)
 {
-
+	printf("secondaryHandleOnOff %d \n", secondaryHandleOnOff);
 	if(secondaryHandleOnOff == HANDLE_OPEN)
 	{
 		memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
@@ -1757,93 +1404,4 @@ void sblcpSetSecondaryHandle(uint8_t secondaryHandleOnOff)
 		memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
 		prepare_uart_command(&gm2m_uart_comm, BREAKER_OPEN_CLOSE, SECONDARY_CONTACTS_TOGGLE, NO_PAYLOAD_2, NO_PAYLOAD_2);
 	}
-	UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
-}
-
-void Test_AddingDPSEndpoint()
-{
-	memset(DeviceInfo.DpsEndpoint, 0, sizeof(DeviceInfo.DpsEndpoint));
-	TRY_STATIC_ASSERT(sizeof(TEST_DpsEndpoint)<=sizeof(DeviceInfo.DpsEndpoint),"TEST_DpsEndpoint Too Large");
-	memcpy(DeviceInfo.DpsEndpoint, TEST_DpsEndpoint, sizeof(TEST_DpsEndpoint));
-	ets_printf("Updating DCI DpsEndpoint to %s\n", DeviceInfo.DpsEndpoint);
-	DCI_UpdateDPSEndpoint();
-}
-
-void Test_AddingDPSIDScope()
-{
-	memset(DeviceInfo.DpsIdScope, 0, sizeof(DeviceInfo.DpsIdScope));
-	TRY_STATIC_ASSERT(sizeof(TEST_DpsIdScope)<=sizeof(DeviceInfo.DpsIdScope),"TEST_DpsIdScope Too Large");
-	memcpy(DeviceInfo.DpsIdScope, TEST_DpsIdScope, sizeof(TEST_DpsIdScope));
-	ets_printf("Updating DCI DpsIdScope to %s\n", DeviceInfo.DpsIdScope);
-	DCI_UpdateDPSIDScope();
-}
-
-void Test_AddingDPSDeviceRegId()
-{
-	memset(DeviceInfo.DpsDeviceRegId, 0, sizeof(DeviceInfo.DpsDeviceRegId));
-	TRY_STATIC_ASSERT(sizeof(TEST_DpsDeviceRegId)<=sizeof(DeviceInfo.DpsDeviceRegId),"TEST_DpsDeviceRegId Too Large");
-	memcpy(DeviceInfo.DpsDeviceRegId, TEST_DpsDeviceRegId, sizeof(TEST_DpsDeviceRegId));
-	ets_printf("Updating DCI DpsDeviceRegId to %s\n", DeviceInfo.DpsDeviceRegId);
-	DCI_UpdateDPSDeviceRegId();
-}
-
-void Test_AddingDPSSymmetricKey()
-{
-	memset(DeviceInfo.DpsSymmetricKey, 0, sizeof(DeviceInfo.DpsSymmetricKey));
-	TRY_STATIC_ASSERT(sizeof(TEST_DpsSymmetricKey)<=sizeof(DeviceInfo.DpsSymmetricKey),"TEST_DpsSymmetricKey Too Large");
-	memcpy(DeviceInfo.DpsSymmetricKey, TEST_DpsSymmetricKey, sizeof(TEST_DpsSymmetricKey));
-	ets_printf("Updating DCI DpsSymmetricKey to %s\n", DeviceInfo.DpsSymmetricKey);
-	DCI_UpdateDPSSymmetricKey();
-}
-
-void Test_ReadingDPSEndpoint()
-{
-	DCI_GetDPSEndpoint();
-	ets_printf("After read from DCI: DpsEndpoint is %s\n", DeviceInfo.DpsEndpoint);
-}
-
-void Test_ReadingDPSIDScope()
-{
-	DCI_GetDPSIDScope();
-	ets_printf("After read from DCI: DpsIdScope is %s\n", DeviceInfo.DpsIdScope);
-}
-
-void Test_ReadingDPSDeviceRegId()
-{
-	DCI_GetDPSDeviceRegId();
-	ets_printf("After read from DCI: DpsDeviceRegId is %s\n", DeviceInfo.DpsDeviceRegId);
-}
-
-void Test_ReadingDPSSymmetricKey()
-{
-	DCI_GetDPSSymmetricKey();
-	ets_printf("After read from DCI: DpsSymmetricKey is %s\n", DeviceInfo.DpsSymmetricKey);
-}
-
-void Test_AddingDPSMessage()
-{
-    // Write Test 'full DPS message' contents to DCI/DeviceInfo i.e. parse and set just like UART
-	memset(DeviceInfo.DpsConcatenatedMessage, 0, sizeof(DeviceInfo.DpsConcatenatedMessage));
-	TRY_STATIC_ASSERT(sizeof(TEST_DpsConcatenatedMessage)<=sizeof(DeviceInfo.DpsConcatenatedMessage),"TEST_DpsConcatenatedMessage Too Large");
-	memcpy(DeviceInfo.DpsConcatenatedMessage, TEST_DpsConcatenatedMessage, sizeof(TEST_DpsConcatenatedMessage));
-	ets_printf("Updating DCI DPS fields from DeviceInfo.DpsConcatenatedMessage: %s\n", DeviceInfo.DpsConcatenatedMessage);
-	SetDPSConcatenatedMessageToIndividualFields();
-	DeviceInfo.DpsInfoSaved = true;
-
-}
-
-void Test_ReadingDPSMessage()
-{
-    // Make sure saved DCI values can be read/concatenated to produce a 'full DPS message' just like UART
-	GetDPSConcatenatedMessageFromIndividualFields();
-	ets_printf("After read from DCI: DpsDeviceRegId is %s\n", DeviceInfo.DpsDeviceRegId);
-	ets_printf("After read from DCI: DpsEndpoint is %s\n", DeviceInfo.DpsEndpoint);
-	ets_printf("After read from DCI: DpsIdScope is %s\n", DeviceInfo.DpsIdScope);
-	ets_printf("After read from DCI: DpsSymmetricKey is %s\n", DeviceInfo.DpsSymmetricKey);
-	ets_printf("Recreated DeviceInfo.DpsConcatenatedMessage is: %s\n", DeviceInfo.DpsConcatenatedMessage);
-}
-
-uint8_t get_statusOfBuildType()
-{
-	return BuildTypeWasProgrammed;
 }

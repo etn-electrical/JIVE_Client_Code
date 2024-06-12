@@ -9,7 +9,7 @@
 *   @version
 *   C++ Style Guide Version 1.0
 *
-*   @copyright 2024 Eaton Corporation. All Rights Reserved.
+*   @copyright 2022 Eaton Corporation. All Rights Reserved.
 *
 *****************************************************************************************
 */

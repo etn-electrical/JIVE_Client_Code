@@ -2,7 +2,7 @@
  *****************************************************************************************
  *   @file
  *   @details See header file for module overview.
- *   @copyright 2024 Eaton Corporation. All Rights Reserved.
+ *   @copyright 2021 Eaton Corporation. All Rights Reserved.
  *
  *****************************************************************************************
  */
@@ -48,30 +48,32 @@ const Ble_DCI::CHAR_ID_TD DCI_BLE_USER2_NAME_BLE_CHAR_ID = 99U;
 const Ble_DCI::CHAR_ID_TD DCI_BLE_USER2_PASSWORD_BLE_CHAR_ID = 101U;
 const Ble_DCI::CHAR_ID_TD DCI_BLE_USER2_ROLE_BLE_CHAR_ID = 103U;
 const Ble_DCI::CHAR_ID_TD DCI_BLE_USER3_NAME_BLE_CHAR_ID = 105U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_USER3_ROLE_BLE_CHAR_ID = 107U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_USER4_NAME_BLE_CHAR_ID = 109U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_USER4_ROLE_BLE_CHAR_ID = 111U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_1_BLE_CHAR_ID = 113U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_2_BLE_CHAR_ID = 115U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_3_BLE_CHAR_ID = 117U;
-const Ble_DCI::CHAR_ID_TD DCI_SIMPLE_APP_CONTROL_WORD_BLE_CHAR_ID = 119U;
-const Ble_DCI::CHAR_ID_TD DCI_SIMPLE_APP_STATUS_WORD_BLE_CHAR_ID = 121U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_COUNTER_BLE_CHAR_ID = 123U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_A_BLE_CHAR_ID = 125U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_D_BLE_CHAR_ID = 127U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_E_BLE_CHAR_ID = 129U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_F_BLE_CHAR_ID = 131U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_READING_1_BLE_CHAR_ID = 133U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_4_BLE_CHAR_ID = 135U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_READING_2_BLE_CHAR_ID = 137U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_LOG_BLE_CHAR_ID = 139U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_LOG_INDEX_BLE_CHAR_ID = 141U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_PRESENT_STATUS_BLE_CHAR_ID = 143U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_DEVICE_TIME_BLE_CHAR_ID = 145U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_FIND_TARGET_DEVICE_LED_CTRL_BLE_CHAR_ID = 148U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_DEVICE_PROFILE_ID_BLE_CHAR_ID = 150U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_DEVICE_BONDING_INFO_BLE_CHAR_ID = 152U;
-const Ble_DCI::CHAR_ID_TD DCI_BLE_ACTIVE_ACCESS_LEVEL_BLE_CHAR_ID = 154U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_USER3_PASSWORD_BLE_CHAR_ID = 107U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_USER3_ROLE_BLE_CHAR_ID = 109U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_USER4_NAME_BLE_CHAR_ID = 111U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_USER4_PASSWORD_BLE_CHAR_ID = 113U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_USER4_ROLE_BLE_CHAR_ID = 115U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_1_BLE_CHAR_ID = 117U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_2_BLE_CHAR_ID = 119U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_3_BLE_CHAR_ID = 121U;
+const Ble_DCI::CHAR_ID_TD DCI_SIMPLE_APP_CONTROL_WORD_BLE_CHAR_ID = 123U;
+const Ble_DCI::CHAR_ID_TD DCI_SIMPLE_APP_STATUS_WORD_BLE_CHAR_ID = 125U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_COUNTER_BLE_CHAR_ID = 127U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_A_BLE_CHAR_ID = 129U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_D_BLE_CHAR_ID = 131U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_E_BLE_CHAR_ID = 133U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_F_BLE_CHAR_ID = 135U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_READING_1_BLE_CHAR_ID = 137U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_SETTING_4_BLE_CHAR_ID = 139U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_READING_2_BLE_CHAR_ID = 141U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_LOG_BLE_CHAR_ID = 143U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_LOG_INDEX_BLE_CHAR_ID = 145U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_PRESENT_STATUS_BLE_CHAR_ID = 147U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_TEST_DEVICE_TIME_BLE_CHAR_ID = 149U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_FIND_TARGET_DEVICE_LED_CTRL_BLE_CHAR_ID = 152U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_DEVICE_PROFILE_ID_BLE_CHAR_ID = 154U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_DEVICE_BONDING_INFO_BLE_CHAR_ID = 156U;
+const Ble_DCI::CHAR_ID_TD DCI_BLE_ACTIVE_ACCESS_LEVEL_BLE_CHAR_ID = 158U;
 
 //*******************************************************
 //******     The Ble DCIDS Cross Reference Table.
@@ -556,6 +558,21 @@ const Ble_DCI::dci_ble_to_dcid_lkup_st_td_t ble_to_dcid_struct[DCI_BLE_DATA_TOTA
 #endif
     },
     {
+        // Ble_User3_Password
+        DCI_BLE_USER3_PASSWORD_BLE_CHAR_ID,
+        DCI_BLE_USER3_PASSWORD_DCID,
+        99U,
+        99U,
+#ifdef STM32WB55_WPAN
+        (
+            ( BLE_CHAR_PROP_READ )
+            | ( BLE_CHAR_PROP_WRITE )
+        ),
+        { 0x50, 0x02 },
+        { 0xbe, 0xc9, 0x7f, 0xc7, 0x3e, 0x8e, 0x47, 0x78, 0x85, 0x7d, 0xf5, 0xac, 0x69, 0x7b, 0x34, 0xfe },
+#endif
+    },
+    {
         // Ble_User3_Role
         DCI_BLE_USER3_ROLE_BLE_CHAR_ID,
         DCI_BLE_USER3_ROLE_DCID,
@@ -583,6 +600,21 @@ const Ble_DCI::dci_ble_to_dcid_lkup_st_td_t ble_to_dcid_struct[DCI_BLE_DATA_TOTA
         ),
         { 0x50, 0x02 },
         { 0xe1, 0xf2, 0x61, 0xc2, 0x97, 0x81, 0x43, 0x26, 0xa2, 0xc8, 0x81, 0x22, 0x8b, 0xa3, 0xaf, 0xb3 },
+#endif
+    },
+    {
+        // Ble_User4_Password
+        DCI_BLE_USER4_PASSWORD_BLE_CHAR_ID,
+        DCI_BLE_USER4_PASSWORD_DCID,
+        99U,
+        99U,
+#ifdef STM32WB55_WPAN
+        (
+            ( BLE_CHAR_PROP_READ )
+            | ( BLE_CHAR_PROP_WRITE )
+        ),
+        { 0x50, 0x02 },
+        { 0x50, 0xbe, 0x06, 0x2a, 0xcc, 0x0c, 0x47, 0xb6, 0xa3, 0x18, 0xa4, 0xaf, 0x28, 0x7f, 0x28, 0xba },
 #endif
     },
     {
@@ -931,7 +963,7 @@ const Ble_DCI::ble_group_assembly_t ble_dci_group_struct[DCI_BLE_DATA_TOTAL_GROU
 {
     {
         15U,
-        157U,
+        161U,
     {
         DCI_BLE_DEVICE_VENDOR_BLE_CHAR_ID,
         DCI_BLE_DEVICE_FAMILY_BLE_CHAR_ID,
@@ -952,7 +984,7 @@ const Ble_DCI::ble_group_assembly_t ble_dci_group_struct[DCI_BLE_DATA_TOTAL_GROU
     },
     {
         4U,
-        159U,
+        163U,
     {
         DCI_BLE_ADMIN_PASSWORD_BLE_CHAR_ID,
         DCI_BLE_OBSERVER_PASSWORD_BLE_CHAR_ID,
@@ -962,7 +994,7 @@ const Ble_DCI::ble_group_assembly_t ble_dci_group_struct[DCI_BLE_DATA_TOTAL_GROU
     },
     {
         6U,
-        161U,
+        165U,
     {
         DCI_BLE_USERNAME_BLE_CHAR_ID,
         DCI_BLE_PASSWORD_BLE_CHAR_ID,
@@ -974,7 +1006,7 @@ const Ble_DCI::ble_group_assembly_t ble_dci_group_struct[DCI_BLE_DATA_TOTAL_GROU
     },
     {
         8U,
-        163U,
+        167U,
     {
         DCI_BLE_TEST_SETTING_1_BLE_CHAR_ID,
         DCI_BLE_TEST_SETTING_2_BLE_CHAR_ID,
@@ -988,7 +1020,7 @@ const Ble_DCI::ble_group_assembly_t ble_dci_group_struct[DCI_BLE_DATA_TOTAL_GROU
     },
     {
         6U,
-        165U,
+        169U,
     {
         DCI_BLE_USER1_NAME_BLE_CHAR_ID,
         DCI_BLE_USER1_PASSWORD_BLE_CHAR_ID,
@@ -999,18 +1031,20 @@ const Ble_DCI::ble_group_assembly_t ble_dci_group_struct[DCI_BLE_DATA_TOTAL_GROU
     },
     },
     {
-        4U,
-        167U,
+        6U,
+        171U,
     {
         DCI_BLE_USER3_NAME_BLE_CHAR_ID,
+        DCI_BLE_USER3_PASSWORD_BLE_CHAR_ID,
         DCI_BLE_USER3_ROLE_BLE_CHAR_ID,
         DCI_BLE_USER4_NAME_BLE_CHAR_ID,
+        DCI_BLE_USER4_PASSWORD_BLE_CHAR_ID,
         DCI_BLE_USER4_ROLE_BLE_CHAR_ID
     },
     },
     {
         3U,
-        169U,
+        173U,
     {
         DCI_SIMPLE_APP_CONTROL_WORD_BLE_CHAR_ID,
         DCI_SIMPLE_APP_STATUS_WORD_BLE_CHAR_ID,
@@ -1019,49 +1053,49 @@ const Ble_DCI::ble_group_assembly_t ble_dci_group_struct[DCI_BLE_DATA_TOTAL_GROU
     },
     {
         1U,
-        171U,
+        175U,
     {
         DCI_BLE_TEST_SETTING_A_BLE_CHAR_ID
     },
     },
     {
         1U,
-        173U,
+        177U,
     {
         DCI_BLE_TEST_SETTING_D_BLE_CHAR_ID
     },
     },
     {
         1U,
-        175U,
+        179U,
     {
         DCI_BLE_TEST_SETTING_E_BLE_CHAR_ID
     },
     },
     {
         1U,
-        177U,
+        181U,
     {
         DCI_BLE_TEST_SETTING_F_BLE_CHAR_ID
     },
     },
     {
         1U,
-        179U,
+        183U,
     {
         DCI_BLE_TEST_READING_1_BLE_CHAR_ID
     },
     },
     {
         1U,
-        181U,
+        185U,
     {
         DCI_BLE_TEST_SETTING_4_BLE_CHAR_ID
     },
     },
     {
         4U,
-        183U,
+        187U,
     {
         DCI_BLE_FIND_TARGET_DEVICE_LED_CTRL_BLE_CHAR_ID,
         DCI_BLE_DEVICE_PROFILE_ID_BLE_CHAR_ID,

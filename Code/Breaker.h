@@ -48,44 +48,28 @@
 #include "Flash.h"
 //#include "Uart_events.h"
 #include "Metrology/metro.h"
-#include "EERAM/eeram_comp.h"
 
-#define MY_FIRMWARE_VERSION    0x240429  //Has to be YYMMDD
+#define MY_FIRMWARE_VERSION    0x240311   //Has to be YYMMDD
 
-//#define _FACTORY_BUILD_ // Don't forget to enable _DISABLE_DEBUG_MESSAGES_ in Debug_Manager_config.h
+//#define _FACTORY_BUILD_
 
 //#define _AUTOMATIC_PROVISIONIG_NO_BUTTONS_OR_RESET_
 //#define _OLD_APP_NO_BREAKER_
-//#define _TRACK_HEAP_SIZE_
-//#define _DEVICE_HAS_PASSWORD_
-
-
-//#define _DELETE_CONNECTION_STRING_TO_TEST_DPS_
-//#define _KEEP_REPORVISINING_EVERY_TIME_POWERING_UP_
 //#define _AHMED_PROVISION_TEST_
 //#define _AHMED_ADD_CONNECTION_STRING_
 
-//#define _RESET_AFTER_CONNECTION_
-//#define _ERROR_LOG_DEBUG_
+#define _ERROR_LOG_DEBUG_
 
-//#define _DISABLE_METROLOGY_
-//#define _DISABLE_M2M_COMMUNICATION_DURING_PROVISIONING_
 
 #ifdef _FACTORY_BUILD_
-    #undef _OLD_APP_NO_BREAKER_
     #undef _AUTOMATIC_PROVISIONIG_NO_BUTTONS_OR_RESET_
-    #undef _DELETE_CONNECTION_STRING_TO_TEST_DPS_
-    #undef _TRACK_HEAP_SIZE_
-    #define _DISABLE_METROLOGY_
-    #define _DISABLE_SBLCP_
-    #undef _KEEP_REPORVISINING_EVERY_TIME_POWERING_UP_
-    #undef _DISABLE_M2M_COMMUNICATION_DURING_PROVISIONING_
-
 #endif
 
 //#define _DEBUG_
 
-#define DEVICE_NAME_DEFAULT             "SmartBreaker-2.0" // Don't change the name here and in the excel sheet, that may break OTA
+#define DEVICE_NAME_DEFAULT             "Smart Breaker 2.0" // Don't change the name here and in the excel sheet, that may break OTA
+
+
 
 #define CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
 //#define CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
@@ -103,7 +87,7 @@
     #define LOG_BREAKER_TURN_OFF            0x71
     #define LOG_BREAKER_PROVISIONING        0x72
     #define LOG_BREAKER_RE_PROVISIONING     0x73
-    #define LOG_BREAKER_TIMER_BASED_LOG     0x74
+    #define LOG_BREAKER_TIMER_BASED_LOG     0x74									
 
 #endif
 
@@ -126,8 +110,6 @@
 
 #define RE_START_PROVISIONING        0xAA
 
-#define FACTORY_LOCATION_1 0x01
-#define FACTORY_LOCATION_2 0x02
 
 #define INVALID_VALUE           0xF0
 
@@ -137,17 +119,6 @@
 #define HostNameLength 			55
 #define DeviceIdLength 			45
 #define SharedAccessKeyLength 	50
-#define ConnectionStringMinValidLength  100
-
-#define DpsConcatenatedMessageLength 237 // see ParseDPSConcatenatedMessage, CreateDPSConcatenatedMessage functions for size guidance
-#define DpsEndpointLength       80
-#define DpsIdScopeLength        20
-#define DpsSymmetricKeyLength   45
-#define DpsDeviceRegIdLength    37
-
-#define DpsConcatenatedMessageMinValidLength 85
-
-#define MAX_SIZE_DEVICE_NAME_DEFAULT 32
 
 /****************************************************************************
  *                              Reseting Types     
@@ -162,22 +133,18 @@
  #define DEVICE_IS_IN_FACTORY_MODE  0xA5 
  
  #define DEVICE_IS_LOCKED           0xAA
-
- #define DEVICE_IS_NOT_LOCKED       0xA6
  
  #define BUILD_TYPE_SAVED           0x5A
-
- #define BUILD_TYPE_NOT_SAVED       0x55
  
  #define NEW_PROGRAMMED_PART_NO_SAVED    0x5B
 
- #define NEW_PROGRAMMED_PART_NO_NOT_SAVED     0x5C
+
 
 /****************************************************************************
  *                              Default values     
  ****************************************************************************/
-#define MAGIC_VALUE					0xAE
-#define PROD_NVS_INIT_DONE			0X5A
+#define MAGIC_VALUE                    0xAE
+
 
 
 /****************************************************************************
@@ -244,12 +211,8 @@
 #define ONE_HOUR_M                      60    // based on 1 minutetimer
 #define ONE_DAY                         24    // based on 1 hour timer
 
-#define CRYPTO_HASH_LENGTH			32
-#define SERIAL_NUMBER_LENGTH		16
-#define CATALOG_LENGTH				12
-#define STYLE_NUMBER_LENGTH			12
-#define	PCB_SERIAL_NUMBER_LENGTH	12
-#define FIRMWARE_VER_LENGTH			8
+#define CRYPTO_HASH_LENGTH		32
+
 
 //#define _DEBUG_TEMP_
 
@@ -362,50 +325,22 @@ typedef struct
 
     uint8_t NewProgrammedPartNumberSaved;
     char NewProgramedPartNumber[32];
-    //bool JustProvisioned; //this is to help not to re-initialize BLE
+    bool JustProvisioned; //this is to help not to re-initialize BLE
     uint8_t StartReProvisioning;
-
-    //DPS for IoT
-    char DpsConcatenatedMessage[DpsConcatenatedMessageLength];
-    char DpsEndpoint[DpsEndpointLength];
-    char DpsIdScope[DpsIdScopeLength];
-    char DpsSymmetricKey[DpsSymmetricKeyLength];
-    char DpsDeviceRegId[DpsDeviceRegIdLength];
-    
-    bool DpsInfoSaved;                     // Do we have info programmed to connect to DPS
-    bool DpsReturnedConnectionStringSaved; // Have we successfully registered with DPS and saved a new IOT connection string
-    bool ConnectionStringSaveNeeded;
-    bool DpsConfigSaveNeeded;
 
     uint8_t M2MUartStatus;
 
-    unsigned char UnicastPrimaryUDPKey[CRYPTO_HASH_LENGTH + 1];
-    unsigned char UnicastSecondaryUDPKey[CRYPTO_HASH_LENGTH + 1];
-    unsigned char BroadcastPrimaryUDPKey[CRYPTO_HASH_LENGTH + 1];
-    unsigned char BroadcastSecondaryUDPKey[CRYPTO_HASH_LENGTH + 1];
+    unsigned char UnicastPrimaryUDPKey[CRYPTO_HASH_LENGTH];
+    unsigned char UnicastSecondaryUDPKey[CRYPTO_HASH_LENGTH];
+    unsigned char BroadcastPrimaryUDPKey[CRYPTO_HASH_LENGTH];
+    unsigned char BroadcastSecondaryUDPKey[CRYPTO_HASH_LENGTH];
 
     bool bSblcpInit;
    
     bool MetroInitStatus;
-
-	uint8_t current_rating;
-	uint8_t PCB_hardware_ver;
-	char catalog_number[CATALOG_LENGTH + 1];
-	char style_number[STYLE_NUMBER_LENGTH + 1];
-	char breaker_serial_no[SERIAL_NUMBER_LENGTH + 1];
-	char ESP_firmware_ver[FIRMWARE_VER_LENGTH + 1];
-	char STM_firmware_ver[FIRMWARE_VER_LENGTH + 1];
-	char PCB_serial_number[PCB_SERIAL_NUMBER_LENGTH + 1];
-	bool breaker_test_status;
-	bool PCBA_test_status;
-    bool EERAMInitStatus;
-    bool Protection_FW_Version_Read;
-    int8_t Wifi_RSSI_Signal_Strength;
-    bool Sblcp_En_Dis;
-    bool Metro_Ade_Spi_Error;
-    uint8_t Device_Factory_Location;
-    uint8_t Breaker_Fault_State;
 } Device_Info_str;
+
+
 
 #define RING_BUFFER_ARRAY_SIZE          3
 #define RING_BUFFER_ARRAY_TEXT_LENGHT   10
@@ -455,22 +390,18 @@ void StartProvisioning(void);
 
 void BreakerDCIInit( void );
 
-void Ask_For_Temperature(void);
 void DCI_UpdateSecondaryContactStatus(void);
 void DCI_UpdatePrimaryContactStatus(void);
 
 void DCI_UpdateSecondaryState(void);
 void DCI_UpdatePrimaryState(void);
 void DCI_UpdatePathStatus(void);
-void DCI_UpdateIdentifyMeStatus(void);
-
-void DCI_UpdatePowerUpState(uint8_t startup_config);
 
 void DCI_Update_SSID(void);
 void DCI_Update_DevicePassWord(void );
 void DCI_Update_DeviceMacAdd(void);
 void DCI_Update_FirmWarVer(void);
-void DCI_UpdateSblcpEnDisStatus(void);
+
 
 void GetDevicePassWord(void);
 void GetDeviceSsid(void);
@@ -478,19 +409,8 @@ void GetDeviceSsid(void);
 void DCI_UpdateBuildType(void);
 void DCI_UpdateNewProgrammedPartNumber(void);
 
-void DCI_Update_LoadPercent();
-void DCI_Update_Temperature();
-void DCI_UpdateDPSDeviceRegId(void);
-void DCI_UpdateDPSEndpoint(void);
-void DCI_UpdateDPSIDScope(void);
-void DCI_UpdateDPSSymmetricKey(void);
-void DCI_GetDPSDeviceRegId(void);
-void DCI_GetDPSEndpoint(void);
-void DCI_GetDPSIDScope(void);
-void DCI_GetDPSSymmetricKey(void);
 
 void initial_Uart(void);
-uint8_t get_statusOfBuildType();
 
 
 
@@ -498,8 +418,6 @@ uint8_t get_statusOfBuildType();
 void Iot_Connect(void);
 void Reset_provisioning(void);
 void PxGreenOneSecondTimer(void);
-void PxGreenConnectionStringChangedCB(void);
-void PxGreenDpsConfigChangedCB(void);
 void WiFi_Connect(void);
 void Factory_WiFi_Connect(void);
 void SetConnectStringInfo(void);
@@ -507,36 +425,21 @@ void GetConnectStringInfo(void);
 void ResetConnectStringInfo(void);
 void ParseConnectionString(void);
 
-void SetDPSConcatenatedMessageToIndividualFields(void);
-void GetDPSConcatenatedMessageFromIndividualFields(void);
-void ParseDPSConcatenatedMessage(void);
-void CreateDPSConcatenatedMessage(void);
-
 void RF_ToggleBreakerState();     //delayed
 
 void ResetDevice(uint8_t ResetType, uint8_t Reset);
 
 
 
-void Test_AddingConnectionString(void);
-void Test_AddingWifiSSID(void);
-void Test_AddingWifiPWD(void);
-void Test_RemoveWifiCredential(void);
-void Test_ConnectWiFi(void);
-void Test_WritingTo_NV_Config(void);
-void Test_ReadingFrom_NV_Config(void);
-void Test_WritingBuildType(void);
-void Test_WritingNewPartNumber(void);
-void Test_AddingDPSEndpoint(void);
-void Test_AddingDPSIDScope(void);
-void Test_AddingDPSDeviceRegId(void);
-void Test_AddingDPSSymmetricKey(void);
-void Test_ReadingDPSEndpoint(void);
-void Test_ReadingDPSIDScope(void);
-void Test_ReadingDPSDeviceRegId(void);
-void Test_ReadingDPSSymmetricKey(void);
-void Test_AddingDPSMessage(void);
-void Test_ReadingDPSMessage(void);
+void Test_AddingConnectionString();
+void Test_AddingWifiSSID();
+void Test_AddingWifiPWD();
+void Test_RemoveWifiCredential();
+void Test_ConnectWiFi();
+void Test_WritingTo_NV_Config();
+void Test_ReadingFrom_NV_Config();
+void Test_WritingBuildType();
+void Test_WritingNewPartNumber();
 
 void DCI_Update_VoltageL1(void);
 void DCI_Update_VoltageL2(void);
@@ -582,17 +485,8 @@ void DCI_Update_ErroLogUpdate(const char * ErrorLog);
 void ErrorLogOneSecondTimer(void);
 
 uint32_t GetEpochTime( void );
-uint8_t get_factoryModeDisableStatus();
-int8_t get_sblcpManufacturingModeOnStatus();
-void sblcp_updateReplyMsgStatus(uint8_t);
+
 bool IsDeviceInProvisioningMode(void);
-int lockSB2Device();
-
-eTaskState Get_Task_State(TaskHandle_t task_handle);
-
-void DCI_Update_Wifi_RSS_Signal_Strength(void);
-
-void UART_Send_Event_To_Queue(void *puart_m2m_data);
 
 #ifdef __cplusplus
 }

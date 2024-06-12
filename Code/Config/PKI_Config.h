@@ -120,18 +120,17 @@ static const uint32_t FIRMWARE_SIGN_SIZE_LENGTH = 2U;
    1. enable RVK/IVK/FVK upgrade
    2. enable application signature verification on power up if APP_CODE_SIGN_CHECK is defined*/
 #define CODE_SIGN
-// Ahmed changing the code from local signing to server signing
 
 #ifdef CODE_SIGN
 /* SERVER_SIGN macro enables CCoE server signing method, this will write rvk available in
    server_sign_rvk.c into RVK region. during firmware upgrade, firmware should be verified by CCoE
    server keys */
-#define SERVER_SIGN
+// #define SERVER_SIGN
 
 /* LOCAL_SIGN macro enables local signing method, this will write rvk available in
    local_sign_rvk.c into RVK region. during firmware upgrade, firmware should be verified by locally
    generated keys. Local signing is used for development purpose */
-//#define LOCAL_SIGN
+#define LOCAL_SIGN
 
 #if defined ( LOCAL_SIGN ) && defined ( SERVER_SIGN )
 #error "Defined multiple code signing methods"	///< Either LOCAL_SIGN or SERVER_SIGN is supported.

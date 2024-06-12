@@ -93,9 +93,7 @@ void PROD_SPEC_Target_OS_Init( void )
 
 	g_cr_task = OS_Tasker::Create_Task( CR_Tasker::Scheduler,
 										COROUTINE_OS_TASK_STACK_SIZE,
-//Ahmed_DPS_ADU come back here
 										OS_TASK_PRIORITY_1,
-                                        //OS_TASK_PRIORITY_LOW_IDLE_TASK,
 										reinterpret_cast<uint8_t const*>( "Co-Routine Task" ), NULL );
 	if ( g_cr_task == NULL )
 	{

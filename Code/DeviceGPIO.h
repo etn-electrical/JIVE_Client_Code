@@ -40,33 +40,15 @@
 #include "Breaker.h"
 
 
-#define _ESP32_MINI_1_  // The reason of not having it as a global define is because it is not the only change needed
-						// We need to disable the PSRAM, change the FLASH size which will be a challenge which is not needed to spend the time on
 
-#ifdef _ESP32_MINI_1_
 
-#define BOARD_PIN_CS							   GPIO_NUM_5
-#define BOARD_PIN_MOSI							   GPIO_NUM_23
-#define BOARD_PIN_MISO							   GPIO_NUM_19
-#define BOARD_PIN_SCLK							   GPIO_NUM_18
-#define BOARD_PIN_RST 							   GPIO_NUM_38
-#define BOARD_PIN_IRQ1							   GPIO_NUM_21
-#define BOARD_PIN_TEST							   GPIO_NUM_4
-#define BOARD_PIN_TEST1							   GPIO_NUM_2
-//#define BOARD_PIN_TEST2							   GPIO_NUM_15
-#define BOARD_PIN_CF3_ZA						   GPIO_NUM_22
-
-#define BOARD_PIN_I2C_HS                           GPIO_NUM_27
-#define BOARD_PIN_I2C_SCL                          GPIO_NUM_26
-#define BOARD_PIN_I2C_SDA 			  			 GPIO_NUM_25
-
-#else
 
 #define SWITCH_ON_OFF_PIN_Pin                       GPIO_NUM_37
 
 
-//#define RGB_R_PIN_Pin                              GPIO_NUM_25 //GPIO_NUM_18  //GPIO_NUM_8
-//#define RGB_G_PIN_Pin                              GPIO_NUM_27//GPIO_NUM_5  //GPIO_NUM_5
+#define RGB_R_PIN_Pin                              GPIO_NUM_25 //GPIO_NUM_18  //GPIO_NUM_8
+#define RGB_G_PIN_Pin                              GPIO_NUM_27//GPIO_NUM_5  //GPIO_NUM_5
+#define RGB_B_PIN_Pin                              GPIO_NUM_26//GPIO_NUM_23  //GPIO_NUM_7
 
 #define BOARD_PIN_CS							   GPIO_NUM_5
 #define BOARD_PIN_MOSI							   GPIO_NUM_7
@@ -79,14 +61,10 @@
 #define BOARD_PIN_TEST2							   GPIO_NUM_15
 #define BOARD_PIN_CF3_ZA						   GPIO_NUM_22
 
-#define BOARD_PIN_I2C_HS                           GPIO_NUM_27
-#define BOARD_PIN_I2C_SCL                          GPIO_NUM_26
-#define BOARD_PIN_I2C_SDA 						   GPIO_NUM_25
 
-#endif
 
 //#ifdef _DEBUG_
-//	#define  TEST_PIN_2  GPIO_NUM_26
+	#define  TEST_PIN_2  GPIO_NUM_26
 //#endif
 
 #define ESP_INTR_FLAG_DEFAULT 0

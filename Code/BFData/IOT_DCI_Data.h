@@ -22,7 +22,7 @@
 //*******************************************************
 
 extern const iot_target_info_st_t iot_dci_data_target_info;
-static const uint16_t IOT_DCI_DATA_BUFFER_SIZE = 1346U;
+static const uint16_t IOT_DCI_DATA_BUFFER_SIZE = 1085U;
 static const uint16_t IOT_DCI_DATA_MAX_VAL_LENGTH = 103U;
 
 #endif

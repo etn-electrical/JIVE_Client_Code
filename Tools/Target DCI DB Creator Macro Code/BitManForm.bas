@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} BitManForm 
    Caption         =   "BitMan Source DCIDs"
-   ClientHeight    =   9075
+   ClientHeight    =   9075.001
    ClientLeft      =   36
    ClientTop       =   360
-   ClientWidth     =   9624
+   ClientWidth     =   9624.001
    OleObjectBlob   =   "BitManForm.frx":0000
    StartUpPosition =   1  'CenterOwner
 End

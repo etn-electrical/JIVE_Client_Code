@@ -9,9 +9,9 @@
  *
  * Author           : Kothe, AARTI J
  *
- * Last Changed By  : $Kothe, AARTI J $
+ * Last Changed By  : $Author: tia $
  * Revision         : $Revision: 1.0 $
- * Last Changed     : $Date: 02/09/2024
+ * Last Changed     : $Date: 07/18/2022
  *
  ****************************************************************************/
 #ifndef __METRO_UTILITIES_H
@@ -22,26 +22,18 @@
  ****************************************************************************/
 #include "esp_log.h"
 #include "esp_system.h"
-#include "esp_err.h"
+
 /****************************************************************************
  *                           	Constants and Macros
  ****************************************************************************/
 #define AD_WFB_EN
 #define MAX_BURST_READ_DATA_BYTES 770
+#define METRO_SPI_ERR 10
+#define METRO_SUCCESS 0
 #define METRO_MAX_CURRENT_CH 2
-
 /****************************************************************************
  *                  			 Types
  ****************************************************************************/
- /**
-   * @brief METROLOGY  ERROR definition
-   *
-   */
-typedef enum {
-    METRO_SUCCESS = 0,
-    METRO_SPI_ERR = 10,
-} metro_err_t;
-
 
  /**
    * @brief METROLOGY  CHANNEL definition
@@ -53,31 +45,6 @@ typedef enum {
    CHANNEL_2,
  }METRO_Channel_t;
 
-
- /**
-   * @brief METROLOGY  ENERGY definition
-   *
-   */
-typedef struct
-{
-	//Line1, Line2 Active energy
-	double active[2];
-
-	//Line1, Line2 Reactive energy
-	double	reactive[2];
-
-	//Line1, Line2 Apparent energy
-	double apparent[2];
-
-	//Line1, Line2 Rev Active energy
-	double revActive[2];
-
-	//Line1, Line2 Rev Reactive energy
-	double revReactive[2];
-
-	//Line1, Line2 Rev Apparent energy
-	double revApparent[2];
-}Metro_Energy;
 
 
  /**

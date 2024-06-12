@@ -100,7 +100,7 @@ void SetGPIO_ExtInterrupt(gpio_num_t gpio_num, gpio_int_type_t interrupt_edge_ty
     //disable pull-down mode
     io_conf.pull_down_en = 0;
     //disable pull-up mode
-    io_conf.pull_up_en = 1;
+    io_conf.pull_up_en = 0;
     //configure GPIO with the given settings
     gpio_config(&io_conf);
 }  

@@ -44,6 +44,7 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
+#include "SBLCP.h"
 #include "Breaker.h"
 //#include "uart_events.h"
 
@@ -56,15 +57,8 @@
 #define INVALID_LED_DURATION	10737418
 #define SBLCP_ERROR             (-1)
 #define SBLCP_SUCCESS           (1)
-#define FACTORY_MODE_DISABLE		0xAF
-#define TRIP_LOG_SIZE				100
 
-#define SBLCP_DEBUG					0
-#define SBLCP_UDP_KEY_DEBUG			0
-#define DISABLE_HASH_VERIFICATION	0
-#define SBLCP_TEMP_CODE				1
-
-#define SBLCP_PROTOTYPE_VER 0x00100000
+#define SBLCP_DEBUG				1
 
 typedef struct __attribute__((__packed__))
 {
@@ -83,7 +77,7 @@ typedef struct __attribute__((__packed__))
 typedef struct __attribute__((__packed__))
 {
 	uint32_t seq_number;
-	char serial_number[SERIAL_NUMBER_LENGTH];
+	char serial_number[SERIAL_NO_LENGTH];
 	uint32_t version;
 	uint32_t nonce;
 }getSeqNumberMesg_st;
@@ -211,27 +205,9 @@ typedef struct
 
 typedef struct
 {
-	uint8_t current_rating;
-	char catalog_number[CATALOG_LENGTH];
-	char style_number[STYLE_NUMBER_LENGTH];
-	char breaker_serial_no[SERIAL_NUMBER_LENGTH];
-	bool breaker_test_status;
-}DeviceDetails_st;
+	uint32_t macAddress;
+}BreakerMacAddress_st;
 
-typedef struct
-{
-	uint8_t PCB_hardware_ver;
-	char PCB_serial_number[PCB_SERIAL_NUMBER_LENGTH];
-	bool PCBA_test_status;
-}Pcbdetsils_st;
-
-typedef struct
-{
-	char ESP_firmware_ver[FIRMWARE_VER_LENGTH];
-	char STM_firmware_ver[FIRMWARE_VER_LENGTH];
-	DeviceDetails_st device_details;
-	Pcbdetsils_st PCB_details;
-}DeviceProductionDetails_st;
 typedef enum
 {
 	ACK = 0,		//Command executed and Next Expected Sequence Number updated.
@@ -242,76 +218,24 @@ typedef enum
 
 typedef enum
 {
-	HANDLE_OPEN = 1,	//remote handle open
-	HANDLE_CLOSE = 3,		//remote handle close
-	TOGGLE,				//toggle remote handle position
+	HANDLE_OPEN = 0,	//remote handle open
+	HANDLE_CLOSE,		//remote handle close
+	TOGGLE,				//toggle remote handle posistion
 }handlePosistion_en;
 typedef enum
 {
-	MANUFACTUING_UNKNOWN = 1,
-	MANUFACTURING_MODE_ON,
+	MANUFACTURING_MODE_ON = 0,
 	MANUFACTURING_MODE_OFF,
 }manufacturingModeState_e;
-
-typedef enum
-{
-	NO_UDP_KEY = 1,
-	PRIMARY_UNICAST,
-	SECONDARY_UNICAST,
-	PRIMARY_BROADCAST,
-	SECONDARY_BROADCAST,
-}activeUDPkey_en;
 
 typedef struct
 {
 	bool status_updated;
 	bool sblcp_timeout_command;
-	uint8_t manufacturing_Mode;
+	bool manufacturing_Mode;
 	uint16_t timeout;
 	uint16_t previous_received_command;
 }sblcpStatusInfo_st;
-
-typedef struct
-{
-	bool primary_unicast_key_expire;
-	uint32_t primary_unicast_key_download_time;
-	uint32_t primary_unicast_key_expiry_time;
-}primaryUnicastUdpKey_st;
-
-typedef struct
-{
-	bool secondary_unicast_key_expire;
-	uint32_t secondary_unicast_key_download_time;
-	uint32_t secondary_unicast_key_expiry_time;
-}secondaryUnicastUdpKey_st;
-
-typedef struct
-{
-	bool primary_broadcast_key_expire;
-	uint32_t primary_broadcast_key_download_time;
-	uint32_t primary_broadcast_key_expiry_time;
-}primaryBroadcastUdpKey_st;
-
-typedef struct
-{
-	bool secondary_broadcast_key_expire;
-	uint32_t secondary_broadcast_key_download_time;
-	uint32_t secondary_broadcast_key_expiry_time;
-}SecondaryBroadcastUdpKey_st;
-
-typedef struct
-{
-    uint8_t ErrorLog;
-    bool CloudUpdated;
-    uint32_t EpochTime;
-}tripLog_st;
-
-typedef struct
-{
-	tripLog_st logs[TRIP_LOG_SIZE];
-	uint8_t index;
-}ErrorLog_st;
-
 //--------------------------------------------------------------------------------------------------
 //                    External (Visible) Function Prototypes
 //--------------------------------------------------------------------------------------------------
@@ -320,29 +244,8 @@ typedef struct
 //--------------------------------------------------------------------------------------------------
 //                    Internal Function Prototypes
 //--------------------------------------------------------------------------------------------------
-void SBLCP_HAL_EERAM_Write_unicastPrimaryKeyTtl(uint32_t *uniCastTtl, size_t length);
-void SBLCP_HAL_EERAM_Write_unicastSecondaryKeyTtl(uint32_t *unicastSecondaryTtl, size_t length);
-void SBLCP_HAL_EERAM_Write_BroadcastPrimaryKeyTtl(uint32_t *BroadCastTtl, size_t length);
-void SBLCP_HAL_EERAM_Write_BroadcastSecondaryKeyTtl(uint32_t *BroadcastSecondaryTtl, size_t length);
-eeram_err_t SBLCP_HAL_EERAM_ReadPrimaryUnicastTtl(uint32_t *uniCastTtl, size_t length);
-eeram_err_t SBLCP_HAL_EERAM_ReadSecondaryUnicastTtl(uint32_t *uniCastsecondaryTtl, size_t length);
-eeram_err_t SBLCP_HAL_EERAM_ReadPrimaryBroadcastTtl(uint32_t *BroadCastTtl, size_t length);
-eeram_err_t SBLCP_HAL_EERAM_ReadSecondaryBroadcastTtl(uint32_t *BroadcastSecondaryTtl, size_t length);
 
-void SBLCP_HAL_EERAM_Write_unicastPrimaryKeyStatus(uint8_t *unicastStatus, size_t length);
-void SBLCP_HAL_EERAM_Write_unicastSecondaryKeyStatus(uint8_t *unicastSecondaryStatus, size_t length);
-void SBLCP_HAL_EERAM_Write_broadcastPrimaryKeyStatus(uint8_t *broadcastStatus, size_t length);
-void SBLCP_HAL_EERAM_Write_broadcastSecondaryKeyStatus(uint8_t *broadcastSecondaryStatus, size_t length);
-eeram_err_t SBLCP_HAL_EERAM_ReadUnicastPrimaryKeyStatus(uint8_t *uniCastStatus, size_t length);
-eeram_err_t SBLCP_HAL_EERAM_ReadUnicastSecondaryKeyStatus(uint8_t *unicastsecondaryStatus, size_t length);
-eeram_err_t SBLCP_HAL_EERAM_ReadBroadcastSecondaryKeyStatus(uint8_t *broadCastsecondaryStatus, size_t length);
-eeram_err_t SBLCP_HAL_EERAM_ReadBroadcastPrimaryKeyStatus(uint8_t *broadCastStatus, size_t length);
-uint8_t SBLCP_HAL_EERAM_Write_FactoryMode(uint8_t *factory_mode, size_t length);
-uint8_t SBLCP_HAL_EERAM_ReadFactoryMode(uint8_t *factoy_mode, size_t length);
-eeram_err_t EERAM_Read_UDP_Keys();
-eeram_err_t SBLCP_readUdpKeyStatus();
-
-bool init_SBLCP();
+int8_t init_SBLCP();
 //int8_t verify_hash(psCipherType_e type, const unsigned char *key, psSize_t keyLen,
 //	    const unsigned char *buf, uint32_t msgbody_len,
 //	    unsigned char hash[MAX_HASHLEN], unsigned char received_hash[MAX_HASHLEN], uint16_t in_message_code);
@@ -351,7 +254,7 @@ uint8_t init_sequence_number(void);
 void updateSequenceNumber();
 void get_serial_number(getSeqNumberMesg_st *replyMesg);
 uint32_t get_protocol_ver();
-int16_t calculate_hash(uint8_t *pMsgData, uint16_t msgdata_size, uint8_t *replyMesg);
+void calculate_hash(uint8_t *pMsgData, uint16_t msgdata_size, uint8_t *replyMesg);
 int16_t prepare_sblcp_response(uint8_t *prx_buffer, uint16_t in_message_code, sblcpResponce_st *pReply_Msg, uint8_t Ack_Nack);
 
 
@@ -360,73 +263,17 @@ void getNextUDPSeqNoReply(uint8_t *reply_message, uint8_t *rxBuff);
 uint8_t setNextUDPSeqNoReply();
 void setRemoteHandlePosistion(uint8_t *rxBuff);
 void getBreakerStatus(breakerStatus_st *reply_message, uint8_t *rxBuff);
+uint8_t setLEDConfiguration(uint8_t *rxBuff);
 size_t getMessageDataSize(uint16_t in_message_code);
 int8_t getMessage(uint16_t in_message_code, uint8_t *prx_buffer, uint8_t *psblcp_msg, uint8_t reponse);
 int8_t checkSequenceNumber(uint32_t rxSeqNumber, uint16_t rxMsgCode);
 void setSequenceNumber(uint8_t *rxBuff, uint8_t *psblcp_msg);
-void Metro_Get_Telemetry_data(meterTelemetryData_st *metroData);
-void Metro_start_data_average();
-void Metro_Set_Breaker_Calibration_Factors(uint8_t *rxBuff);
+void getMetroData(meterTelemetryData_st *metroData);
+void Metro_startAvgMetroDataRead();
+void Metro_setBreakerCalibration(uint8_t *rxBuff);
 void sblcpSetSecondaryHandle(uint8_t handle_posistion);
 void SBLCP_getSetAvgTeleData(meterTelemetryData_st *telemetry_data);
-eeram_err_t SBLCP_resetUdpKeys();
-void SBLCP_enbaleFactoyMode();
-void checkPrimaryUniKeyExpiry(uint32_t);
-void checkSecondaryUniKeyExpiry(uint32_t);
-void checkPrimaryBroadKeyExpiry(uint32_t);
-void checkSecondaryBroadKeyExpiry(uint32_t);
-void checkUdpKeyExpiry();
-void checkActiveBroadcastKey();
-void setActiveBroadcastKey(activeUDPkey_en);
-activeUDPkey_en getActiveBroadcastKey();
-
-void checkActiveUnicastKey();
-void setActiveUnicastKey(activeUDPkey_en);
-activeUDPkey_en getActiveUnicastKey();
-int8_t get_UdpKeyForHashCalculation(unsigned char *udp_key, uint8_t keyType);
-void hexToString(unsigned char *outbuff, uint8_t *srcBuff, uint16_t srcBuffLen);
-void setMesaageType(uint8_t msg_type);
-uint8_t getMesaageType();
-void SBLCP_resetProdDetails();
-responceAckNac_e updateProductionDetails(uint8_t *prx_buffer);
-void getProductionDetails(DeviceProductionDetails_st *prod_details);
-responceAckNac_e updatePcbDetails(uint8_t *prx_buffer);
-uint8_t get_SblcpCommandStatus();
-void SBLCP_performFactoryReset();
-uint8_t get_FactoryModeStatus();
-void set_FactoryModeStatus(uint8_t);
-void get_TripLog(uint8_t *sblcp_trip_log);
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-void update_unicastPrimaryKey(void);
-void update_broadcastPrimaryKey(void);
-void read_PrimaryUnicastUdpKey();
-void read_secondaryUnicastUdpKey();
-void read_PrimaryBroadcasttUdpKey();
-void read_secondaryBroadcasttUdpKey();
-
-
-void update_unicastSecondaryKey();
-void update_broadcastSecondaryKey();
-
-eeram_err_t reset_primaryUnicastkey();
-eeram_err_t reset_secondaryUnicastkey();
-eeram_err_t reset_primaryBroadcastkey();
-eeram_err_t reset_secondaryBroadcastkey();
-void delete_primaryUnicastudpKeys();
-void delete_secondaryUnicastudpKeys();
-void delete_primary_BroadcastKey();
-void delete_secondary_BroadcastKey();
-
-
-
-#ifdef __cplusplus
-}
-#endif
-
+int16_t prepare_sblcp_timeout_response(uint8_t *prx_buffer, uint16_t in_message_code, sblcpResponce_st *pReply_Msg, uint8_t Ack_Nack);
 #if SBLCP_DEBUG
 void print_reposnce(void *pMsgForPrint, uint16_t msg_code);
 #endif

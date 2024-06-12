@@ -9,7 +9,7 @@
 *   @version
 *   C++ Style Guide Version 1.0
 *
-*   @copyright 2024 Eaton Corporation. All Rights Reserved.
+*   @copyright 2021 Eaton Corporation. All Rights Reserved.
 *
 *****************************************************************************************
 */
@@ -127,44 +127,48 @@ static const uint8_t serv3_char6_val_uuid[BYTES_UUID_128BIT] =
 static const uint8_t serv3_char7_val_uuid[BYTES_UUID_128BIT] = 
 { 0x67, 0x0d, 0x96, 0x6f, 0xa6, 0x61, 0xdb, 0x87, 0x6f, 0x4b, 0xba, 0x92, 0x6a, 0x03, 0xa2, 0x95 };
 static const uint8_t serv3_char8_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xfe, 0x34, 0x7b, 0x69, 0xac, 0xf5, 0x7d, 0x85, 0x78, 0x47, 0x8e, 0x3e, 0xc8, 0x8f, 0xc9, 0xbe };
+{ 0xfe, 0x34, 0x7b, 0x69, 0xac, 0xf5, 0x7d, 0x85, 0x78, 0x47, 0x8e, 0x3e, 0xc7, 0x7f, 0xc9, 0xbe };
 static const uint8_t serv3_char9_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xb3, 0xaf, 0xa3, 0x8b, 0x22, 0x81, 0xc8, 0xa2, 0x26, 0x43, 0x81, 0x97, 0xc2, 0x61, 0xf2, 0xe1 };
+{ 0xfe, 0x34, 0x7b, 0x69, 0xac, 0xf5, 0x7d, 0x85, 0x78, 0x47, 0x8e, 0x3e, 0xc8, 0x8f, 0xc9, 0xbe };
 static const uint8_t serv3_char10_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xba, 0x28, 0x7f, 0x28, 0xaf, 0xa4, 0x18, 0xa3, 0xb6, 0x47, 0x0c, 0xcc, 0x3a, 0x06, 0xbe, 0x51 };
+{ 0xb3, 0xaf, 0xa3, 0x8b, 0x22, 0x81, 0xc8, 0xa2, 0x26, 0x43, 0x81, 0x97, 0xc2, 0x61, 0xf2, 0xe1 };
 static const uint8_t serv3_char11_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x32, 0xc1, 0xc7, 0xd4, 0x21, 0x7b, 0x91, 0x9c, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0xba, 0x28, 0x7f, 0x28, 0xaf, 0xa4, 0x18, 0xa3, 0xb6, 0x47, 0x0c, 0xcc, 0x2a, 0x06, 0xbe, 0x50 };
 static const uint8_t serv3_char12_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x43, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0xba, 0x28, 0x7f, 0x28, 0xaf, 0xa4, 0x18, 0xa3, 0xb6, 0x47, 0x0c, 0xcc, 0x3a, 0x06, 0xbe, 0x51 };
 static const uint8_t serv3_char13_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x22, 0xc1, 0xc0, 0xd1, 0x21, 0x7b, 0x91, 0x93, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0xbb, 0x32, 0xc1, 0xc7, 0xd4, 0x21, 0x7b, 0x91, 0x9c, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv3_char14_val_uuid[BYTES_UUID_128BIT] = 
-{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x80, 0x52, 0x9c, 0x76 };
+{ 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x43, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv3_char15_val_uuid[BYTES_UUID_128BIT] = 
-{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x30, 0x54, 0x9c, 0x76 };
+{ 0xbb, 0x22, 0xc1, 0xc0, 0xd1, 0x21, 0x7b, 0x91, 0x93, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv3_char16_val_uuid[BYTES_UUID_128BIT] = 
-{ 0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0xc1, 0xad, 0xea, 0x11, 0x17, 0xf8, 0xda, 0x01, 0x48, 0xb2 };
+{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x80, 0x52, 0x9c, 0x76 };
 static const uint8_t serv3_char17_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x9c, 0x45, 0x76, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x30, 0x54, 0x9c, 0x76 };
 static const uint8_t serv3_char18_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x93, 0x45, 0x28, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0x02, 0x00, 0x12, 0xac, 0x42, 0x02, 0xc1, 0xad, 0xea, 0x11, 0x17, 0xf8, 0xda, 0x01, 0x48, 0xb2 };
 static const uint8_t serv3_char19_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x28, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x9c, 0x45, 0x76, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv3_char20_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x32, 0xc1, 0xc3, 0xd1, 0x21, 0x7b, 0x91, 0x93, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x93, 0x45, 0x28, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv3_char21_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x32, 0xc1, 0xc3, 0xd1, 0x21, 0x7b, 0x91, 0x05, 0x10, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x28, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv3_char22_val_uuid[BYTES_UUID_128BIT] = 
-{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x36, 0x4c, 0x9c, 0x76 };
+{ 0xbb, 0x32, 0xc1, 0xc3, 0xd1, 0x21, 0x7b, 0x91, 0x93, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv3_char23_val_uuid[BYTES_UUID_128BIT] = 
-{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x8c, 0x50, 0x9c, 0x76 };
+{ 0xbb, 0x32, 0xc1, 0xc3, 0xd1, 0x21, 0x7b, 0x91, 0x05, 0x10, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv3_char24_val_uuid[BYTES_UUID_128BIT] = 
-{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x68, 0x71, 0x9c, 0x76 };
+{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x36, 0x4c, 0x9c, 0x76 };
 static const uint8_t serv3_char25_val_uuid[BYTES_UUID_128BIT] = 
-{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x68, 0x81, 0x9c, 0x76 };
+{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x8c, 0x50, 0x9c, 0x76 };
 static const uint8_t serv3_char26_val_uuid[BYTES_UUID_128BIT] = 
-{ 0xbb, 0x32, 0xc1, 0xc3, 0xd1, 0x21, 0x7b, 0x91, 0x12, 0x10, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x68, 0x71, 0x9c, 0x76 };
 static const uint8_t serv3_char27_val_uuid[BYTES_UUID_128BIT] = 
+{ 0x0a, 0xb5, 0xb6, 0x78, 0xc2, 0xce, 0xc4, 0xab, 0xe7, 0x11, 0xea, 0xcd, 0x68, 0x81, 0x9c, 0x76 };
+static const uint8_t serv3_char28_val_uuid[BYTES_UUID_128BIT] = 
+{ 0xbb, 0x32, 0xc1, 0xc3, 0xd1, 0x21, 0x7b, 0x91, 0x12, 0x10, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
+static const uint8_t serv3_char29_val_uuid[BYTES_UUID_128BIT] = 
 { 0xbb, 0x32, 0xc1, 0xc7, 0xd5, 0x21, 0x7b, 0x91, 0x9c, 0x45, 0x66, 0x8d, 0xef, 0xda, 0x0a, 0x2a };
 static const uint8_t serv4_svc_uuid[BYTES_UUID_16BIT] = 
         { 0x05, 0x50 };
@@ -217,7 +221,7 @@ static uint8_t sec_service_uuid[ BYTES_UUID_128BIT ] = {
 ///< Define Total Number of Attributes in each Services 
 #define TOTAL_ATTRIB_OF_SERV1             3
 #define TOTAL_ATTRIB_OF_SERV2             51
-#define TOTAL_ATTRIB_OF_SERV3             55
+#define TOTAL_ATTRIB_OF_SERV3             59
 #define TOTAL_ATTRIB_OF_SERV4             9
 #define TOTAL_ATTRIB_OF_SERV5             29
 
@@ -969,7 +973,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
        }
    },
    {
-      TOTAL_ATTRIB_OF_SERV3,           /// Total number of attributes included in service 55
+      TOTAL_ATTRIB_OF_SERV3,           /// Total number of attributes included in service 59
        {
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1172,7 +1176,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_USER3_ROLE
+            /* Service 5002 Characteristic DCI_BLE_USER3_PASSWORD
                Service 3 Characteristic 8 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1186,7 +1190,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_USER3_ROLE
+            /* Service 5002 Characteristic DCI_BLE_USER3_PASSWORD
                Service 3 Characteristic 8 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1199,34 +1203,34 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_USER4_NAME
+            /* Service 5002 Characteristic DCI_BLE_USER3_ROLE
                Service 3 Characteristic 9 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_16,
                    ( uint8_t * )&character_declaration_uuid,
-                   ESP_GATT_PERM_READ,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
                    CHAR_DECLARATION_SIZE,
                    CHAR_DECLARATION_SIZE,
-                   ( uint8_t * )&char_prop_read
+                   ( uint8_t * )&char_prop_read_write
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_USER4_NAME
+            /* Service 5002 Characteristic DCI_BLE_USER3_ROLE
                Service 3 Characteristic 9 Value */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_128,
                    ( uint8_t * )&serv3_char9_val_uuid,
-                   ESP_GATT_PERM_READ,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
                    0,
                    0,
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_USER4_ROLE
+            /* Service 5002 Characteristic DCI_BLE_USER4_NAME
                Service 3 Characteristic 10 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1240,7 +1244,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_USER4_ROLE
+            /* Service 5002 Characteristic DCI_BLE_USER4_NAME
                Service 3 Characteristic 10 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1253,7 +1257,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_1
+            /* Service 5002 Characteristic DCI_BLE_USER4_PASSWORD
                Service 3 Characteristic 11 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1267,7 +1271,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_1
+            /* Service 5002 Characteristic DCI_BLE_USER4_PASSWORD
                Service 3 Characteristic 11 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1280,34 +1284,34 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_2
+            /* Service 5002 Characteristic DCI_BLE_USER4_ROLE
                Service 3 Characteristic 12 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_16,
                    ( uint8_t * )&character_declaration_uuid,
-                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   ESP_GATT_PERM_READ,
                    CHAR_DECLARATION_SIZE,
                    CHAR_DECLARATION_SIZE,
-                   ( uint8_t * )&char_prop_read_write
+                   ( uint8_t * )&char_prop_read
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_2
+            /* Service 5002 Characteristic DCI_BLE_USER4_ROLE
                Service 3 Characteristic 12 Value */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_128,
                    ( uint8_t * )&serv3_char12_val_uuid,
-                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   ESP_GATT_PERM_READ,
                    0,
                    0,
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_3
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_1
                Service 3 Characteristic 13 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1321,7 +1325,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_3
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_1
                Service 3 Characteristic 13 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1334,7 +1338,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_SIMPLE_APP_CONTROL_WORD
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_2
                Service 3 Characteristic 14 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1348,7 +1352,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_SIMPLE_APP_CONTROL_WORD
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_2
                Service 3 Characteristic 14 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1361,13 +1365,67 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_SIMPLE_APP_STATUS_WORD
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_3
                Service 3 Characteristic 15 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_16,
                    ( uint8_t * )&character_declaration_uuid,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   CHAR_DECLARATION_SIZE,
+                   CHAR_DECLARATION_SIZE,
+                   ( uint8_t * )&char_prop_read_write
+               }
+           },
+
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_3
+               Service 3 Characteristic 15 Value */
+           {
+               { ESP_GATT_RSP_BY_APP },
+               {
+                   ESP_UUID_LEN_128,
+                   ( uint8_t * )&serv3_char15_val_uuid,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   0,
+                   0,
+                   NULL
+               }
+           },
+            /* Service 5002 Characteristic DCI_SIMPLE_APP_CONTROL_WORD
+               Service 3 Characteristic 16 Declaration */
+           {
+               { ESP_GATT_RSP_BY_APP },
+               {
+                   ESP_UUID_LEN_16,
+                   ( uint8_t * )&character_declaration_uuid,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   CHAR_DECLARATION_SIZE,
+                   CHAR_DECLARATION_SIZE,
+                   ( uint8_t * )&char_prop_read_write
+               }
+           },
+
+            /* Service 5002 Characteristic DCI_SIMPLE_APP_CONTROL_WORD
+               Service 3 Characteristic 16 Value */
+           {
+               { ESP_GATT_RSP_BY_APP },
+               {
+                   ESP_UUID_LEN_128,
+                   ( uint8_t * )&serv3_char16_val_uuid,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   0,
+                   0,
+                   NULL
+               }
+           },
+            /* Service 5002 Characteristic DCI_SIMPLE_APP_STATUS_WORD
+               Service 3 Characteristic 17 Declaration */
+           {
+               { ESP_GATT_RSP_BY_APP },
+               {
+                   ESP_UUID_LEN_16,
+                   ( uint8_t * )&character_declaration_uuid,
                    ESP_GATT_PERM_READ,
                    CHAR_DECLARATION_SIZE,
                    CHAR_DECLARATION_SIZE,
@@ -1376,12 +1434,12 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
            },
 
             /* Service 5002 Characteristic DCI_SIMPLE_APP_STATUS_WORD
-               Service 3 Characteristic 15 Value */
+               Service 3 Characteristic 17 Value */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_128,
-                   ( uint8_t * )&serv3_char15_val_uuid,
+                   ( uint8_t * )&serv3_char17_val_uuid,
                    ESP_GATT_PERM_READ,
                    0,
                    0,
@@ -1389,7 +1447,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
             /* Service 5002 Characteristic DCI_BLE_TEST_COUNTER
-               Service 3 Characteristic 16 Declaration */
+               Service 3 Characteristic 18 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
                {
@@ -1403,12 +1461,12 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
            },
 
             /* Service 5002 Characteristic DCI_BLE_TEST_COUNTER
-               Service 3 Characteristic 16 Value */
+               Service 3 Characteristic 18 Value */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_128,
-                   ( uint8_t * )&serv3_char16_val_uuid,
+                   ( uint8_t * )&serv3_char18_val_uuid,
                    ESP_GATT_PERM_READ,
                    0,
                    0,
@@ -1416,60 +1474,6 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
             /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_A
-               Service 3 Characteristic 17 Declaration */
-           {
-               { ESP_GATT_RSP_BY_APP },
-               {
-                   ESP_UUID_LEN_16,
-                   ( uint8_t * )&character_declaration_uuid,
-                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                   CHAR_DECLARATION_SIZE,
-                   CHAR_DECLARATION_SIZE,
-                   ( uint8_t * )&char_prop_read_write
-               }
-           },
-
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_A
-               Service 3 Characteristic 17 Value */
-           {
-               { ESP_GATT_RSP_BY_APP },
-               {
-                   ESP_UUID_LEN_128,
-                   ( uint8_t * )&serv3_char17_val_uuid,
-                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                   0,
-                   0,
-                   NULL
-               }
-           },
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_D
-               Service 3 Characteristic 18 Declaration */
-           {
-               { ESP_GATT_RSP_BY_APP },
-               {
-                   ESP_UUID_LEN_16,
-                   ( uint8_t * )&character_declaration_uuid,
-                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                   CHAR_DECLARATION_SIZE,
-                   CHAR_DECLARATION_SIZE,
-                   ( uint8_t * )&char_prop_read_write
-               }
-           },
-
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_D
-               Service 3 Characteristic 18 Value */
-           {
-               { ESP_GATT_RSP_BY_APP },
-               {
-                   ESP_UUID_LEN_128,
-                   ( uint8_t * )&serv3_char18_val_uuid,
-                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-                   0,
-                   0,
-                   NULL
-               }
-           },
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_E
                Service 3 Characteristic 19 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1483,7 +1487,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_E
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_A
                Service 3 Characteristic 19 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1496,7 +1500,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_F
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_D
                Service 3 Characteristic 20 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1510,7 +1514,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_F
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_D
                Service 3 Characteristic 20 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1523,7 +1527,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_READING_1
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_E
                Service 3 Characteristic 21 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1537,7 +1541,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_READING_1
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_E
                Service 3 Characteristic 21 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1550,7 +1554,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_4
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_F
                Service 3 Characteristic 22 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1564,7 +1568,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_4
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_F
                Service 3 Characteristic 22 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1577,7 +1581,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_READING_2
+            /* Service 5002 Characteristic DCI_BLE_TEST_READING_1
                Service 3 Characteristic 23 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1591,7 +1595,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_READING_2
+            /* Service 5002 Characteristic DCI_BLE_TEST_READING_1
                Service 3 Characteristic 23 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1604,34 +1608,34 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_LOG
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_4
                Service 3 Characteristic 24 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_16,
                    ( uint8_t * )&character_declaration_uuid,
-                   ESP_GATT_PERM_READ,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
                    CHAR_DECLARATION_SIZE,
                    CHAR_DECLARATION_SIZE,
-                   ( uint8_t * )&char_prop_read
+                   ( uint8_t * )&char_prop_read_write
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_LOG
+            /* Service 5002 Characteristic DCI_BLE_TEST_SETTING_4
                Service 3 Characteristic 24 Value */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_128,
                    ( uint8_t * )&serv3_char24_val_uuid,
-                   ESP_GATT_PERM_READ,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
                    0,
                    0,
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_LOG_INDEX
+            /* Service 5002 Characteristic DCI_BLE_TEST_READING_2
                Service 3 Characteristic 25 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1645,7 +1649,7 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_LOG_INDEX
+            /* Service 5002 Characteristic DCI_BLE_TEST_READING_2
                Service 3 Characteristic 25 Value */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1658,34 +1662,34 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_PRESENT_STATUS
+            /* Service 5002 Characteristic DCI_BLE_LOG
                Service 3 Characteristic 26 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_16,
                    ( uint8_t * )&character_declaration_uuid,
-                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   ESP_GATT_PERM_READ,
                    CHAR_DECLARATION_SIZE,
                    CHAR_DECLARATION_SIZE,
-                   ( uint8_t * )&char_prop_read_write
+                   ( uint8_t * )&char_prop_read
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_PRESENT_STATUS
+            /* Service 5002 Characteristic DCI_BLE_LOG
                Service 3 Characteristic 26 Value */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_128,
                    ( uint8_t * )&serv3_char26_val_uuid,
-                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   ESP_GATT_PERM_READ,
                    0,
                    0,
                    NULL
                }
            },
-            /* Service 5002 Characteristic DCI_BLE_TEST_DEVICE_TIME
+            /* Service 5002 Characteristic DCI_BLE_LOG_INDEX
                Service 3 Characteristic 27 Declaration */
            {
                { ESP_GATT_RSP_BY_APP },
@@ -1699,13 +1703,67 @@ const esp_gatts_attrib_table_t esp_gatts_attrib_db[ TOTAL_SERVICE ] =
                }
            },
 
-            /* Service 5002 Characteristic DCI_BLE_TEST_DEVICE_TIME
+            /* Service 5002 Characteristic DCI_BLE_LOG_INDEX
                Service 3 Characteristic 27 Value */
            {
                { ESP_GATT_RSP_BY_APP },
                {
                    ESP_UUID_LEN_128,
                    ( uint8_t * )&serv3_char27_val_uuid,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   0,
+                   0,
+                   NULL
+               }
+           },
+            /* Service 5002 Characteristic DCI_BLE_TEST_PRESENT_STATUS
+               Service 3 Characteristic 28 Declaration */
+           {
+               { ESP_GATT_RSP_BY_APP },
+               {
+                   ESP_UUID_LEN_16,
+                   ( uint8_t * )&character_declaration_uuid,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   CHAR_DECLARATION_SIZE,
+                   CHAR_DECLARATION_SIZE,
+                   ( uint8_t * )&char_prop_read_write
+               }
+           },
+
+            /* Service 5002 Characteristic DCI_BLE_TEST_PRESENT_STATUS
+               Service 3 Characteristic 28 Value */
+           {
+               { ESP_GATT_RSP_BY_APP },
+               {
+                   ESP_UUID_LEN_128,
+                   ( uint8_t * )&serv3_char28_val_uuid,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   0,
+                   0,
+                   NULL
+               }
+           },
+            /* Service 5002 Characteristic DCI_BLE_TEST_DEVICE_TIME
+               Service 3 Characteristic 29 Declaration */
+           {
+               { ESP_GATT_RSP_BY_APP },
+               {
+                   ESP_UUID_LEN_16,
+                   ( uint8_t * )&character_declaration_uuid,
+                   ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+                   CHAR_DECLARATION_SIZE,
+                   CHAR_DECLARATION_SIZE,
+                   ( uint8_t * )&char_prop_read_write
+               }
+           },
+
+            /* Service 5002 Characteristic DCI_BLE_TEST_DEVICE_TIME
+               Service 3 Characteristic 29 Value */
+           {
+               { ESP_GATT_RSP_BY_APP },
+               {
+                   ESP_UUID_LEN_128,
+                   ( uint8_t * )&serv3_char29_val_uuid,
                    ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
                    0,
                    0,
@@ -2245,10 +2303,10 @@ extern const Ble_DCI::ble_group_info_st_td_t ble_dci_data_group_info;
 // Ble bonding flag dcid will be accessed from app.c to retrieve and update the bonding info.
 const Ble_DCI::CHAR_ID_TD DCI_DEVICE_BONDING_INFO_BLE_CHAR_ID = 156U;
 
-static const uint32_t BLE_TOTAL_DCID_RAM_SIZE = 766U;
+static const uint32_t BLE_TOTAL_DCID_RAM_SIZE = 838U;
 
 // ******************************************************* 
 // ******     The Ble characteristic Id Counts.
 // *******************************************************
-static const Ble_DCI::CHAR_ID_TD DCI_BLE_DATA_TOTAL_CHAR_ID = 57U;
+static const Ble_DCI::CHAR_ID_TD DCI_BLE_DATA_TOTAL_CHAR_ID = 59U;
 #endif

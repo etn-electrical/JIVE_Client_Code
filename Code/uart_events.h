@@ -130,19 +130,6 @@
 #define UART_GET_PROGRAMMED_PART_NUMBER_MESSAGE       	0x1A
 #define UART_GET_PROGRAMMED_PART_NUMBER_REPLY_MESSAGE 	0x9A
 
-// Four messages/replies added for DPS support
-
-#define UART_SET_IOT_DPS_MESSAGE                    0x1B
-#define UART_SET_IOT_DPS_REPLY_MESSAGE              0x9B
-
-#define UART_GET_IOT_DPS_MESSAGE                    0x1C
-#define UART_GET_IOT_DPS_REPLY_MESSAGE              0x9C
-
-#define UART_CONNECT_DPS_MESSAGE                    0x1D
-#define UART_CONNECT_DPS_REPLY_MESSAGE              0x9D
-
-#define UART_VERIFY_DPS_CONNECTION_MESSAGE          0x1E
-#define UART_VERIFY_DPS_CONNECTION_REPLY_MESSAGE    0x9E
 
 
 #define UART_CRC_ERROR_REPLY_MESSAGE         		0xF0
@@ -152,24 +139,14 @@
 #define ESP_UART_READY 0x01
 
 #define DEFAULT_TASK_STACK_SIZE                     1024
-#define UART_CMD_MAX_QUEUE_SIZE                      5
 /******************************************************************************/
 
 #define START_BYTE   0x7e
 #define END_BYTE     0x7f
 
 #define NO_PAYLOAD_2 0
-#ifdef _ESP32_MINI_1_
-#define TXD_PIN (GPIO_NUM_10)
-#define RXD_PIN (GPIO_NUM_9)
-#else
 #define TXD_PIN (GPIO_NUM_32)
 #define RXD_PIN (GPIO_NUM_35)
-#endif
-
-#define POSITIVE_ACK 0x01
-
-//#define UART_DEBUG_MESSAGE
 
 typedef enum {
 	SWITCH_1_PRESS = 0x01,//change name according to button functionality
@@ -180,7 +157,6 @@ typedef enum {
 typedef struct {
 	uint8_t start_flag; //HEX start of packet end of packet flag
 	uint8_t cmd;        //handler side what to do.
-	uint8_t msg_num;	// Counter to ensure ack message is same as sent message.
 	uint8_t len;        // payload length
 	uint8_t payload_1;   //command data param 1
 	uint8_t payload_2;   //command data param 2
@@ -189,6 +165,7 @@ typedef struct {
 					             // (8/16 bitcrc check timing, for max bytes data)
 	uint8_t end_flag;   //end of frame flag
 }M2M_UART_COMMN;
+
 
 typedef enum {
 	//review
@@ -212,12 +189,6 @@ typedef enum {
 	STM32_OTA_DATA,
 	STM32_OTA_END,
 	BREAKER_STATUS,
-	IDENTIFY_ME,
-	UPDATE_TEMPERATURE,
-	SET_STARTUP_CONFIG,
-	BREAKER_GF_RAW,
-	BREAKER_HAL_RAW,
-	BREAKER_PRTOTECTION_FW_VERSION,
 	ESP_FACTORY_RESET = 0xFE,
 	ERROR_RESPONSE            =    0xFF,
 }UART_COMMANDS;
@@ -262,12 +233,8 @@ int prepare_uart_packet(M2M_UART_COMMN *pm2m_uart_comm);
 int process_breaker_fault_state(M2M_UART_COMMN *pm2m_uart_comm);
 int prepare_uart_command(M2M_UART_COMMN *pm2m_uart_comm, UART_COMMANDS uart_cmd, uint8_t payload_1, uint8_t payload_2, uint8_t payload_3);
 void process_breaker_status(M2M_UART_COMMN *pm2m_uart_comm);
-void process_protection_fw_version(M2M_UART_COMMN *pm2m_uart_comm);
-void send_uart_ack(M2M_UART_COMMN *pm2m_uart_comm);
+
 void init_m2m_uart(void);
-void update_temperature(M2M_UART_COMMN *pm2m_uart_com);
-void process_gf_raw_stats(M2M_UART_COMMN *pm2m_uart_comm);
-void process_HAL_raw_stats(M2M_UART_COMMN *pm2m_uart_comm);
 
 #ifdef __cplusplus
 extern "C"

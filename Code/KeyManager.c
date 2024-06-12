@@ -97,7 +97,7 @@ void EnableSwitchs()
 **-------------------------------------------------------------------------*/
 void KeyStateMachine(void)
 {
-#ifndef _ESP32_MINI_1_
+
     Switch Swt;
     bool KeyPress = false;
     bool KeyReleased = false;
@@ -385,5 +385,5 @@ void KeyStateMachine(void)
         SwitchInfo.DoublePrssCounter = 0;
         
     }    
-#endif
+  
 }

@@ -124,7 +124,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 }
                 DeviceInfo.ProvisionState = ProvisionStarted;
                 SetRGB_Color(PROVISION_STARTED_COLOR);
-                ProvisinTimer = 0;       
+                ProvisinTimer = 0;
                 break;
             case WIFI_PROV_CRED_RECV: {
                 if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
@@ -140,7 +140,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 memset ((char *)&DeviceInfo.Ssid,0, sizeof (DeviceInfo.Ssid));
                 memset ((char *)&DeviceInfo.PassWord,0, sizeof (DeviceInfo.PassWord));
                 strcpy((char *)&DeviceInfo.Ssid,(const char *) wifi_sta_cfg->ssid);
-                strncpy((char *)&DeviceInfo.PassWord,(const char *) wifi_sta_cfg->password, sizeof(DeviceInfo.PassWord) - 1);
+                strcpy((char *)&DeviceInfo.PassWord,(const char *) wifi_sta_cfg->password);
                 
                 DeviceInfo.ProvisionState = ProvisionGotSSID;
                 SetRGB_Color(PROVISION_GOT_SSID_COLOR);
@@ -176,7 +176,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 ESP_LOGI(TAG, "Provisioning successful");
                 retries = 0;
                 ProvisinTimer = 0;
-//                ProvisinAlreadyStarted = false;
+                ProvisinAlreadyStarted = false;
                 DeviceInfo.WiFiConnected = true;
                 DeviceInfo.WiFiConnectedWaitTimer = WIFI_CONNECT_WAIT_TIMER;
                 //set running color to indicate success.
@@ -250,7 +250,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 
 static void get_device_service_name(char *service_name, size_t max)
 {
-    uint8_t eth_mac[6] = {0};
+    uint8_t eth_mac[6];
 
 #ifdef _OLD_APP_NO_BREAKER_
     const char *ssid_prefix = "ETN_DIM_";
@@ -323,14 +323,13 @@ static void wifi_prov_print_qr(const char *name, const char *pop, const char *tr
 **--------------------------------------------------------------------------*/
 void StartProvisioning(void)
 {
-#if 0    
     if (DeviceInfo.ConnectionStringSaved == false)
     {
         //that means no connection string, return 
         ets_printf("Can't start provising process, there is no connection string\n");
         return;
     }
-#endif
+
     if (DeviceInfo.DeviceInNetworkStatus == DEVICE_IS_IN_A_NETWORK)
     {
         // We will check first if we already here because we are re-provisining
@@ -519,9 +518,6 @@ void StartProvisioning(void)
 void WiFi_Connect()
 {
         wifi_sta_config_t wifi_cfg;
-
-        memset(&wifi_cfg, 0, sizeof(wifi_sta_config_t));
-
         /* Initialize TCP/IP */
         ESP_ERROR_CHECK(esp_netif_init());        
                 
@@ -541,42 +537,10 @@ void WiFi_Connect()
     #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-                /* Configuration for the provisioning manager */
-        wifi_prov_mgr_config_t config = {
-            /* What is the Provisioning Scheme that we want ?
-             * wifi_prov_scheme_softap or wifi_prov_scheme_ble */
-    #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
-            .scheme = wifi_prov_scheme_ble,
-    #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
-    #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
-            .scheme = wifi_prov_scheme_softap,
-    #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
 
-            /* Any default scheme specific event handler that you would
-             * like to choose. Since our example application requires
-             * neither BT nor BLE, we can choose to release the associated
-             * memory once provisioning is complete, or not needed
-             * (in case when device is already provisioned). Choosing
-             * appropriate scheme specific event handler allows the manager
-             * to take care of this automatically. This can be set to
-             * WIFI_PROV_EVENT_HANDLER_NONE when using wifi_prov_scheme_softap*/
-    #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
-            .scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM
-    #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
-    #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
-            .scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
-    #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
-        };
-
-        /* Initialize provisioning manager with the
-         * configuration parameters set above */
-        ESP_ERROR_CHECK(wifi_prov_mgr_init(config));
-
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-
-        wifi_prov_mgr_deinit();
-
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        /* We don't need the manager as device is already provisioned,
+         * so let's release it's resources */
+        //wifi_prov_mgr_deinit();
 
         if (esp_wifi_get_config(ESP_IF_WIFI_STA, &wifi_cfg) == ESP_OK) {
             memcpy ((char *)&DeviceInfo.Ssid, (char *)&wifi_cfg.ssid,sizeof(DeviceInfo.Ssid));
@@ -664,6 +628,8 @@ void Reset_provisioning(void)
 void ProvisionEvent(void)
 {
  
+    #define DEINITIATE_BLE_TIME_OUT 5 //5 seconds
+    static uint8_t DeinitiateBLE_TimeOutCounter = DEINITIATE_BLE_TIME_OUT;
 
 #ifdef  _AHMED_PROVISION_TEST_
     static uint8_t TestReInitiateProvisioningAgainCounter = 30;
@@ -681,7 +647,40 @@ void ProvisionEvent(void)
         }
     }
     
+    if (DeviceInfo.JustProvisioned == true)
+    {
+        DeviceInfo.JustProvisioned = false;
+        DeinitiateBLE_TimeOutCounter = DEINITIATE_BLE_TIME_OUT;
+        DeviceInfo.DeinitProvisioningStart = true;
+    }
     
+    if (DeviceInfo.DeinitProvisioningStart)
+    {
+        if (DeinitiateBLE_TimeOutCounter != 0)
+        {
+            DeinitiateBLE_TimeOutCounter--;
+        }
+        else
+        {
+            ets_printf("Turn OFF BLE \n");
+            int ret = nimble_port_stop();
+            if (ret == 0) {
+                 nimble_port_deinit();
+                 ret = esp_nimble_hci_and_controller_deinit();
+                 if (ret != ESP_OK) 
+                 {
+                     ESP_LOGE(TAG, "esp_nimble_hci_and_controller_deinit() failed with error: %d", ret);
+                 }
+                 else
+                 {
+                     DeviceInfo.DeinitProvisioningStart = false;
+#ifdef  _AHMED_PROVISION_TEST_
+                     TestReInitiateProvisioningAgainFlag = true;
+#endif
+                 }
+            }
+        }
+    } 
 
 #ifdef  _AHMED_PROVISION_TEST_
     if (TestReInitiateProvisioningAgainFlag)

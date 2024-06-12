@@ -89,18 +89,14 @@
 #define EEOFFSET_PH_B_REVRS_ENERGY_LOCATION_1_LABEL			"PhBRevEgy_M1"
 #define EEOFFSET_PH_B_REVRS_ENERGY_LOCATION_2_LABEL			"PhBRevEgy_M2"
 
-#define EEOFFSET_EERAM_INIT_LABEL					"EERAM_Ready"
+#define EEOFFSET_ENERGY_RESET_LABEL					"Reset_Energy"
 
 #define EEOFFSET_METRO_RESET_LABEL					"Reset_Metro"
 
-#define EEOFFSET_EERAM_RESET_LABEL					"Reset_EERAM"
+#define EEOFFSET_FACTORY_MODE						"SBLCPFactoyMode"
 
-#define EEOFFSET_CALIBRATION_INIT_STATUS_LABEL		"Calibration"
 
-#define EEOFFSET_SET_PRODUCTION_DETAILS				"Prod_details"
-#define EEOFFSET_SET_PCB_DETAILS					"PCB_details"
-#define EEOFFSET_SBLCP_FACTORY_MODE					"FACT_MODE"
-#define EEOFFSET_PROD_DATA_NVS_INIT				"Init_Prod_NVS"
+
 
 
 esp_err_t   FlashInit();

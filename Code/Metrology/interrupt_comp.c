@@ -9,9 +9,9 @@
  *
  * Author           : Kothe, AARTI J
  *
- * Last Changed By  : $Kothe, AARTI J $
+ * Last Changed By  : $Author: tia $
  * Revision         : $Revision: 1.0 $
- * Last Changed     : $Date: 08/24/2023
+ * Last Changed     : $Date: 07/18/2022
  *
  ****************************************************************************/
 #include "interrupt_comp.h"
@@ -21,7 +21,7 @@
 /****************************************************************************
  *                              Global variables
  ****************************************************************************/
-extern xQueueHandle g_metro_evt_queue;
+extern xQueueHandle Metro_evt_queue;
 extern metro_flag_t g_metroFlag;
 
 /**
@@ -32,9 +32,9 @@ extern metro_flag_t g_metroFlag;
 bool IRAM_ATTR EXTI_IRQ0_Handler(void *args)
 {
 	uint8_t MetroEvent = METRO_IRQ_READ_EVENT;
-	if (g_metro_evt_queue != NULL)
+	if (Metro_evt_queue != NULL)
 	{
-		xQueueSendFromISR(g_metro_evt_queue, &MetroEvent, NULL);
+		xQueueSendFromISR(Metro_evt_queue, &MetroEvent, NULL);
 	}
 
 	return 0;
@@ -50,6 +50,7 @@ bool IRAM_ATTR EXTI_CF3_ZA_Handler(void *args)
 {
 	uint8_t MetroEvent;
 	static bool FirstZeroCrossing = true;
+	uint8_t ret = METRO_SUCCESS;
 
 	if (FirstZeroCrossing == true)
 	{
@@ -65,21 +66,34 @@ bool IRAM_ATTR EXTI_CF3_ZA_Handler(void *args)
 		{
 #ifdef AD_WFB_EN
 
-			if (Metro_Waveform_Cap_Init() != METRO_SUCCESS)
+			if ((ret = Metro_Waveform_Cap_Init()) != METRO_SUCCESS)
 			{
 				MetroEvent = WAVEFORM_INIT_FAIL_EVENT;
-				if (g_metro_evt_queue != NULL)
+				if (Metro_evt_queue != NULL)
 				{
-					xQueueSendToBackFromISR(g_metro_evt_queue, &MetroEvent, NULL);
+					xQueueSendToBackFromISR(Metro_evt_queue, &MetroEvent, NULL);
 				}
+				ret = METRO_SPI_ERR;
 			}
 			else
 			{
 				g_metroFlag.waveform_enable = true;
+				g_metroFlag.read_data = true;
 			}
 		}
 	}
 
+		//Notify once metrology data read event occurred
+
+	if ((g_metroFlag.read_data) && (g_metroFlag.waveform_enable))
+	{
+		MetroEvent = METRO_READ_EVENT;
+		g_metroFlag.read_data = false;
+		if (Metro_evt_queue != NULL)
+		{
+			xQueueSendToBackFromISR(Metro_evt_queue, &MetroEvent, NULL);
+		}
+	}
 #endif
 
 	return 0;

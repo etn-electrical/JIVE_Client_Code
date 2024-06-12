@@ -42,8 +42,6 @@
 #include "hal/timer_ll.h"
 #include "hal/mcpwm_ll.h"
 #include "freertos/event_groups.h"
-#include "esp_efuse.h"
-#include "esp_efuse_table.h"
 
 #include <wifi_provisioning/manager.h>
 
@@ -69,91 +67,18 @@
 #include "Log.h"
 #include "ErrorLog.h"
 
-
-#ifdef _TRACK_HEAP_SIZE_
-#include "esp_heap_trace.h"
-
-#define NUM_RECORDS 100
-static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in internal RAM
-#define _TRACK_HEAP_SIZE_PER_SECOND_
-//#define _TRACK_HEAP_SIZE_PER_50_MS_
-//#define _TEST_PSRAM_
-#endif
-
-
-#ifdef _FACTORY_BUILD_
-	#undef _DEVICE_HAS_PASSWORD_
-#endif
-
-// Uncomment to perform Manufacturing Process Test
 //#define MANUFACTURING_PROCESS_TEST
 
-extern bool Prod_Code_Sign_Complete;
-
-#ifdef MANUFACTURING_PROCESS_TEST
-    /* When MFG_TEST_FORCE is true
-    * The 'Manufacturing Process Test State Machine' 
-    * will be forced to run even if DeviceInfo.ConnectionStringSaved 
-    * is already saved */
-    #define MFG_TEST_FORCE					(true)
-
-    /* When MFG_TEST_SKIP_WIFI is true
-    * The 'Manufacturing Process Test State Machine' 
-    * will skip the states associated with WiFi Settings */
-    #define MFG_TEST_SKIP_WIFI				(false)
-
-
-    /* When MFG_TEST_DISABLE_FACTORY_FLAG is true 
-    * DeviceInfo.DeviceInFactoryMode will **NOT** be set/updated 
-    * by the 'Manufacturing Process Test State Machine' */
-    #define MFG_TEST_DISABLE_FACTORY_FLAG	(false)
-
-    /* When MFG_TEST_SKIP_RESTORE_RESTART is true
-    * The 'Manufacturing Process Test State Machine' 
-    * will skip restoring the original Connection string and/or WiFi credentials 
-    * as well as the device reboot that would typically accompany this.
-    * This can be used for intentionally changing the connection string */
-    #define MFG_TEST_SKIP_RESTORE_RESTART	(true)
-
-    /* When MFG_TEST_SET_DPS is true 
-    * The hardcoded TEST_DpsConcatenatedMessage will be 
-    * loaded when running the manufacturing process test */
-    #define MFG_TEST_SET_DPS                (true)
-
-    /* When MFG_TEST_SET_CONNECTION_STRING is true 
-    * The hardcoded TEST_ConnectionString will be 
-    * loaded when running the manufacturing process test */
-    #define MFG_TEST_SET_CONNECTION_STRING  (false)
-
-    /* When MFG_TEST_ADDITIONAL_PRINTS is true 
-    * There will be additional ets_printf() calls during the 
-    * 'Manufacturing Process Test State Machine' execution 
-    * providing more detailed information of what is 
-    * happening through the process */
-    #define MFG_TEST_ADDITIONAL_PRINTS		(true)
-#else
-    /* default values if MANUFACTURING_PROCESS_TEST is not defined */
-    #define MFG_TEST_FORCE					(false)
-    #define MFG_TEST_SKIP_WIFI				(false)
-    #define MFG_TEST_DISABLE_FACTORY_FLAG   (false)
-    #define MFG_TEST_SKIP_RESTORE_RESTART	(false)
-    #define MFG_TEST_SET_DPS                (false)
-    #define MFG_TEST_SET_CONNECTION_STRING  (false)
-    #define MFG_TEST_ADDITIONAL_PRINTS		(false)
-#endif
 
 /****************************************************************************
  *                              Global variables
  ****************************************************************************/
-
 extern uint8_t OneHourCounter;
 DRAM_ATTR Device_Info_str DeviceInfo;
 extern bool Prod_Code_Sign_Complete;
 extern ErrorLogStrArray_str ErrLogStr;
 uint16_t ms_counter        = 0;
 uint16_t sec_counter       = 0;
-
-
 
 bool DisableKeyPress         = true;
 
@@ -165,15 +90,21 @@ bool RefreshWDG_Flag         = false;
 
 bool HeartBeatTimer10ms      = false;
 
+
+
 bool ServingZC_ISR           = false;
+
 
 uint64_t PreviousFlashDataValue = 0;
 
-static const char *TAG = "Breaker";
-extern uint8_t gStm_Firmware_Version[];//major.minor.patch versions
-                            
-const char device_Name_Default[MAX_SIZE_DEVICE_NAME_DEFAULT]= {"SmartBreaker-2.0"}; // Don't change the name here and in the excel sheet, that may break OTA
+uint32_t ZeroCrossingTickTimer;
+bool     ZeroCrossingTickflag = false;
 
+
+static const char *TAG = "Breaker";
+
+                            
+                                            
 #ifdef _DEBUG_
     char RingBuffer [RING_BUFFER_ARRAY_SIZE][RING_BUFFER_ARRAY_TEXT_LENGHT];
     uint8_t RingBufferRead;
@@ -250,10 +181,9 @@ void timer_10ms(void)
     HeartBeatTimer10ms = true;
     //this is the heart beat and here we should put the watchdog
     RefreshWDG_Flag = true;
+    Event_10msTimer();
 
     KeyStateMachine();
-
-    Event_10msTimer();
 }
 
 
@@ -272,40 +202,8 @@ void timer_50ms(void)
     EventStateMachine();
 
     Event_50msTimer();
-
-#ifndef _FACTORY_BUILD_
-	if(!DeviceInfo.bSblcpInit)
-	{
-		//init SBLCP only when device is connected to IOT hub when Factory mode is disable
-		//If factory mode is enable init SBLCP, when device is connected to Wi-Fi even if there is no IoT connection
-		//if(get_FactoryModeStatus() == FACTORY_MODE_DISABLE)
-		if(DeviceInfo.DeviceInFactoryMode == FACTORY_MODE_DISABLE)
-		{
-			//init SBLCP only only if connected to wifi router
-			if((DeviceInfo.IoTConnected) && (DeviceInfo.WiFiConnected))
-			{
-				if(init_SBLCP() > 0)
-				{
-					DeviceInfo.bSblcpInit = true;
-				}
-			}
-		}
-		else
-		{
-			if(DeviceInfo.WiFiConnected)
-			{
-				if(init_SBLCP() > 0)
-				{
-					DeviceInfo.bSblcpInit = true;
-				}
-			}
-		}
-	}
-#endif
-
-#ifdef _TRACK_HEAP_SIZE_PER_50_MS_
-     ets_printf(" Heap Size %d Min HeapSize %d \n", esp_get_free_heap_size(),esp_get_minimum_free_heap_size());
-#endif
+    
+    
 }
 
 
@@ -315,6 +213,7 @@ void timer_50ms(void)
 **
 **
 **--------------------------------------------------------------------------*/
+
 void timer_1Sec(void)
 {
     uint32_t Address;
@@ -326,60 +225,6 @@ void timer_1Sec(void)
 //    SecondsSincePoweringUp++;
 //#endif
 
-#ifdef  _RESET_AFTER_CONNECTION_
-	#define RESET_TIME		30
-
-    static uint8_t ResetCounter = 0;
-
-
-    if ( (ResetCounter == 0) && (DeviceInfo.IoTConnected == true))
-    {
-    	ResetCounter++;
-    }
-    if (ResetCounter != 0)
-    {
-    	ResetCounter++;
-    	if (ResetCounter == RESET_TIME)
-    	{
-            //Manfacutre Reset
-           // ResetDevice(MANUFACTURING_RESET, true);
-           StartProvisioning();
-    	}
-    }
-#endif    //_RESET_AFTER_CONNECTION_
-
-
-
-
-#ifdef _TRACK_HEAP_SIZE_PER_SECOND_
-     ets_printf(" Heap Size %d Min HeapSize %d \n", esp_get_free_heap_size(),esp_get_minimum_free_heap_size());
-#endif  
-
-#ifdef _TEST_PSRAM_
-    #define SPRAM_BASE_SIZE   1024  //10K
-    char *buffer;
-    static char i = 10;
-
-    buffer = (char *) heap_caps_malloc(SPRAM_BASE_SIZE * i, MALLOC_CAP_SPIRAM);
-    if (buffer != NULL)
-    {
-        ets_printf("Allocating %dK of SPRAM \n", i);
-        ets_printf(" Heap Size %d Min HeapSize %d \n", esp_get_free_heap_size(),esp_get_minimum_free_heap_size());
-        free(buffer);
-        ets_printf("Freed %dK of SPRAM\n", i);
-        i+=10;
-        if (i>100)
-            i=10;
-    }
-    else
-    {
-        ets_printf("Couldn't allocate %d K of SPRAM", i);
-    }
-#endif
-
-
-
-
     sec_counter++;
 
     if (sec_counter == ONE_MINUTE)
@@ -389,12 +234,20 @@ void timer_1Sec(void)
     }
     ErrorLogOneSecondTimer();
 
+
+    //init SBLCP only only if connected to wifi router
+	if(!DeviceInfo.bSblcpInit && DeviceInfo.WiFiConnected)
+	{
+		if(init_SBLCP() > 0)
+		{
+			DeviceInfo.bSblcpInit = true;
+		}
+	}
+
     EventOneSeconedTimer();
 
-    if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
-    {
-    	PxGreenOneSecondTimer();
-    }
+    
+    PxGreenOneSecondTimer();
     ProvisionEvent();
     
     if (TimeToResetflag)
@@ -408,147 +261,6 @@ void timer_1Sec(void)
             esp_restart();
         }
     }
-//    static uint8_t count = 0;
-//    float percentLoad;
-//    if(count == 20)
-//    {
-//    	getPercentageLoad(&percentLoad);
-//    	printf("percentLoad %f\n", percentLoad);
-//    }
-//    count++;
-
-//#define DPS_DCI_TEST
-//#define INDIVIDUAL_DPS_WRITE_TEST
-//#define CONCAT_DPS_WRITE_TEST
-
-#ifdef DPS_DCI_TEST
-    static uint8_t StartDpsTestingCounter = 5; // to start testing 2 sec after powering up
-    static bool DpsTestIsDone = false;
-    static uint8_t StartDpsTestingState = 0;
-    if (DpsTestIsDone == false)
-    {
-        if (StartDpsTestingCounter != 0)
-        {
-            StartDpsTestingCounter--;
-        }
-        else
-        {
-            //start after 5 seconds
-            switch (StartDpsTestingState)
-            {
-                case 0 :
-#ifdef INDIVIDUAL_DPS_WRITE_TEST
-                    Test_AddingDPSEndpoint();
-#endif                    
-                    StartDpsTestingState++;                    
-                break;
-
-                case 1 :
-#ifdef INDIVIDUAL_DPS_WRITE_TEST
-                    Test_AddingDPSIDScope();
-#endif                    
-                    StartDpsTestingState++;                    
-                break;
-
-                case 2 :
-#ifdef INDIVIDUAL_DPS_WRITE_TEST
-                    Test_AddingDPSDeviceRegId();
-#endif                    
-                    StartDpsTestingState++;                    
-                break;
-
-                case 3 :
-#ifdef INDIVIDUAL_DPS_WRITE_TEST
-                    Test_AddingDPSSymmetricKey();
-#endif                    
-                    StartDpsTestingState++;                    
-                break;
-
-                case 4 :
-                    Test_ReadingDPSEndpoint();
-                    StartDpsTestingState++;                    
-                break;
-
-                case 5 :
-                    Test_ReadingDPSIDScope();
-                    StartDpsTestingState++;                    
-                break;
-
-                case 6 :
-                    Test_ReadingDPSDeviceRegId();
-                    StartDpsTestingState++;                    
-                break;
-                
-                case 7 :
-                    Test_ReadingDPSSymmetricKey();
-                    StartDpsTestingState++;                    
-                break;
-
-                case 8 :
-#ifdef CONCAT_DPS_WRITE_TEST
-                    Test_AddingDPSMessage();
-#endif                    
-                    StartDpsTestingState++;
-                break;
-
-                case 9 :
-                    Test_ReadingDPSMessage();
-                    StartDpsTestingState++;
-                break;
-
-                case 10 :
-                    Test_AddingWifiSSID();
-
-                    StartDpsTestingState++;
-                break;
-
-
-                case 11 :
-
-                    Test_AddingWifiPWD();
-                    StartDpsTestingState++;
-                break;
-
-                case 12 :
-                    Test_ConnectWiFi();
-                    StartDpsTestingState++;
-                break;           
-
-
-
-                  case 13 :
-                    if (DeviceInfo.WiFiConnected)
-                    {
-                        StartDpsTestingState++;
-                    }
-                break;              
-                case 14: //wait till it connect to Iot
-                    if (DeviceInfo.IoTConnected)
-                    {
-                        //#if MFG_TEST_ADDITIONAL_PRINTS
-                            ets_printf("IoT Connected!\n");
-                        //#endif
-                        StartDpsTestingState++;
-                    }
-                break;
-
-                case 15 :
-                    DpsTestIsDone = true;
-                break;
-            }
-        }
-    }
-
-#endif
-
-//    static uint8_t count = 0;
-//    float percentLoad;
-//    if(count == 20)
-//    {
-//    	getPercentageLoad(&percentLoad);
-//    	printf("percentLoad %f\n", percentLoad);
-//    }
-//    count++;
 
 #ifdef MANUFACTURING_PROCESS_TEST    
     static uint8_t StartTestingCounter = 5; // to start testing after 5 seconds from powring up
@@ -572,8 +284,7 @@ void timer_1Sec(void)
             switch (StartTestingState)
             {
                 case 0 :
-                    //MFG_TEST_FORCE allows forcing test mode even when ConnectionString is Saved
-                    if (DeviceInfo.ConnectionStringSaved && !MFG_TEST_FORCE )
+                    if (DeviceInfo.ConnectionStringSaved)
                     {
                         TestIsDone = true;
                     }
@@ -581,21 +292,9 @@ void timer_1Sec(void)
                 break;
                 
                 case 1 :
-                    #if !MFG_TEST_DISABLE_FACTORY_FLAG
                     DeviceInfo.DeviceInFactoryMode = DEVICE_IS_IN_FACTORY_MODE;
-                    #endif
-
-                    #if MFG_TEST_ADDITIONAL_PRINTS
-                        ets_printf("Start factory test \n");
-                    #endif
-                    //ZeroCrossing_Disable();
-
-                    #if MFG_TEST_SKIP_WIFI
-                        StartTestingState = 7;  //force to the state after WiFi testing based on MFG_TEST_SKIP_WIFI 
-                    #else
-                        wifi_prov_mgr_reset_provisioning();
+                    //wifi_prov_mgr_reset_provisioning();
                     StartTestingState++;
-                    #endif
                 break;  
                 
 
@@ -639,90 +338,52 @@ void timer_1Sec(void)
                 break;
                 
                 case 7 :
-                    #if MFG_TEST_SET_DPS
-                        Test_AddingDPSMessage();
-                        #if MFG_TEST_ADDITIONAL_PRINTS
-                            ets_printf("New DPS parameters!\n");
-                            ets_printf("    DpsEndpoint:      %s\n", DeviceInfo.DpsEndpoint);
-                            ets_printf("    DpsIdScope:       %s\n", DeviceInfo.DpsIdScope);
-                            ets_printf("    DeviceId:         %s\n", DeviceInfo.DeviceId);
-                            ets_printf("    DpsSymmetricKey:  %s\n", DeviceInfo.DpsSymmetricKey);
-                        #endif
-                    #endif
                     StartTestingState++;
-                break;
-                
-                case 8 :
-                    #if MFG_TEST_SET_CONNECTION_STRING
                     Test_AddingConnectionString();
-                        #if MFG_TEST_ADDITIONAL_PRINTS
-                            ets_printf("New ConnectionString: %s\n", DeviceInfo.ConnectionString);
-                            ets_printf("    HostName:         %s\n", DeviceInfo.HostName);
-                            ets_printf("    DeviceId:         %s\n", DeviceInfo.DeviceId);
-                            ets_printf("    SharedAccessKey:  %s\n", DeviceInfo.SharedAccessKey);
-                        #endif
-                    #endif
-                    StartTestingState++;
                 break;
 
                 
-                case 9: //wait till it connect to Iot
+                case 8: //wait till it connect to Iot
                     if (DeviceInfo.IoTConnected)
                     {
-                        #if MFG_TEST_ADDITIONAL_PRINTS
-                            ets_printf("IoT Connected!\n");
-                        #endif
                         StartTestingState++;
                     }
                 break;
 
-                case 10: 
+                case 9: 
                     ets_printf("Writing Build Type \n");
                     Test_WritingBuildType();
-                    #if MFG_TEST_ADDITIONAL_PRINTS
-                        ets_printf("New BuildType: %s\n", DeviceInfo.BuildType);
-                    #endif
+                    StartTestingState++;
+                break;
+
+                case 10: 
+                    ets_printf("Writing New part number \n");
+                    Test_WritingNewPartNumber();
                     StartTestingState++;
                 break;
 
                 case 11: 
-                    ets_printf("Writing New part number \n");
-                    Test_WritingNewPartNumber();
-                    #if MFG_TEST_ADDITIONAL_PRINTS
-                        ets_printf("New NewProgramedPartNumber: %s\n", DeviceInfo.NewProgramedPartNumber);
-                    #endif
-                    StartTestingState++;
-                break;
-
-                case 12: 
                     //ets_printf("Lock The device \n");
                     //DeviceInfo.TheDeviceIsLocked = true;
                    // WriteByteToFlash(EEOFFSET_DEVICE_LOCKED_LABEL,DEVICE_IS_LOCKED );
                     StartTestingState++;
                 break;
                 
-                case 13:
-                #if MFG_TEST_SKIP_RESTORE_RESTART
-                    #if MFG_TEST_ADDITIONAL_PRINTS
-                        ets_printf("Testing Done \n");
-                    #endif
-                    TestIsDone = true; // Because we are not re-starting the Esp32
-                #else
-                    if (WaitTimeBeforeRemovingWifiCredential != 0)
+                case 12:
+                    //if (WaitTimeBeforeRemovingWifiCredential != 0)
+                    //{
+                    //    WaitTimeBeforeRemovingWifiCredential--;
+                    //    ets_printf("Wait to reset \n");
+                    //}
+                   // else
                     {
-                        WaitTimeBeforeRemovingWifiCredential--;
-                        ets_printf("Wait to reset \n");
-                    }
-                    else
-                    {
-                        Test_RemoveWifiCredential();
+                        //Test_RemoveWifiCredential();
                         GetConnectStringInfo();
                         //ets_printf("Reset \n");
                         //esp_restart();
                         TestIsDone = true; // Just in case if we don't re-start the Esp32
                         StartTestingState++;
                     }
-                #endif
                 break;
                     
                 
@@ -731,7 +392,6 @@ void timer_1Sec(void)
     }
     
 #endif
-    //ets_printf("I am alive \n");
 }
 
 /*=====================================   timer_1Min ======================
@@ -765,14 +425,14 @@ void InitEE()
     uint8_t  ReadValue;
     uint8_t  lightlevel;
     uint32_t Address;
+	uint8_t energy_reset_status = 0;
     wifi_sta_config_t wifi_cfg;
-    uint8_t calibration_init_status = 0;
-	eeram_err_t eeram_ret = EERAM_SUCCESS;
-
 //    char ConnectionString[] = "HostName=EatonCRDSWDeviceIothub1.azure-devices.net;DeviceId=28d4e9fe-4cfb-447c-83d4-c234d3b0b755;SharedAccessKey=vBTkva1Z1f6kEBrgX4Sgm+aHE4utqFe9sxbYq4GUiFI=";
-
+    
     memset (&DeviceInfo,0, sizeof (DeviceInfo));
     
+    Metro_Data_Reset();	//reset metrology data and cloud data structure
+
     /* Initialize NVS partition */
     esp_err_t ret = FlashInit();
 
@@ -783,11 +443,10 @@ void InitEE()
         return;
     }
 
-     
     ReadValue = ReadByteFromFlash(EEOFFSET_MAGIC_LABEL);
     if (ReadValue == MAGIC_VALUE)
     {
-#ifndef _DEVICE_HAS_PASSWORD_
+        
         ReadValue = ReadByteFromFlash(EEOFFSET_PROVISION_LABEL);
         if (ReadValue == DEVICE_IS_IN_A_NETWORK)
         {
@@ -798,10 +457,7 @@ void InitEE()
         {
             ResetDevice(PROVISIONING_RESET, false);
         }
-#else
-        DeviceInfo.DeviceInNetworkStatus = DEVICE_IS_IN_A_NETWORK;
-        DeviceInfo.ProvisionState = ProvisionSavedInfo;
-#endif
+        
         ReadDataFromFlash(EEOFFSET_DEVICE_NAME_LABEL, (char *)&DeviceInfo.DeviceName);
 
         ReadValue = ReadByteFromFlash(EEOFFSET_RE_PROVISION_STARTED_LABEL);
@@ -816,6 +472,7 @@ void InitEE()
         DeviceInfo.StartReProvisioning = ReadValue;
         //Reset re-provisioning
         WriteByteToFlash(EEOFFSET_RE_PROVISION_STARTED_LABEL,0 );
+        
     }
     else
     {
@@ -827,30 +484,42 @@ void InitEE()
         DeviceInfo.DeviceInNetworkStatus = DEVICE_IS_NOT_IN_A_NETWORK;
         WriteByteToFlash(EEOFFSET_PROVISION_LABEL,DeviceInfo.DeviceInNetworkStatus );    
 
-        const char *default_name = device_Name_Default;
-
-        memcpy ((char *)&DeviceInfo.DeviceName, default_name, sizeof (device_Name_Default));
-
+        const char *p = (char *)&DEVICE_NAME_DEFAULT;
+        memcpy ((char *)&DeviceInfo.DeviceName, p,sizeof (DeviceInfo.DeviceName));
         WriteDataToFlash(EEOFFSET_DEVICE_NAME_LABEL,DeviceInfo.DeviceName,sizeof(DeviceInfo.DeviceName));
 
         WriteByteToFlash(EEOFFSET_RE_PROVISION_STARTED_LABEL,DeviceInfo.StartReProvisioning );
 
         WriteByteToFlash(EEOFFSET_METRO_RESET_LABEL, METRO_RESET_CLEAR);
-
-        WriteByteToFlash(EEOFFSET_EERAM_RESET_LABEL, EERAM_RESET_CLEAR);
  
-        WriteByteToFlash(EEOFFSET_MAGIC_LABEL, MAGIC_VALUE);
+        WriteByteToFlash(EEOFFSET_MAGIC_LABEL,MAGIC_VALUE );
+
+        Metro_Load_Default_Calibration();
     }
 
+/*******************************************************************/
+	energy_reset_status = ReadByteFromFlash(EEOFFSET_ENERGY_RESET_LABEL);
+	if(energy_reset_status == UPDATE_ENERGY)
+	{
+		read_PhA_frwrd_energy();
+		read_PhA_reverse_energy();
+		read_PhB_frwrd_energy();
+		read_PhB_reverse_energy();
+	}
+	else
+	{
+		reset_energy();
+		//Metro calibration and configuration are not yet finalized
+		//setting NVS with default values which will be changed once Calibration and configuration is finalized
+		setDefaultMetroCalibConfig();
+		WriteByteToFlash(EEOFFSET_ENERGY_RESET_LABEL, UPDATE_ENERGY);
+	}
 /************************************************************************/
     //Check if the device is locked or not
     ReadValue = ReadByteFromFlash(EEOFFSET_DEVICE_LOCKED_LABEL);
     if (ReadValue == DEVICE_IS_LOCKED)
     {
         DeviceInfo.TheDeviceIsLocked = true;
-    }
-    {
-        WriteByteToFlash(EEOFFSET_DEVICE_LOCKED_LABEL, DEVICE_IS_NOT_LOCKED );
     }
 
     //Check if this build is a special build
@@ -871,9 +540,7 @@ void InitEE()
     else
     {
         WriteDataToFlash(EEOFFSET_BUILD_TYPE_LABEL,DeviceInfo.BuildType,sizeof(DeviceInfo.BuildType));
-        WriteByteToFlash(EEOFFSET_BUILD_TYPE_SAVED_LABEL,BUILD_TYPE_NOT_SAVED );
     }
-
 
 
     //Check if there is special part number
@@ -885,7 +552,6 @@ void InitEE()
     else
     {
         WriteDataToFlash(EEOFFSET_PROGRAMED_NEW_PART_NO_LABEL,DeviceInfo.NewProgramedPartNumber,sizeof(DeviceInfo.NewProgramedPartNumber));
-        WriteByteToFlash(EEOFFSET_PROGRAMED_NEW_PART_NO_SAVED_LABEL,NEW_PROGRAMMED_PART_NO_NOT_SAVED );
     }
 
     //temporary change for init of SBLCP
@@ -899,106 +565,6 @@ void InitEE()
        //This is to aviod a lot of issues like slow wi-fi
         esp_wifi_set_config(WIFI_IF_STA, &wifi_cfg);
     }
-
-    /************************************************************************/
-    calibration_init_status = ReadByteFromFlash(EEOFFSET_CALIBRATION_INIT_STATUS_LABEL);
-	if (calibration_init_status != CALIBRATION_INIT_DONE)
-	{
-		 Metro_Load_Default_Calibration();
-		 WriteByteToFlash(EEOFFSET_CALIBRATION_INIT_STATUS_LABEL, CALIBRATION_INIT_DONE);
-	}
-
-	/************************************************************************/
-
-	if ((eeram_ret = EERAM_Init()) != EERAM_SUCCESS)
-	{
-		ret = EERAM_I2C_ERR;
-	}
-
-	if (eeram_ret != EERAM_SUCCESS)
-	{
-		printf("EERAM init fail\n");
-	   	EERAM_Task_Stop_Execution();
-	   	EERAM_ReInit(ret);
-	   	EERAM_Task_Delete();
-
-	   	DeviceInfo.EERAMInitStatus = false;
-	}
-	else
-	{
-		DeviceInfo.EERAMInitStatus = true;
-		printf("EERAM Init Success\n");
-	}
-/****************** Init PRoduction data ********************************************/
-	ReadValue = ReadByteFromFlash(EEOFFSET_PROD_DATA_NVS_INIT);
-	if(ReadValue != PROD_NVS_INIT_DONE)
-	{
-		//Code comes here means the device is powered up for the very first time.
-		//Code comes here only one time at very first power up.
-		//Init the NVS space where production details are stored with
-		//default values. Set the Production data NVS space init done in NVS
-		SBLCP_enbaleFactoyMode();
-		SBLCP_resetProdDetails();
-		WriteByteToFlash(EEOFFSET_PROD_DATA_NVS_INIT, PROD_NVS_INIT_DONE);
-	}
-	else
-	{
-		// read production details from ESP NVS
-		DeviceDetails_st prod_details;
-		Pcbdetsils_st pcb_details;
-		size_t length;
-
-		set_FactoryModeStatus(ReadByteFromFlash(EEOFFSET_SBLCP_FACTORY_MODE));
-
-		memset(&prod_details, 0, sizeof(DeviceDetails_st));
-		length = ReadDataFromFlash(EEOFFSET_SET_PRODUCTION_DETAILS, (char *)&prod_details);
-		if(length > 0)
-		{
-			DeviceInfo.current_rating = prod_details.current_rating;
-			DeviceInfo.breaker_test_status = prod_details.breaker_test_status;
-			memcpy(&DeviceInfo.catalog_number, prod_details.catalog_number, sizeof(prod_details.catalog_number));
-			memcpy(&DeviceInfo.style_number, prod_details.style_number, sizeof(prod_details.style_number));
-			memcpy(&DeviceInfo.breaker_serial_no, prod_details.breaker_serial_no, sizeof(prod_details.breaker_serial_no));
-		}
-		uint32_t Communication_FW_Version = MY_FIRMWARE_VERSION;
-		sprintf(DeviceInfo.ESP_firmware_ver, "%x", Communication_FW_Version);
-
-		memset(&pcb_details, 0, sizeof(Pcbdetsils_st));
-		length = ReadDataFromFlash(EEOFFSET_SET_PCB_DETAILS, (char *)&pcb_details);
-		if(length > 0)
-		{
-			DeviceInfo.PCBA_test_status = pcb_details.PCBA_test_status;
-			DeviceInfo.PCB_hardware_ver = pcb_details.PCB_hardware_ver;
-			memcpy(&DeviceInfo.PCB_serial_number, pcb_details.PCB_serial_number, sizeof(pcb_details.PCB_serial_number));
-		}
-
-#if SBLCP_DEBUG
-		printf("\n");
-		printf("Current Rating:-[%d]\n", DeviceInfo.current_rating);
-		printf("breaker_test_status:-[%d]\n", DeviceInfo.breaker_test_status);
-		printf("catalog_number:-[%s]\n", DeviceInfo.catalog_number);
-		printf("style_number:-[%s]\n", DeviceInfo.style_number);
-		printf("breaker_serial_no:-[%s]\n", DeviceInfo.breaker_serial_no);
-		printf("ESP_firmware_ver:-[%s]\n", DeviceInfo.ESP_firmware_ver);
-		printf("STM_firmware_ver:-[%s]\n", DeviceInfo.STM_firmware_ver);
-
-		printf("PCBA_test_status:-[%d]\n", DeviceInfo.PCBA_test_status);
-		printf("PCB_hardware_ver:-[%d]\n", DeviceInfo.PCB_hardware_ver);
-		printf("PCB_serial_number:-[%s]\n", DeviceInfo.PCB_serial_number);
-		printf("\n");
-#endif
-	}
-    #ifdef _KEEP_REPORVISINING_EVERY_TIME_POWERING_UP_
-        if (DeviceInfo.DeviceInNetworkStatus == DEVICE_IS_IN_A_NETWORK)
-        {
-            wifi_prov_mgr_reset_provisioning();
-        }
-        ets_printf("RESET REMOVE CREDINTIAL \n");
-        DeviceInfo.DeviceInNetworkStatus = DEVICE_IS_NOT_IN_A_NETWORK;
-        DeviceInfo.WiFiConnected = false;
-        WriteByteToFlash(EEOFFSET_PROVISION_LABEL,DeviceInfo.DeviceInNetworkStatus );
-
-    #endif
 }
 
 /*=================================== HW_Init   =============================
@@ -1011,28 +577,23 @@ void HW_Init(void)
 {
 //	ets_printf("HW init\n");
     //Inputs
-#ifndef _ESP32_MINI_1_
     SetGPIO_InPut(SWITCH_ON_OFF_PIN_Pin);
-#endif
 
 
-//    SetGPIO_OutPut(RGB_R_PIN_Pin);
-//    SetGPIO_OutPut(RGB_G_PIN_Pin);
+    SetGPIO_OutPut(RGB_R_PIN_Pin);
+    SetGPIO_OutPut(RGB_G_PIN_Pin);
+    SetGPIO_OutPut(RGB_B_PIN_Pin);
     
-    SetGPIO_OutPut(BOARD_PIN_I2C_HS);
-
-
-//    SetGPIO_OutPut(TEST_PIN_2);
+    SetGPIO_OutPut(TEST_PIN_2);
 
     SetGPIO_OutPut(BOARD_PIN_CS);
     SetGPIO_OutPut(BOARD_PIN_RST);
     SetGPIO_OutPut(BOARD_PIN_TEST);
     SetGPIO_OutPut(BOARD_PIN_TEST1);
-    //SetGPIO_OutPut(BOARD_PIN_TEST2);
+    SetGPIO_OutPut(BOARD_PIN_TEST2);
     SetGPIO_ExtInterrupt(BOARD_PIN_CF3_ZA, GPIO_INTR_POSEDGE);
     SetGPIO_ExtInterrupt(BOARD_PIN_IRQ1, GPIO_INTR_NEGEDGE);
 }
-
 
 /*================== InitZeroCrossingInterrupt   =============================
 **    Function description :
@@ -1042,30 +603,16 @@ void HW_Init(void)
 void InitZeroCrossingInterrupt(void)
 {
 
-	uint8_t eth_mac[6] = {0};
-	metro_err_t ret = METRO_SUCCESS;
-
+	uint8_t eth_mac[6];
+	int8_t ret = METRO_SUCCESS;
     //This fucntion should be called one time after one second of powering up
     // To avoid a lot of issues releated to reseting while writing to EE
     // This time will be enough for Px green to intialize, writing cert and other tasks
     
     if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
     {    
-        //ets_printf("ConnectionString: %s\n",  DeviceInfo.ConnectionString);
-    	ets_printf("HostName: %s \n",  DeviceInfo.HostName);
+    	//ets_printf("HostName: %s \n",  DeviceInfo.HostName);
     	ets_printf("DeviceId: %s\n", DeviceInfo.DeviceId);
-
-                            ets_printf("New DPS parameters!\n");
-                            ets_printf("    DpsEndpoint:      %s\n", DeviceInfo.DpsEndpoint);
-                            ets_printf("    DpsIdScope:       %s\n", DeviceInfo.DpsIdScope);
-    	                    ets_printf("DeviceId: %s\n", DeviceInfo.DeviceId);
-                            ets_printf("    DpsSymmetricKey:  %s\n", DeviceInfo.DpsSymmetricKey);
-                            ets_printf("New ConnectionString: %s\n", DeviceInfo.ConnectionString);
-                            ets_printf("    HostName:         %s\n", DeviceInfo.HostName);
-                            ets_printf("    DeviceId:         %s\n", DeviceInfo.DeviceId);
-                            ets_printf("    SharedAccessKey:  %s\n", DeviceInfo.SharedAccessKey);                            
-
-
     	//ets_printf("SharedAccessKey: %s\n",  DeviceInfo.SharedAccessKey);
     }
     
@@ -1085,6 +632,23 @@ void InitZeroCrossingInterrupt(void)
     snprintf((char *)&DeviceInfo.MacAddress, sizeof (DeviceInfo.MacAddress), "%02X:%02X:%02X:%02X:%02X:%02X",
              eth_mac[0], eth_mac[1], eth_mac[2],eth_mac[3],eth_mac[4],eth_mac[5]);
 
+    if (DeviceInfo.MetroInitStatus)
+	{
+    	if ((ret = Metro_GPIO_IRQ_Init()) != METRO_SUCCESS)
+    	{
+    		ets_printf("IRQ Init fail\n");
+    		Metro_Task_Stop_Execution();
+    		Metro_Task_ReInit();
+    		Metro_Task_Delete();
+
+    	}
+    	else
+    	{
+    		ets_printf("IRQ Init success\n");
+    	}
+	}
+
+
     if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
     {
         ets_printf("ZeroCrossingIsInitiated \n");
@@ -1101,13 +665,13 @@ void InitZeroCrossingInterrupt(void)
     else
     {
         if (DeviceInfo.DeviceInNetworkStatus != DEVICE_IS_IN_A_NETWORK)
-        {
+        {    
             //start provisiong
             StartProvisioning();
         }
 
     }
-#else
+#else    
 
     if (DeviceInfo.StartReProvisioning == RE_START_PROVISIONING)
     {
@@ -1117,8 +681,6 @@ void InitZeroCrossingInterrupt(void)
         StartProvisioning();
     }
 #endif
-
-
 }    
 
 
@@ -1130,48 +692,19 @@ void InitZeroCrossingInterrupt(void)
 
 void SW_Init(void)
 {
-	metro_err_t ret = METRO_SUCCESS;
-
-	//Initialize Metrology
-	if (DeviceInfo.EERAMInitStatus)
-	{
-		if ((ret = Metro_Init()) != METRO_SUCCESS)
-		{
-			ets_printf("Metro Init fail\n");
-		}
-		else
-		{
-			ets_printf("Metro Init success\n");
-			if ((ret = Metro_GPIO_IRQ_Init()) != METRO_SUCCESS)
-			{
-				ets_printf("IRQ Init fail\n");
-			}
-			else
-			{
-				ets_printf("IRQ Init success\n");
-				DeviceInfo.MetroInitStatus = true;
-			}
-		}
-	}
-
-	if (ret != METRO_SUCCESS)
-	{
-		Metro_Task_Stop_Execution();
-		Metro_ReInit(ret);
-		Metro_Task_Delete();
-	}
+    uint8_t ret = METRO_SUCCESS;
 
     DisableSwitchs();
+
 
     KeyStateMachineInit();
 
     // reset timer countet
     ms_counter = 0;
 
-	BreakerDCIInit();
+    BreakerDCIInit();
 
-	GetConnectStringInfo();
-	GetDPSConcatenatedMessageFromIndividualFields();
+    GetConnectStringInfo();
 
     //initiate LED structure
     LED_Init();    
@@ -1186,23 +719,28 @@ void SW_Init(void)
         periph_module_disable(PERIPH_UART0_MODULE); //disable Uart0
     }
 
-#ifdef AHMED_ADD_CONNECTION_STRING_
-   // if (DeviceInfo.ConnectionStringSaved == false)
+    	//Initialize Metrology
+
+    if ((ret = Metro_Init()) != METRO_SUCCESS)
     {
-    	Test_AddingConnectionString();
+    	ets_printf("Metro Init fail\n");
+    	Metro_Task_Stop_Execution();
+    	Metro_Task_ReInit();
+
+    }
+    else
+    {
+    	DeviceInfo.MetroInitStatus = true;
+    	ets_printf("Metro Init success\n");
     }
 
-#endif
-
-#ifdef  _DELETE_CONNECTION_STRING_TO_TEST_DPS_
+#ifdef _AHMED_ADD_CONNECTION_STRING_
     if (DeviceInfo.ConnectionStringSaved == false)
     {
-        ets_printf("Deleting Connection String \n");
     	Test_AddingConnectionString();
     }
 
 #endif
-
 }
 
 
@@ -1228,29 +766,29 @@ void RefreshWatchDog()
 
 void MainFunction()
 {
-
-	// https://esp32developer.com/programming-in-c-c/timing/hardware-timers
-
-    uint32_t LocalTickTimer;
-
-    ms_counter++;
-
-    timer_10ms();
-	if (!(ms_counter%FIFTY_MS))
-	{
-			timer_50ms();
-	}
-	if (!(ms_counter%ONE_SECOND))
-	{
-		timer_1Sec();
-		ms_counter = 0;
-	}
-
-	if (Prod_Code_Sign_Complete)
-	{
-		Prod_Code_Sign_Complete= false;
-		InitZeroCrossingInterrupt();
-	}
+//
+//	// https://esp32developer.com/programming-in-c-c/timing/hardware-timers
+//
+//    uint32_t LocalTickTimer;
+//
+//    ms_counter++;
+//
+//    timer_10ms();
+//	if (!(ms_counter%FIFTY_MS))
+//	{
+//			timer_50ms();
+//	}
+//	if (!(ms_counter%ONE_SECOND))
+//	{
+//		timer_1Sec();
+//		ms_counter = 0;
+//	}
+//
+//	if (Prod_Code_Sign_Complete)
+//	{
+//		Prod_Code_Sign_Complete= false;
+//		InitZeroCrossingInterrupt();
+//	}
 }
 
 
@@ -1263,7 +801,7 @@ void ResetDevice(uint8_t ResetType, uint8_t Reset)
         // Please notice, no break is needed in this switch case        
         case MANUFACTURING_RESET :
             WriteByteToFlash(EEOFFSET_MAGIC_LABEL,0x00 );
-            WriteByteToFlash(EEOFFSET_EERAM_INIT_LABEL, 0x00);
+            WriteByteToFlash(EEOFFSET_ENERGY_RESET_LABEL, RESET_ENERGY);
 
         case PROVISIONING_RESET :
             if ((DeviceInfo.DeviceInNetworkStatus == DEVICE_IS_IN_A_NETWORK) || (DeviceInfo.WiFiConnected == true))
@@ -1310,90 +848,5 @@ void ResetDevice(uint8_t ResetType, uint8_t Reset)
     }
 }    
 
-int lockSB2Device()
-{
-	//TODO: remove below line for production build
-	esp_err_t err = ESP_FAIL;
-	ets_printf("Locking ESP32 \n");
-#if 0
-	esp_err_t err = ESP_OK;
-	if (get_statusOfBuildType() == true)
-	{
-
-		if (strcmp (DeviceInfo.BuildType,"Development")!= 0)
-		{
-			// Lock the device if we are not Development mode
-			uint8_t jtag;
-			ESP_ERROR_CHECK(esp_efuse_read_field_blob(ESP_EFUSE_DISABLE_JTAG, &jtag, 1));
-			ESP_LOGI(TAG, "2. jtag = %d", jtag);
-			if(jtag == 0)
-			{
-			   jtag = 1;
-			   ESP_ERROR_CHECK(esp_efuse_write_field_blob(ESP_EFUSE_DISABLE_JTAG, &jtag, 1));   //disable the JTAG
-			}
-
-			ESP_ERROR_CHECK(esp_efuse_read_field_blob(ESP_EFUSE_DISABLE_JTAG, &jtag, 1));
-			ESP_LOGI(TAG, "2. jtag = %d", jtag);
-			if(jtag == 0)
-			{
-				err = ESP_FAIL;
-			}
-			else
-			{
-				uint8_t uart_download;
-				ESP_ERROR_CHECK(esp_efuse_read_field_blob(ESP_EFUSE_UART_DOWNLOAD_DIS, &uart_download, 1));
-				ESP_LOGI(TAG, "2. uart_download = %d", uart_download);
-
-				if(uart_download == 0)
-				{
-				   uart_download = 1 ;
-				   ESP_ERROR_CHECK(esp_efuse_write_field_blob(ESP_EFUSE_UART_DOWNLOAD_DIS, &uart_download, 1));  //disable the UART DOWNLOAD
-				}
-				ESP_ERROR_CHECK(esp_efuse_read_field_blob(ESP_EFUSE_UART_DOWNLOAD_DIS, &uart_download, 1));
-				ESP_LOGI(TAG, "2. uart_download = %d", uart_download);
-				if(uart_download == 0)
-				{
-					err = ESP_FAIL;
-				}
-				else
-				{
-					  //  ESP_LOGI(TAG, "Done");
-						DeviceInfo.TheDeviceIsLocked = true;
-						WriteByteToFlash(EEOFFSET_DEVICE_LOCKED_LABEL,DEVICE_IS_LOCKED );
-						err = ESP_OK;
-				}
-			}
-
-		}
-		else
-		{
-			printf("build type is development \n");
-			err = ESP_FAIL;
-		}
-	}
-	else
-	{
-		printf("build type is not programmed\n");
-		err = ESP_FAIL;
-	}
-#endif
-	return err;
-}
-
             
-/**
- * @brief      This function returns current task state
- * @param[in]  TaskHandle_t task_handle
- * @retval     eTaskState Task state
-*/
-eTaskState Get_Task_State(TaskHandle_t task_handle)
-{
-	eTaskState task_state = 0;
-
-	if (task_handle != NULL)
-	{
-		task_state = eTaskGetState(task_handle);
-	}
-
-	return task_state;
-}
+    

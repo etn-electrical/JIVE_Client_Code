@@ -47,11 +47,8 @@ static bool     PreviousWiFiDisConnectionState = true;  // make it opposite of D
 
 char ErrorReportBuffer [(MAX_ERROR_DESCRIPTION_SIZE*2)+ STRFTIME_BUF_SIZE];
 
-#ifdef  _ERROR_LOG_DEBUG_
-#define MAX_ERROR_LOGS        59  //change if any new err log added into ErrLogDataInfo
-#else
-#define MAX_ERROR_LOGS        54  //change if any new err log added into ErrLogDataInfo
-#endif
+
+#define MAX_ERROR_LOGS        52  //change if any new err log added into ErrLogDataInfo
 const ErrLogDataInfo_str ErrLogDataInfo[] = {   // protection trip codes
 												//TODO: in PR review, need to remove from below unwanted codes
 												// Please don't forget to change MAX_ERROR_LOGS when you add more error logs
@@ -94,10 +91,6 @@ const ErrLogDataInfo_str ErrLogDataInfo[] = {   // protection trip codes
 												 { 0x50 , "FAILED_SELF_CHECK_OUTPUT"},
 												 { 0x51 , "FAILED_SELF_CHECK_CT_DIRECTION"},
 												 { 0x52 , "COMPLETE_LOSS_OF_ZCD_TRIP"},
-												 { 0x53 , "FAILED_TRIP_CIRCUIT_AUTO_MONITOR"},
-												 { 0x54 , "OVER_TEMP_EVENT_OCCURED"},
-												 { 0x55 , "OVER_TEMP_TRIP_EVENT_OCCURED"},
-												 { 0x56 , "COOLED_DOWN_EVENT"},
 												 { 0x60 , "SECONDARY_SWITCH_FAULT"},
 												 { 0x61 , "SECONDARY_SWITCH_STUCK_OPEN"},
 												 { 0x62 , "SECONDARY_SWITCH_STUCK_CLOSED"},
@@ -105,11 +98,7 @@ const ErrLogDataInfo_str ErrLogDataInfo[] = {   // protection trip codes
 												 { 0x64 , "SECONDARY_SWITCH_UNEXPECTED_CLOSED"},
 												 { 0x65 , "SECONDARY_SWITCH_UNEXPECTED_OVERLOAD"},
 												 { 0x66 , "SECONDARY_SWITCH_DEFAULT_TO_CLOSED"},
-												 { LOG_SPI_COMM_FAIL , "SPI Communication fail"},
-												 { LOG_SPI_COMM_ERR , "SPI Communication error LOG"},
-												 { LOG_I2C_COMM_FAIL , "I2C Communication fail"},
-												 { LOG_I2C_COMM_ERR , "I2C Communication error LOG"},
-
+												 { LOG_METRO_SPI_ERROR , "Metro_SPI_Error LOG"},
 												 // 128-255 USER_INITIATED_HW_FAULT_CODES various.
 
 #ifdef  _ERROR_LOG_DEBUG_
@@ -241,7 +230,7 @@ void ErrorLogOneSecondTimer()
         else
         {
             //The earliest one will be what the index pointing to and increasing till MaxLog and then go sequential till "ErrLogStr.Index - 1" + 1
-        	SendingToCloudCounter = ErrLogStr.Index-1;
+        	SendingToCloudCounter = ErrLogStr.Index;
         }
 
         SaveErrLogToNVM();
@@ -370,8 +359,7 @@ void SendErrLogToCloud(uint8_t LogIndex)
     // " NORMAL STARTUP at 123456789"
     
 
-    if (( (DeviceInfo.IoTConnected == true) && (DeviceInfo.WiFiDisconnected == false) )
-    		&& (ErrLogStr.ErrLogArray[LogIndex].CloudUpdated == false))
+    if (ErrLogStr.ErrLogArray[LogIndex].CloudUpdated == false)
     {
         ErrorPreperationLog(LogIndex);
         DCI_Update_ErroLogUpdate(&ErrorReportBuffer);
@@ -438,7 +426,6 @@ void ErrorPreperationLog(uint8_t index)
     char buff[MAX_ERROR_DESCRIPTION_SIZE] = "UNKNOWN ERROR";
     uint32_t    TimeStamp;
     uint32_t    event;
-    uint32_t    errorlog;
     //char strftime_buf[STRFTIME_BUF_SIZE];
 
     //memset( strftime_buf, 0, STRFTIME_BUF_SIZE );
@@ -446,7 +433,6 @@ void ErrorPreperationLog(uint8_t index)
 
     LogID = ErrLogStr.ErrLogArray[index].ErrorLog;
     TimeStamp = ErrLogStr.ErrLogArray[index].EpochTime;
-    errorlog = ErrLogStr.ErrLogArray[index].ErrorLog;
 #ifdef _ERROR_LOG_DEBUG_
     event = ErrLogStr.ErrLogArray[index].EventLog;
 #endif
@@ -456,11 +442,9 @@ void ErrorPreperationLog(uint8_t index)
         //ConvertEpochTimeToReadableFormat(TimeStamp,strftime_buf,STRFTIME_BUF_SIZE);
 #ifdef _ERROR_LOG_DEBUG_
         //sprintf(ErrorReportBuffer," Send To Cloud %s %u at %u   %s", buff,event,TimeStamp , strftime_buf);
-        //sprintf(ErrorReportBuffer," Send To Cloud %s %u at %u ", buff,event,TimeStamp );
-    	sprintf(ErrorReportBuffer,"%u,%x,%u,%s", event, errorlog, TimeStamp, buff );
+        sprintf(ErrorReportBuffer," Send To Cloud %s %u at %u ", buff,event,TimeStamp );
 #else
-        //sprintf(ErrorReportBuffer," Send To Cloud %s  at %u  ", buff,TimeStamp );
-    	sprintf(ErrorReportBuffer,"%x,%u,%s", errorlog, TimeStamp, buff);
+        sprintf(ErrorReportBuffer," Send To Cloud %s  at %u  ", buff,TimeStamp );
 #endif
     }
     else
@@ -468,15 +452,15 @@ void ErrorPreperationLog(uint8_t index)
 #ifdef _ERROR_LOG_DEBUG_
         if (TimeStamp == INVALID_TIME_STAMP)
         {
-            sprintf(ErrorReportBuffer," Write to NVM %s %u,%x  With Invalid Time Stamp", buff,event,errorlog);
+            sprintf(ErrorReportBuffer," Write to NVM %s %u  With Invalid Time Stamp", buff,event);
         }
         else
         {
-            sprintf(ErrorReportBuffer," Write to NVM %s %u,%x at %u", buff,event,errorlog,TimeStamp);
+            sprintf(ErrorReportBuffer," Write to NVM %s %u at %u", buff,event,TimeStamp);
         }
         
 #else
-        sprintf(ErrorReportBuffer," Write to NVM %u,%s at %u",errorlog, buff,TimeStamp);
+        sprintf(ErrorReportBuffer," Write to NVM %s at %u", buff,TimeStamp);
 #endif
     }
 #ifdef _ERROR_LOG_DEBUG_
@@ -516,9 +500,4 @@ typedef struct
 }EpochTimeConnect_str;
 
 #endif
-void get_TripLog(uint8_t *sblcp_trip_log)
-{
 
-	memcpy(sblcp_trip_log, ErrLogStr.ErrLogArray, sizeof(ErrLogStr.ErrLogArray));
-	sblcp_trip_log[sizeof(ErrLogStr.ErrLogArray)] = ErrLogStr.Index - 1;
-}

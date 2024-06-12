@@ -28,7 +28,7 @@
 #include <esp_log.h>
 #include "Breaker.h"
 // Enable the next line to demonstrate publishing of a product's "custom" IoT Message
-#define DEMO_CUSTOM_IOT_MESSAGES
+// #define DEMO_CUSTOM_IOT_MESSAGES
 extern DRAM_ATTR Device_Info_str DeviceInfo;
 
 #ifdef DEMO_CUSTOM_IOT_MESSAGES
@@ -72,10 +72,8 @@ void PROD_SPEC_IOT_Init( void )
 	iot_config.data_update_rate = new DCI_Owner( DCI_IOT_UPDATE_RATE_DCID );
 	iot_config.cadence_update_rate = new DCI_Owner( DCI_IOT_CADENCE_UPDATE_RATE_DCID );
 	iot_config.iot_conn_status_reason = new DCI_Owner( DCI_IOT_CONN_STAT_REASON_DCID );
-	iot_config.dps_endpoint = new DCI_Owner( DCI_IOT_DPS_ENDPOINT_DCID );
-	iot_config.dps_id_scope = new DCI_Owner( DCI_IOT_DPS_ID_SCOPE_DCID );
-	iot_config.dps_reg_id = new DCI_Owner( DCI_IOT_DPS_DEVICE_REG_ID_DCID );
-	iot_config.dps_device_sym_key = new DCI_Owner( DCI_IOT_DPS_SYMM_KEY_DCID );
+
+
 
 //Ahmed
    iot_config.device_guid->Check_In((DCI_DATA_PASS_TD *)DeviceInfo.DeviceId);
@@ -113,14 +111,10 @@ void PROD_SPEC_IOT_Init( void )
 		const iot_channel_config_struct_t* channel_config = &channel_list[i];
 		// coverity[leaked_storage]
 		new DCI_Owner( channel_config->dcid );
-		//printf("channel_config->dcid  %d \n",channel_config->dcid);
 
 	}
 	// Create the owners for the cadence channels. For now, don't do anything with them.
 #ifdef PX_GREEN_IOT_SUPPORT
-
-	//VECTOR_ functions need to be addressed
-	
 	/* Note: first tried this with the std::vector; it added 252 bytes to codespace.
 	 * But then saw in the .map file that VECTOR is available and already used in the Azure code. */
 	VECTOR_HANDLE cadence_owners = VECTOR_create( sizeof( DCI_Owner* ) );

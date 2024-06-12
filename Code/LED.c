@@ -153,6 +153,7 @@ void StopBlinkingLEDs ()
     else
     {
         SetRGB_Color(UNPROVISIONED_COLOR);
+
         if ( (DeviceInfo.ConnectionStringSaved == false) && (DeviceInfo.DidWeCheckTheConnectionString == true))
         {
           SetRGB_Color(NO_CONNECTION_STRING_PROGRAMMED_COLOR);
@@ -365,7 +366,6 @@ void SetST_LED()
 
 		memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
 		prepare_uart_command(&gm2m_uart_comm, LED_COLOR_BLINK_RATE, LED_color, interval_s, time_to_espire_s);
-		UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
 	}
 
     return;
@@ -396,18 +396,6 @@ void SetST_LED()
  **************************************************************************************************/
 void UpdateSTLED(bool force_update)
 {
-
-	//Patching as the unprovisioned color is set in the reset function before we checked for connection string
-	//and then is not reset to no connection string when we finally do check.
-	if ( (RGB_Color == UNPROVISIONED_COLOR)
-		 &&(DeviceInfo.ConnectionStringSaved == false)
-		 && (DeviceInfo.DidWeCheckTheConnectionString == true)
-	   )
-	{
-		(RGB_Color = NO_CONNECTION_STRING_PROGRAMMED_COLOR);
-	}
-
-
 	static uint16_t update_st_timer = 0;
 	uint16_t update_interval = ST_STANDARD_UPDATE_INTERVAL;
 	if(IsDeviceInProvisioningMode() == true)
@@ -427,15 +415,12 @@ void UpdateSTLED(bool force_update)
 		if (StartBlinkingLEDsFlag)
 		{
 			prepare_uart_command(&gm2m_uart_comm, LED_COLOR_BLINK_RATE, RGB_Color, BlinkingTimeInterval, BlinkingTimeExpire);
-			UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
 			//prepare_uart_command(&gm2m_uart_comm, LED_COLOR_BLINK_RATE, RGB_Color, BlinkingTimeInterval, BLINK_FOREVER);
-			//UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
 			//ets_printf("\n## LED_COLOR::[%d] payload_2:[%d] payload_3:[%d]\n",RGB_Color, BlinkingTimeInterval, BlinkingTimeExpire);
 		}
 		else
 		{
 			prepare_uart_command(&gm2m_uart_comm, LED_COLOR_BLINK_RATE, LED_UNASSIGNED_COLOR, 0, 0);
-			UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
 			//ets_printf("\n## LED_COLOR::[%d] payload_2:[%d] payload_3:[%d]\n",RGB_Color, 0, 0);
 		}
 	}
@@ -595,10 +580,10 @@ void TurnOnRGB(void)
 
 void TurnOffRGB(void)
 {
-//    gpio_set_level(TEST_PIN_2, LOW);
-//    gpio_set_level(RGB_R_PIN_Pin, HI);
-//    gpio_set_level(RGB_G_PIN_Pin, HI);
-//    gpio_set_level(RGB_B_PIN_Pin, HI);
+    gpio_set_level(TEST_PIN_2, LOW);
+    gpio_set_level(RGB_R_PIN_Pin, HI);
+    gpio_set_level(RGB_G_PIN_Pin, HI);
+    gpio_set_level(RGB_B_PIN_Pin, HI);
 }
 
 

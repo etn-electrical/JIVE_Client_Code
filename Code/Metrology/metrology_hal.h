@@ -9,9 +9,9 @@
  *
  * Author           : Kothe, AARTI J
  *
- * Last Changed By  : $Kothe, AARTI J $
+ * Last Changed By  : $Author: tia $
  * Revision         : $Revision: 1.0 $
- * Last Changed     : $Date: 02/09/2024
+ * Last Changed     : $Date: 07/19/2022
  *
  ****************************************************************************/
 
@@ -22,11 +22,17 @@
 * INCLUDE FILES:
 *******************************************************************************/
 #include "metro_utilities.h"
+#include "SBLCP.h"
 /*******************************************************************************
 * CONSTANTS & MACROS:
 *******************************************************************************/
 #define MILLI_DIV_FACTOR 		(double)1000.00
 #define MAX_WAVEFORM_CYCLES 8
+
+#define CURRENT_CONV_FACT 21.36473467
+#define VOLTAGE_CONV_FACT 18.3026904
+#define POWER_CONV_FACT 52.48344288
+#define ENERGY_CONV_FACT 29.8572475
 
 #define MAX_CONFIG_REG_16 9
 #define MAX_CONFIG_REG_32 2
@@ -38,28 +44,9 @@
 
 #define ZERO_ENERGY 0
 
-#define CURRENT_CONV_FACT 15.80390549
-#define VOLTAGE_CONV_FACT 22.77760229
-#define POWER_CONV_FACT 48.32020325
-#define ENERGY_CONV_FACT 27.51128955
-
-#define MAX_CH_ENERGIES 6
 /*******************************************************************************
 * TYPES:
 *******************************************************************************/
- /**
-  * @brief METROLOGY Energy definition
-  *
-  */
-typedef enum
-{
-  ACTIVE_EGY = 1,
-  REACTIVE_EGY,
-  APPARENT_EGY,
-}METRO_Energy_selection_t;
-
-
-
 typedef struct
 {
 //	32 bit RW reg
@@ -155,23 +142,20 @@ void Metro_HAL_read_Period(METRO_Channel_t in_Metro_Channel, uint32_t *raw_perio
 void Metro_HAL_read_Active_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *raw_energy);
 void Metro_HAL_read_Reactive_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *raw_energy);
 void Metro_HAL_read_Apparent_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *raw_energy);
-
-metro_err_t Metro_HAL_set_Channel_Gain(void);
-metro_err_t Metro_HAL_set_Config_regs(void);
-metro_err_t Metro_HAL_Write_Calibration_regs(void);
-metro_err_t Metro_HAL_Start_SPI_Com(void);
-metro_err_t Metro_HAL_get_Status_reg(uint32_t *status0_val);
-metro_err_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel);
-metro_err_t Metro_HAL_set_Status_reg(uint32_t value);
-metro_err_t Merto_HAL_SPI_Init(void);
-metro_err_t Metro_HAL_read_required_reg(void);
-metro_err_t Metro_HAL_Waveform_Cap_En(void);
-metro_err_t Metro_HAL_Waveform_Cap_Dis(void);
-metro_err_t Metro_HAL_read_Waveform_burst_data(void);
-metro_err_t Metro_HAL_read_Phase_Sign(METRO_Channel_t in_Metro_Channel, uint16_t *phase_sign);
-metro_err_t Metro_HAL_Redirect_Channels(void);
-metro_err_t Metro_HAL_set_EGY_TIME_reg(uint16_t timer_count);
-metro_err_t Metro_HAL_set_Energy_Threshold(void);
-
+uint8_t Metro_HAL_set_Channel_Gain(void);
+uint8_t Metro_HAL_set_Config_regs(void);
+uint8_t Metro_HAL_Write_Calibration_regs(void);
+uint8_t Metro_HAL_Start_SPI_Com(void);
+uint8_t Metro_HAL_get_Status_reg(uint32_t *status0_val);
+uint8_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel);
+uint8_t Metro_HAL_set_Status_reg(void);
+uint8_t Merto_HAL_SPI_Init(void);
+uint8_t Metro_HAL_read_required_reg(void);
+uint8_t Metro_HAL_Waveform_Cap_En(void);
+uint8_t Metro_HAL_Waveform_Cap_Dis(void);
+uint8_t Metro_HAL_read_Waveform_burst_data(void);
+void Metro_HAL_read_Phase_Sign(METRO_Channel_t in_Metro_Channel, uint16_t *phase_sign);
+uint8_t Metro_HAL_Redirect_Channels(void);
+uint8_t Metro_HAL_Write_EOL_Calibration_Params(BreakerEOLCalibration_st *pBreakerEOLCalibration);
 #endif /* __METROLOGY_HAL_H */
 

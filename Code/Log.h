@@ -23,12 +23,11 @@
 /****************************************************************************
  *                              CONSTANTS & MACROS:
  ****************************************************************************/
+#define RESET_ENERGY				0x00
+#define UPDATE_ENERGY				0x11
+
 #define METRO_RESET_CLEAR			0xA5
 #define METRO_RESET					0x5A
-#define CALIBRATION_INIT_DONE		0x22
-#define EERAM_READY				0x11
-#define EERAM_RESET_CLEAR			0xA0
-#define EERAM_RESET					0x0A
 /****************************************************************************/
 /*                     EXPORTED TYPES and DEFINITIONS                       */
 /****************************************************************************/
@@ -58,8 +57,22 @@ extern "C"
 /*******************************************************************************
 * FUNCTIONS:
 *******************************************************************************/
+void write_PhA_Frwrd_energy();
+void write_PhB_frwrd_energy();
+void write_PhA_reverse_energy();
+void write_PhB_reverse_energy();
+int8_t reset_energy();
+int8_t reset_nonResettable_energy();
+void read_PhA_frwrd_energy();
+void read_PhB_frwrd_energy();
+void read_PhA_reverse_energy();
+void read_PhB_reverse_energy();
+
 void nvs_write_metro_calib(metro_calib_struct calib_factors);
+void write_metro_config();
 size_t nvs_read_metro_calib(metro_calib_struct *calib_factors);
+void read_metro_config();
+void setDefaultMetroCalibConfig();
 
 #ifdef __cplusplus
 }

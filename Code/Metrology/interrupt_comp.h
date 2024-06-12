@@ -5,13 +5,13 @@
  ****************************************************************************
  * Description      : IoT Platform Smart Breaker 2.0
  *
- * File name        : interrupt_comp.h
+ * File name        : spi_comp.h
  *
  * Author           : Kothe, AARTI J
  *
- * Last Changed By  : $Kothe, AARTI J $
+ * Last Changed By  : $Author: tia $
  * Revision         : $Revision: 1.0 $
- * Last Changed     : $Date: 08/24/2023
+ * Last Changed     : $Date: 07/18/2022
  *
  ****************************************************************************/
 

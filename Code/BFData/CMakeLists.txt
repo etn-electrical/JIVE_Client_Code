@@ -1,6 +1,6 @@
 #Set source files 
-set( srcs
-	 
+set( srcs "DCI_Data.cpp"
+	  "BLE_DCI_Data.cpp"
 	  "IOT_DCI_Data.cpp"
 	  "REST_DCI_Data.cpp"
 	  "Base_DCI_BACnet_Data.cpp"

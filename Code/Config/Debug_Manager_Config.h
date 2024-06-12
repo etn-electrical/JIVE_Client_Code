@@ -18,10 +18,6 @@
 #ifndef DEBUG_MANAGER_CONFIG_H
 #define DEBUG_MANAGER_CONFIG_H
 
-//#define _DISABLE_DEBUG_MESSAGES_
-
-
-
 /*  Macro for enabling Debug Manager functionality for Debug Print
  *  Do not enable Term Print or Modbus UART if enabling Debug Manager
  *  as they all use same UART interface.
@@ -92,75 +88,38 @@ extern void UARTDebug( const char* pcString, ... );
 #define BF_DBG_MSG_EMERGENCY    DBG_ON
 #define BF_DBG_MSG_ERROR        DBG_ON
 #define BF_DBG_MSG_CRITICAL     DBG_ON
-
-
-
+#define BF_DBG_MSG_INFO         DBG_ON
+#define BF_DBG_MSG_DEBUG        DBG_ON
 
 /*
  * Module level configuration
  */
-#ifndef _DISABLE_DEBUG_MESSAGES_
-	#define BF_DBG_MSG_INFO         DBG_OFF
-	#define BF_DBG_MSG_DEBUG        DBG_OFF
-
-	#define BF_PROD_SPEC_DBG        DBG_OFF
-	#define BF_DCI_DBG              DBG_OFF
-	#define BF_DSI_DBG              DBG_OFF
-	#define BF_USER_SESS_DBG        DBG_OFF
-	#define BF_NV_CTRL_DBG          DBG_OFF
-	#define BF_TLS_SERVER_DBG       DBG_OFF
-	#define BF_SSL_CONN_DBG         DBG_OFF
-	#define BF_ETHERNET_DBG         DBG_OFF
-	#define BF_BLE_DBG              DBG_OFF
-	#define BF_EIP_DBG              DBG_OFF
-	#define BF_REST_DBG             DBG_OFF
-	#define BF_WEBSERVER_DBG        DBG_OFF
-	#define BF_FAULTS_DBG           DBG_OFF
-	#define BF_CR_TASKER_DBG        DBG_OFF
-	#define BF_FUS_DBG              DBG_ON
-	#define BF_PKI_DBG              DBG_OFF
-	#define BF_FREERTOS_DBG         DBG_OFF
-	#define BF_USER_ACC_DBG         DBG_OFF
-	#define BF_IOT_DBG              DBG_ON
-	#define BF_ACD_DBG              DBG_OFF
-	#define BF_LANGUAGE_DBG         DBG_OFF
-	#define BF_MODBUS_TCP_DBG       DBG_OFF
-	#define BF_PTP_DBG              DBG_OFF
-	#define BF_IEC61850_DBG         DBG_OFF
-	#define BF_TEST_CODE_DBG        DBG_OFF
-	#define BF_HAL_DBG              DBG_OFF
-#else
-
-	#define BF_DBG_MSG_INFO         DBG_OFF
-	#define BF_DBG_MSG_DEBUG        DBG_OFF
-
-	#define BF_PROD_SPEC_DBG        DBG_OFF
-	#define BF_DCI_DBG              DBG_OFF
-	#define BF_DSI_DBG              DBG_OFF
-	#define BF_USER_SESS_DBG        DBG_OFF
-	#define BF_NV_CTRL_DBG          DBG_OFF
-	#define BF_TLS_SERVER_DBG       DBG_OFF
-	#define BF_SSL_CONN_DBG         DBG_OFF
-	#define BF_ETHERNET_DBG         DBG_OFF
-	#define BF_BLE_DBG              DBG_OFF
-	#define BF_EIP_DBG              DBG_OFF
-	#define BF_REST_DBG             DBG_OFF
-	#define BF_WEBSERVER_DBG        DBG_OFF
-	#define BF_FAULTS_DBG           DBG_OFF
-	#define BF_CR_TASKER_DBG        DBG_OFF
-	#define BF_FUS_DBG              DBG_OFF
-	#define BF_PKI_DBG              DBG_OFF
-	#define BF_FREERTOS_DBG         DBG_OFF
-	#define BF_USER_ACC_DBG         DBG_OFF
-	#define BF_IOT_DBG              DBG_OFF
-	#define BF_ACD_DBG              DBG_OFF
-	#define BF_LANGUAGE_DBG         DBG_OFF
-	#define BF_MODBUS_TCP_DBG       DBG_OFF
-	#define BF_PTP_DBG              DBG_OFF
-	#define BF_IEC61850_DBG         DBG_OFF
-	#define BF_TEST_CODE_DBG        DBG_OFF
-	#define BF_HAL_DBG              DBG_OFF
-#endif //#ifndef _DISABLE_DEBUG_MESSAGES_
+#define BF_PROD_SPEC_DBG        DBG_ON
+#define BF_DCI_DBG              DBG_OFF
+#define BF_DSI_DBG              DBG_OFF
+#define BF_USER_SESS_DBG        DBG_OFF
+#define BF_NV_CTRL_DBG          DBG_OFF
+#define BF_TLS_SERVER_DBG       DBG_OFF
+#define BF_SSL_CONN_DBG         DBG_OFF
+#define BF_ETHERNET_DBG         DBG_ON
+#define BF_BLE_DBG              DBG_OFF
+#define BF_EIP_DBG              DBG_OFF
+#define BF_REST_DBG             DBG_OFF
+#define BF_WEBSERVER_DBG        DBG_OFF
+#define BF_FAULTS_DBG           DBG_OFF
+#define BF_CR_TASKER_DBG        DBG_OFF
+#define BF_FUS_DBG              DBG_ON
+#define BF_PKI_DBG              DBG_ON
+#define BF_FREERTOS_DBG         DBG_OFF
+#define BF_USER_ACC_DBG         DBG_OFF
+#define BF_IOT_DBG              DBG_OFF
+#define BF_ACD_DBG              DBG_OFF
+#define BF_LANGUAGE_DBG         DBG_OFF
+#define BF_MODBUS_TCP_DBG       DBG_OFF
+#define BF_PTP_DBG              DBG_OFF
+#define BF_IEC61850_DBG         DBG_OFF
+#define BF_TEST_CODE_DBG        DBG_ON
+#define BF_HAL_DBG              DBG_OFF
 
 // <<<< ADD 	NEW MODULE ENTRY HERE >>>>
 

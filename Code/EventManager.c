@@ -47,10 +47,11 @@
 /****************************************************************************/
 /*                              Global variables                            */
 /****************************************************************************/
-
 extern Switch_Info_Str SwitchInfo;
 extern DRAM_ATTR Device_Info_str DeviceInfo;
-extern M2M_UART_COMMN gm2m_uart_comm;
+
+extern metro_flag_t g_metroFlag;
+extern M2M_UART_COMMN gm2m_uart_comm_ss_onoff;
 
 uint8_t OneHourCounter = 0;
 
@@ -73,13 +74,28 @@ uint8_t WriteToFlashTimer = WRITING_TO_FLASH_WAIT_TIMER;
 **    Function description :
 **    This function is called from timer_10ms();
 **-----------------------------------------------------------------------*/
+
 void Event_10msTimer()
 {
-	//Sends event to Metro task to get status of metrology events
-	//i.e. Waveform capture, Energy ready, Energy sign change event etc.
+	#define METRO_CALIB_SAMPLE_TIMER 2 	//means every 20 msec
+    static uint8_t MetroCalibSampleTimer = METRO_CALIB_SAMPLE_TIMER;
 
-	Metro_Get_Event_Status();
+	if (MetroCalibSampleTimer != 0)
+	{
+		MetroCalibSampleTimer--;
+	}
+
+	if(MetroCalibSampleTimer == 0)
+	{
+		MetroCalibSampleTimer = METRO_CALIB_SAMPLE_TIMER;
+
+		if (g_metroFlag.data_average_status)
+		{
+			Metro_Read_Event_Set();
+		}
+	}
 }
+
 
 /*=========================== Event_50msTimer  ==========================
 **    Function description :
@@ -91,14 +107,72 @@ void Event_50msTimer()
     #define UPDATE_DCI  1 // means every 50ms
     #define UPDATE_OTA_RGB  5 // means every 250ms
 
+	#define READ_METRO_TIMER 20 	//means every 1 sec
+	#define READ_ENERGY_TIMER 100	 //means every 5 sec
+	#define UPDATE_ENERGY_TIMER 1200	//means every 30 mins
+	#define TRENDING_DATA_TIMER 6000 //means every 5 mins
+
     static uint8_t UpdateDCI = UPDATE_DCI;
     static uint8_t UpdateOTA_RGB = UPDATE_OTA_RGB;
 
     static RGB_COLOR OTA_LedIndicator  = RGB_RED;
     static bool  TurnRGB_Flag= true;
     static OTA_State_enum PrevOTA_State = OTA_NON;
+    
+    static uint8_t ReadEnergyTimer = READ_ENERGY_TIMER;
+    static uint16_t UpdateEnergyTimer = UPDATE_ENERGY_TIMER;
+    static uint8_t ReadMetroTimer = READ_METRO_TIMER;
+    static uint16_t TrendingDataTimer = TRENDING_DATA_TIMER;
 
-    bool trending_data_ready = false;
+
+	if (ReadEnergyTimer != 0)
+	 {
+		ReadEnergyTimer--;
+	 }
+
+	if(ReadEnergyTimer == 0)
+	{
+		ReadEnergyTimer = READ_ENERGY_TIMER;
+		g_metroFlag.read_Energy = true;
+	}
+
+
+	if (UpdateEnergyTimer != 0)
+	{
+		UpdateEnergyTimer--;
+	}
+	if(UpdateEnergyTimer == 0)
+	{
+		UpdateEnergyTimer = UPDATE_ENERGY_TIMER;
+		g_metroFlag.energy_nvs_write = true;
+	}
+
+
+	if (TrendingDataTimer != 0)
+	{
+		TrendingDataTimer--;
+	}
+	if(TrendingDataTimer == 0)
+	{
+		TrendingDataTimer = TRENDING_DATA_TIMER;
+		g_metroFlag.trending_data_timer = true;
+	}
+
+
+	if (ReadMetroTimer != 0)
+	{
+		ReadMetroTimer--;
+	}
+
+	if(ReadMetroTimer == 0)
+	{
+		ReadMetroTimer = READ_METRO_TIMER;
+
+		if (!g_metroFlag.data_average_status)
+		{
+			g_metroFlag.read_data = true;
+		}
+	}
 
 #ifdef _DEBUG_    
     static uint32_t AppTimer = 0;
@@ -113,8 +187,7 @@ void Event_50msTimer()
     {
         UpdateDCI = UPDATE_DCI;
 
-
-        if ((DeviceInfo.IoTConnected == true) && (DeviceInfo.WiFiDisconnected == false))
+        if  (DeviceInfo.PxInitiated == true)
         {
             DCI_UpdatePrimaryContactStatus();
             DCI_UpdateSecondaryContactStatus();
@@ -123,9 +196,7 @@ void Event_50msTimer()
         	DCI_UpdateSecondaryState();
         	DCI_UpdatePathStatus();
 
-        	DCI_UpdateSblcpEnDisStatus();
-
-            if((trending_data_ready = Metro_Get_Trending_Data_Status()) == true)
+            if(g_metroFlag.update_trending_data == true)
             {
 				DCI_Update_VoltageL1();
 				DCI_Update_VoltageL2();
@@ -166,12 +237,7 @@ void Event_50msTimer()
 				DCI_Update_RevApparentEnergyL1();
 				DCI_Update_RevApparentEnergyL2();
 
-				DCI_Update_LoadPercent();
-				DCI_Update_Temperature();
-
-				DCI_Update_Wifi_RSS_Signal_Strength();
-
-				Metro_Set_Trending_Data_Status(false);
+				g_metroFlag.update_trending_data = false;
 
             }
 
@@ -186,6 +252,7 @@ void Event_50msTimer()
                 DCI_UpdateNewProgrammedPartNumber();
             }
         }
+
     }
 
     if (ToggleFlag)
@@ -200,6 +267,7 @@ void Event_50msTimer()
             TurnBreakerOff();
         }
     }
+
 
 #ifdef _DEBUG_        
     if (AppTimerFlag)
@@ -337,8 +405,6 @@ void Event_1MinuteTimer()
         //Disable sending report based on Dmitry recommendation
         //DeviceInfo.ACK_SendChangeReportDueToLocalControl = true;
     }
-    DCI_UpdateIdentifyMeStatus();
-//	Ask_For_Temperature();
 
 }
 
@@ -570,61 +636,11 @@ void ToggleBreakerState(void)
 	//        ets_printf(" SendingTimeStartTick %d \n", SendingTimeStartTick);
 	//    }
 
-	memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
+	memset(&gm2m_uart_comm_ss_onoff, 0x00, sizeof(gm2m_uart_comm_ss_onoff));
 	//enable code and test on P0
-	prepare_uart_command(&gm2m_uart_comm, BREAKER_OPEN_CLOSE, SECONDARY_CONTACTS_TOGGLE, NO_PAYLOAD_2, NO_PAYLOAD_2);
-	UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
+	prepare_uart_command(&gm2m_uart_comm_ss_onoff, BREAKER_OPEN_CLOSE, SECONDARY_CONTACTS_TOGGLE, NO_PAYLOAD_2, NO_PAYLOAD_2);
 }
 
-/*=================================== IdentifyMe   =======================
-**    Function description :
-**         IdentifyMe (LEd blinking)
-**
-**--------------------------------------------------------------------------*/
-void IdentifyMeBegin()
-{
-	memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
-	prepare_uart_command(&gm2m_uart_comm, IDENTIFY_ME, NO_PAYLOAD, NO_PAYLOAD_2, NO_PAYLOAD_2);
-	UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
-}
-
-/*=================================== TurnBreakerOn   =======================
-**    Function description :
-**         IdentifyMe (LEd blinking)
-**
-**--------------------------------------------------------------------------*/
-void updateStartupConfig(uint8_t startup_config)
-{
-	const char *TX_EE_TASK_TAG = "TX_BYTES";
-
-	//Currently only using bool version of startup configuration do to cap implementation limitations.
-	if(startup_config > 1)
-	{
-		startup_config = 1;
-	}
-
-	EERAM_Set_Startup_Config(startup_config);
-
-	memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
-	prepare_uart_command(&gm2m_uart_comm, SET_STARTUP_CONFIG, startup_config, NO_PAYLOAD_2, NO_PAYLOAD_2);
-	UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
-
-	//We do not need to update this periodically as it only updates from the cloud and once during initialization.
-	DCI_UpdatePowerUpState(startup_config);
-}
-
-/*=================================== ReadTemperature   =======================
-**    Function description :
-**         ReadTemperature ()
-**
-**--------------------------------------------------------------------------*/
-
-void ReadTemperature()
-{
-	memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
-	prepare_uart_command(&gm2m_uart_comm, UPDATE_TEMPERATURE, NO_PAYLOAD, NO_PAYLOAD_2, NO_PAYLOAD_2);
-	UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
-}
 /*=================================== TurnBreakerOn   =======================
 **    Function description :
 **         Turn on Breaker (secondery contact
@@ -658,10 +674,9 @@ void TurnBreakerOn ()
     if ( (DeviceInfo.SecondaryContactState != SS_CLOSED) )
 #endif
     {
-    	memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
+    	memset(&gm2m_uart_comm_ss_onoff, 0x00, sizeof(gm2m_uart_comm_ss_onoff));
 		//enable code and test on P0
-		prepare_uart_command(&gm2m_uart_comm, BREAKER_OPEN_CLOSE, SECONDARY_CONTACTS_CLOSE, NO_PAYLOAD_2, NO_PAYLOAD_2);
-		UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
+		prepare_uart_command(&gm2m_uart_comm_ss_onoff, BREAKER_OPEN_CLOSE, SECONDARY_CONTACTS_CLOSE, NO_PAYLOAD_2, NO_PAYLOAD_2);
     }
 
    // DeviceInfo.SecondaryContactState        = LOAD_ON;
@@ -712,10 +727,9 @@ void TurnBreakerOff ()
 #endif
     {
       // DeviceInfo.SecondaryContactState = LOAD_OFF;
-      memset(&gm2m_uart_comm, 0x00, sizeof(gm2m_uart_comm));
+      memset(&gm2m_uart_comm_ss_onoff, 0x00, sizeof(gm2m_uart_comm_ss_onoff));
       //	enable code and test on P0
-      prepare_uart_command(&gm2m_uart_comm, BREAKER_OPEN_CLOSE, SECONDARY_CONTACTS_OPEN, NO_PAYLOAD_2, NO_PAYLOAD_2);
-      UART_Send_Event_To_Queue((void *)&gm2m_uart_comm);
+      prepare_uart_command(&gm2m_uart_comm_ss_onoff, BREAKER_OPEN_CLOSE, SECONDARY_CONTACTS_OPEN, NO_PAYLOAD_2, NO_PAYLOAD_2);
     }
 #ifdef _AUTOMATIC_PROVISIONIG_NO_BUTTONS_OR_RESET_    
     SetRGB_Color(RGB_WHITE);
@@ -733,9 +747,6 @@ void TurnBreakerOff ()
 void EventOneSeconedTimer(void)
 {
     static bool SendMaticMessageFlag = false;
-	#define UPDATE_TEMP  10 // means every 10s
-
-    static uint8_t updatetemp = UPDATE_TEMP;
 
 #ifdef _DEBUG_
     static uint8_t i = 0;
@@ -748,15 +759,7 @@ void EventOneSeconedTimer(void)
         SendingTimeDifference = SendingTimeEndTick - SendingTimeStartTick;
         ets_printf(" \n SendingTimeDifference %d \n", SendingTimeDifference);
     }
-    if (updatetemp != 0)
-    {
-    	updatetemp--;
-    }
-    else
-    {
-    	updatetemp = UPDATE_TEMP;
-    	Ask_For_Temperature();
-    }
+
 }
 
 /****************************************************************************
@@ -777,6 +780,7 @@ void Set_LED_Pattern(void)
     else
     {
         SetRGB_Color(UNPROVISIONED_COLOR);
+
         if ( (DeviceInfo.ConnectionStringSaved == false) && (DeviceInfo.DidWeCheckTheConnectionString == true))
         {
             SetRGB_Color(NO_CONNECTION_STRING_PROGRAMMED_COLOR);

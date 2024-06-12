@@ -28,7 +28,7 @@ set CROSS_SIGN=0
 
 
 :: local sign certs and keys path
-set LOCAL_FVK_NAME=Smartbreaker2
+set LOCAL_FVK_NAME=PXGreen
 set LOCAL_FVK_KEY=%LOCAL_FVK_NAME%.pub.der
 set LOCAL_RVK_KEY=ca.pub.der
 set LOCAL_KEY_PATH=Local_Sign\public\
@@ -41,15 +41,15 @@ set LOCAL_TRUSTED_KEY_PATH=Local_Sign\trusted\public\
 set LOCAL_TRUSTED_RVK_KEY=ca.pub.der
 
 :: server sign certs and keys path
-set SERVER_FVK_KEY=FW-Smartbreaker2-CMS.pub.der
+set SERVER_FVK_KEY=CNPXGreen_OUElectrical Sector_OEaton.pub.der
 set SERVER_RVK_KEY=Eaton_Commercial_Root_CA_1.pub.der
 set SERVER_KEY_PATH=Server_Sign\public\
-set SERVER_FVK_CERT_DER=FW-Smartbreaker2-CMS.der
+set SERVER_FVK_CERT_DER=CNPXGreen_OUElectrical Sector_OEaton.der
 set SERVER_IVK_CERT_DER=Eaton_Firmware_Signing_MA_Issuing_CA_1.crt
 set SERVER_CERT_PATH=Server_Sign\certs\
 REM will have a folder in Server_Sign which will have trusted certs
 set SERVER_TRUSTED_CERT_PATH=Server_Sign\trusted\certs\
-set SERVER_TRUSTED_FVK_CERT_DER=FW-Smartbreaker2-CMS.der
+set SERVER_TRUSTED_FVK_CERT_DER=CNPXGreen_OUElectrical Sector_OEaton.der
 set SERVER_TRUSTED_KEY_PATH=Server_Sign\trusted\public\
 set SERVER_TRUSTED_RVK_KEY=Eaton_Commercial_Root_CA_1.pub.der
 
@@ -94,7 +94,7 @@ if '%choice%'=='1' (
 	set app_path=%prj_path%build\
 	::ESP32 has two OTA partitions, size of both partitions is same hence you can provide start and end address of any partition.. These addresses are used to verify that length of application is within range.
 	set App_fw_HexBaseAddr=0x00000000
-        set App_fw_HexEndAddr=0x0017ffff
+	set App_fw_HexEndAddr=0x0017ffff
 	set Web_Fw_HexBaseAddr=0x00000000
 	set Web_Fw_HexEndAddr=0x00080000
 	set App_Code_Pack_INI_Path=%Code_Pack_INI_Path%ESP32_INI

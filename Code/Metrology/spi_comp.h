@@ -9,9 +9,9 @@
  *
  * Author           : Kothe, AARTI J
  *
- * Last Changed By  : $Kothe, AARTI J $
+ * Last Changed By  : $Author: tia $
  * Revision         : $Revision: 1.0 $
- * Last Changed     : $Date: 02/09/2024
+ * Last Changed     : $Date: 07/18/2022
  *
  ****************************************************************************/
 
@@ -29,38 +29,37 @@
 #include "esp_system.h"
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
+#include "ADE9000.h"
 #include "metro_utilities.h"
 #include "../DeviceGPIO.h"
-#include "ADE9039.h"
 
 /*******************************************************************************
 * GLOBAL VARIABLES:
 *******************************************************************************/
+#define AD_SPI_HOST    HSPI_HOST
 #define SPI_TX_BUF_SIZE 6
 #define SPI_RX_BUF_SIZE 8
 #define BYTE 8
 
-#define SPI_PACKET16_BUF_SIZE 4
-#define SPI_PACKET16_BUF_SIZE_CRC 6
-#define SPI_PACKET32_BUF_SIZE 6
-#define SPI_PACKET32_BUF_SIZE_CRC 8
+#define SPI_PACKET_16_BUF_SIZE 4
+#define SPI_PACKET_16_BUF_SIZE_CRC 6
+#define SPI_PACKET_16_START_INDEX 2
+#define SPI_DATA_BYTES_16 2
 
-#define SPI_DATA16_SIZE 2
-#define SPI_DATA32_SIZE 4
-
-#define SPI_CRC_SIZE 2
-
-#define SPI_DATA_START_INDEX 2
-#define SPI_DATA16_CRC_START_INDEX 4
-#define SPI_DATA32_CRC_START_INDEX 6
+#define SPI_PACKET_32_BUF_SIZE 6
+#define SPI_PACKET_32_BUF_SIZE_CRC 8
+#define SPI_PACKET_32_START_INDEX 2
+#define SPI_DATA_BYTES_32 4
 
 #define BURST_READ_TX_BUF_SIZE 4
+
 #define SIGNAL_NOT_USED -1
+#define SPI_DMA_MODE 3
 #define SPI_QUEUE_SIZE 6
 #define SPI_INPUT_DELAY_MS 10
-#define SPI_CLK_FREQ 10000000	//10Mhz
+#define SPI_CLK_FREQ 10000000
 
-#define METRO_SPI_CRC_EN 1
+//#define METRO_SPI_CRC_EN
  /*******************************************************************************
  * TYPES:
  *******************************************************************************/
@@ -89,18 +88,18 @@
  /*******************************************************************************
  * FUNCTIONS:
  *******************************************************************************/
- metro_err_t SPI_Read_ADE9039_Reg_16(uint16_t  us_ADE_Addr, uint16_t* spi_read_data);
- metro_err_t SPI_Read_ADE9039_Reg_32(uint16_t  us_ADE_Addr, uint32_t* spi_read_data);
- metro_err_t SPI_Write_ADE9039_Reg_32(uint16_t us_ADE_Addr, uint32_t Reg_Data);
- metro_err_t SPI_Write_ADE9039_Reg_16(uint16_t us_ADE_Addr, uint16_t Reg_Data);
- metro_err_t SPI_Comp_SendAndReceivePacket_16(uint8_t * data_snd, uint8_t * data_rcv);
- metro_err_t SPI_Comp_SendAndReceivePacket_32(uint8_t * data_snd, uint8_t * data_rcv);
- metro_err_t SPI_Comp_SendAndReceivePacket_burst(uint8_t * data_snd, uint16_t total_bytes, uint8_t *rx_buffer);
- metro_err_t SPI_Burst_Read(uint16_t  us_ADE_Addr);
- metro_err_t SPI_Init(void);
- void SPI_AD_En_CS(spi_transaction_t *t);
- void SPI_AD_Ds_CS(spi_transaction_t *t);
- uint16_t SPI_CRC_CCITT16_Cal32(uint8_t data_rcv[SPI_RX_BUF_SIZE], uint8_t total_bytes);
- metro_err_t SPI_CRC_Check(uint8_t total_bytes, uint8_t data_rcv[SPI_RX_BUF_SIZE]);
+ uint8_t Read_SPI_ADE9039_Reg_16(uint16_t  us_ADE_Addr, uint16_t* spi_read_data);
+ uint8_t Read_SPI_ADE9039_Reg_32(uint16_t  us_ADE_Addr, uint32_t* spi_read_data);
+ uint8_t Write_SPI_ADE9039_Reg_32(uint16_t us_ADE_Addr, uint32_t Reg_Data);
+ uint8_t Write_SPI_ADE9039_Reg_16(uint16_t us_ADE_Addr, uint16_t Reg_Data);
+ uint8_t SPI_Comp_SendAndReceivePacket_16(uint8_t * data_snd, uint8_t * data_rcv);
+ uint8_t SPI_Comp_SendAndReceivePacket_32(uint8_t * data_snd, uint8_t * data_rcv);
+ uint8_t SPI_Comp_SendAndReceivePacket_burst(uint8_t * data_snd, uint16_t total_bytes, uint8_t *rx_buffer);
+ uint8_t Burst_Read_SPI_ADE9039(uint16_t  us_ADE_Addr /*uint16_t *Reg_Data */,uint16_t total_bytes);
+ uint8_t SPI_Init(void);
+ void AD_En_CS(spi_transaction_t *t);
+ void AD_Ds_CS(spi_transaction_t *t);
+ uint16_t CRC_CCITT16_Cal32(uint8_t total_bytes);
+ uint16_t CRC_Check(uint8_t total_bytes);
 
 #endif

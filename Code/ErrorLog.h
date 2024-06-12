@@ -58,7 +58,7 @@
 
 
 #ifdef _ERROR_LOG_DEBUG_
-    #define ERROR_LOG_SIZE                    100
+    #define ERROR_LOG_SIZE                    10
 #else
     #define ERROR_LOG_SIZE                    100
 #endif
@@ -73,10 +73,7 @@
 #define EPOCH_TIME_Jan_1_2023           1672549200 //0x63B11350
 #define INVALID_TIME_STAMP              0xFFFFFFFF
 
-#define LOG_SPI_COMM_FAIL				0x75
-#define LOG_I2C_COMM_FAIL				0x76
-#define LOG_SPI_COMM_ERR				0x77
-#define LOG_I2C_COMM_ERR				0x78
+#define LOG_METRO_SPI_ERROR				0x75
 
 typedef struct
 {
@@ -89,8 +86,8 @@ typedef struct
 typedef struct
 {
     uint8_t    ErrorLog;
-    bool       CloudUpdated;
     uint32_t   EpochTime;
+    bool       CloudUpdated; 
 #ifdef _ERROR_LOG_DEBUG_
     uint32_t    EventLog;
 #endif    

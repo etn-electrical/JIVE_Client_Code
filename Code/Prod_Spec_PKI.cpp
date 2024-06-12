@@ -237,30 +237,26 @@ PKI_Common::pki_status_t Prod_Spec_Code_Sign( NV_Ctrl* nv_handle, bool* key_upgr
 		fw_ctrl = new Fw_Store_NV( &mem_config, const_cast<NV_Ctrl*>( nv_handle ), &Prod_Spec_User_Callback,
 								   &fw_ctrl_ret );
 	}
-	//ets_printf(" Ahmed to be removed  Verifying image signing\n");
+
 	if ( ( fw_ctrl != nullptr ) && ( fw_ctrl_ret == true ) )
 	{
 		if ( pki_state == PKI_CS_INIT )
 		{
-			//ets_printf(" Ahmed to be removed  PKI_CS_INIT\n");
 			pki_state = PKI_CS_PROGRESS;///< start signature verification
 		}
 #if !defined( DISABLE_PKI_CERT_GEN_SUPPORT ) && defined( HTTPS_SUPPORT )
 		else if ( ( pki_state == PKI_CERT_INIT ) || ( pki_state == PKI_CERT_PROGRESS ) )
 		{
-			//ets_printf(" Ahmed to be removed  PENDING_CALL_BACK\n");
 			ret_status = PKI_Common::PENDING_CALL_BACK;
 		}
 		else if ( pki_state == PKI_CERT_FAILURE )
 		{
-			//ets_printf(" Ahmed to be removed  PKI_CERT_FAILURE\n");
 			pki_state = PKI_CS_PROGRESS;///< start signature verification
 		}
 #endif
 		/* wait for signature verification result */
 		if ( pki_state == PKI_CS_SUCCESS )
 		{
-			//ets_printf(" Ahmed to be removed  PKI_CS_SUCCESS\n");
 			if ( key_upgrade_msg == true )
 			{
 				*key_upgrade_status = true;
@@ -277,12 +273,10 @@ PKI_Common::pki_status_t Prod_Spec_Code_Sign( NV_Ctrl* nv_handle, bool* key_upgr
 			}
 			ret_status = PKI_Common::SUCCESS;
 			pki_state = PKI_CS_INIT;///< reset the status
-			//ets_printf(" Ahmed to be removed  Back to PKI_CS_INIT\n");
 		}
 		else if ( pki_state == PKI_CS_PROGRESS )
 		{
 			/* return BUSY_ERROR if signature verification is in progress or if not started */
-			//ets_printf(" Ahmed to be removed  Returning BUSY_ERROR\n");
 			ret_status = PKI_Common::BUSY_ERROR;
 		}
 		else if ( pki_state == PKI_CS_FAILURE )
@@ -299,7 +293,6 @@ PKI_Common::pki_status_t Prod_Spec_Code_Sign( NV_Ctrl* nv_handle, bool* key_upgr
 	}
 	else if ( ( fw_ctrl != nullptr ) && ( fw_ctrl_ret == false ) )
 	{
-		//ets_printf(" Ahmed to be removed  Prod_Code_Sign_Complete\n");
 		fw_ctrl->~Fw_Store();
 		delete fw_ctrl;
 		fw_ctrl = nullptr;

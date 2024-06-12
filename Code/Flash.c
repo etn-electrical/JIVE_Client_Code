@@ -30,8 +30,8 @@
 #include "nvs.h"
 #include "Breaker.h"
 #include "LED_Breaker.h"
-//#include "KeyManager.h"
-//#include "EventManager.h"
+#include "KeyManager.h"
+#include "EventManager.h"
 
 #include "Flash.h"
 
@@ -173,7 +173,7 @@ void WriteByteToFlash(const char *offeset, uint8_t value )
     if (err != ESP_OK)
     {
         ets_printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        return;
+        //return err;
     } 
     
     err = nvs_set_u8(NVS_Handle, offeset, value);
@@ -200,27 +200,20 @@ void WriteByteToFlash(const char *offeset, uint8_t value )
 uint8_t ReadByteFromFlash(const char *offeset)
 {
     esp_err_t err;
-    uint8_t out_value = 0;
+    uint8_t *out_value;
     nvs_handle_t NVS_Handle;
-
+    
     //ets_printf("ReadByteFromFlash \n");
-
+    
     err = nvs_open("DeviceStorage", NVS_READWRITE, &NVS_Handle);
-
     if (err != ESP_OK)
     {
         ets_printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        return 0;
-    }
+        return err;
+    } 
 
     err = nvs_get_u8(NVS_Handle, offeset, &out_value);
-
-    if (err != ESP_OK)
-    {
-		ets_printf("Error (%s) in reading uint8_t!\n", esp_err_to_name(err));
-		return 0;
-    }
-
+    
     // Close
     nvs_close(NVS_Handle);        
 
@@ -248,7 +241,7 @@ void WriteIntToFlash(const char *offeset, uint16_t value )
     if (err != ESP_OK)
     {
         ets_printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        return;
+        return err;
     }
 
     err = nvs_set_u16(NVS_Handle, offeset, value);
@@ -275,7 +268,7 @@ void WriteIntToFlash(const char *offeset, uint16_t value )
 uint16_t ReadIntFromFlash(const char *offeset)
 {
     esp_err_t err;
-    uint16_t out_value = 0;
+    uint16_t *out_value;
     nvs_handle_t NVS_Handle;
 
     //ets_printf("ReadIntFromFlash \n");
@@ -288,11 +281,6 @@ uint16_t ReadIntFromFlash(const char *offeset)
     }
 
     err = nvs_get_u16(NVS_Handle, offeset, &out_value);
-    if (err != ESP_OK)
-    {
-        ets_printf("Error (%s) in reading uint16_t!\n", esp_err_to_name(err));
-        return err;
-    }
 
     // Close
     nvs_close(NVS_Handle);
@@ -321,7 +309,7 @@ void WriteWordToFlash(const char *offeset, uint32_t value )
     if (err != ESP_OK)
     {
         ets_printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        return;
+        return err;
     }
 
     err = nvs_set_u32(NVS_Handle, offeset, value);
@@ -348,7 +336,7 @@ void WriteWordToFlash(const char *offeset, uint32_t value )
 uint32_t ReadWordFromFlash(const char *offeset)
 {
     esp_err_t err;
-    uint32_t out_value = 0;
+    uint32_t *out_value;
     nvs_handle_t NVS_Handle;
 
     //ets_printf("ReadWordFromFlash \n");
@@ -361,11 +349,6 @@ uint32_t ReadWordFromFlash(const char *offeset)
     }
 
     err = nvs_get_u32(NVS_Handle, offeset, &out_value);
-    if (err != ESP_OK)
-    {
-        ets_printf("Error (%s) in reading uint32_t!\n", esp_err_to_name(err));
-        return err;
-    }
 
     // Close
     nvs_close(NVS_Handle);
@@ -422,7 +405,7 @@ void WriteArrayToFlash(const char *offeset, const char * String, size_t length )
     if (err != ESP_OK)
     {
         ets_printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-        return;
+        return err;
     }
 
     err = nvs_set_blob(NVS_Handle, offeset, String, length);

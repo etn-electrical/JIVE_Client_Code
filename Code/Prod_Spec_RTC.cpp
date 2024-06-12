@@ -136,9 +136,6 @@ static DCI_CB_RET_TD Update_RTC_CB( DCI_CBACK_PARAM_TD cback_param,
 	uint32_t* epoch_time_ptr = nullptr;
 	Time_Internal utc_date_time = { 0, 0, 0, 0, 1, 1, 0 };
 
-	printf( "\nInside RTC CB\n" );
-	printf( "\n Command value %d\n", access_struct->command );
-
 	/* check if command is valid */
 	if ( access_struct->command == DCI_ACCESS_SET_RAM_CMD )
 	{
@@ -224,7 +221,7 @@ void Update_Epoch_Time( SNTP_If::cback_param_t param, SNTP_If::cback_event_t eve
 {
 	Time_Internal utc_date_time = { 0, 0, 0, 0, 1, 1, 0 };
 
-	BF_Lib::Unused<SNTP_If::cback_param_t>::Okay( param );		///< @TODO - Vimal SNTP implementation is needed
+	BF_Lib::Unused<SNTP_If::cback_param_t>::Okay( param );
 
 	switch ( event )
 	{
@@ -254,9 +251,6 @@ void Update_Epoch_Time( SNTP_If::cback_param_t param, SNTP_If::cback_event_t eve
 			Time_Conversion::POSIXTimeUtil::Get_POSIX_Time_From_UTC_Time( &utc_date_time,
 																		  epoch_time );
 			*epoch_time_usec = utc_date_time.microsecond;
-			printf( "In Update EPOC Date: %d-%d-%d\n", utc_date_time.day,  utc_date_time.month,
-					( utc_date_time.year + 2000 ) );
-			printf( "In Update EPOC Time: %d:%d:%d\n", utc_date_time.hour, utc_date_time.minute, utc_date_time.second );
 			break;
 
 		default:

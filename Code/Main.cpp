@@ -24,7 +24,6 @@
 
 #ifdef PX_GREEN_IOT_SUPPORT
 #include "Prod_Spec_IOT.h"
-#include "IOT_DCI_Config.h"
 #endif	// #ifdef PX_GREEN_IOT_SUPPORT
 
 //Ahmed
@@ -63,13 +62,9 @@ int32_t main( void )
 	PROD_SPEC_OS_Init();
 
     //Ahmed
-    SW_Init();
-	DeviceInfo.DpsReturnedConnectionStringSaved = false;
-	IOT_DCI_Config::Register_CB_Connection_String_Update(PxGreenConnectionStringChangedCB);
-        IOT_DCI_Config::Register_CB_DPS_Config_Update(PxGreenDpsConfigChangedCB);
+//    SW_Init();	// Jonathan commented this out
 
-    if ((DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
-    		&& (DeviceInfo.DeviceInNetworkStatus == DEVICE_IS_IN_A_NETWORK))
+    if (DeviceInfo.DeviceInNetworkStatus == DEVICE_IS_IN_A_NETWORK)
     {
         JustPoweredUpNoConnection = false;
         PROD_SPEC_IOT_Init();
@@ -101,7 +96,7 @@ void PxGreenOneSecondTimer()
 
     if (JustPoweredUpNoConnection == true)
     {
-        if  ( (DeviceInfo.WiFiConnected == true) && ((DeviceInfo.DpsInfoSaved == true) || (DeviceInfo.ConnectionStringSaved == true)) )
+        if  ( (DeviceInfo.WiFiConnected == true) && (DeviceInfo.ConnectionStringSaved == true))
         {
             JustPoweredUpNoConnection = false;
 #if defined ( PX_GREEN_IOT_SUPPORT ) && defined ( WIFI_STATION_MODE )
@@ -110,51 +105,4 @@ void PxGreenOneSecondTimer()
             DeviceInfo.PxInitiated = true;
         }
     }
-	//updated connection string to the NVM
-	if (DeviceInfo.ConnectionStringSaveNeeded)
-
-	{
-		//Using SetConnectStringInfo() instead of Save_Connection_String() since it is 
-		//already used in the dimmer application to save the connection string to NVM
-		SetConnectStringInfo();
-		DeviceInfo.ConnectionStringSaveNeeded = false;
-
-		DeviceInfo.DpsReturnedConnectionStringSaved = true;
-	}
-
-	//Wait until the dimmer is off to save the 
-	//updated DPS Config to the NVM
-	if (DeviceInfo.DpsConfigSaveNeeded)
-	{
-		//Save DPS config info to NVM
-		DCI_UpdateDPSDeviceRegId();
-		DCI_UpdateDPSEndpoint();
-		DCI_UpdateDPSIDScope();
-		DCI_UpdateDPSSymmetricKey();
-
-		DeviceInfo.DpsConfigSaveNeeded = false;
-	}
-}
-
-void PxGreenConnectionStringChangedCB( void )
-{
-	//Update connection string info in the DeviceInfo struct
-	GetConnectStringInfo();
-
-	//Set the flag that the connection string needs 
-	//to be saved into NVM when it is safe to do so
-	DeviceInfo.ConnectionStringSaveNeeded = true;
-}
-
-void PxGreenDpsConfigChangedCB( void )
-{
-	//Update DPS Config info in the DeviceInfo struct
-	DCI_GetDPSDeviceRegId();
-	DCI_GetDPSEndpoint();
-	DCI_GetDPSIDScope();
-	DCI_GetDPSSymmetricKey();
-
-	//Set the flag that the DPS Config needs 
-	//to be saved into NVM when it is safe to do so
-	DeviceInfo.DpsConfigSaveNeeded = true;
 }

@@ -9,15 +9,16 @@
  *
  * Author           : Kothe, AARTI J
  *
- * Last Changed By  : $Kothe, AARTI J $
+ * Last Changed By  : $Author: tia $
  * Revision         : $Revision: 1.0 $
- * Last Changed     : $Date: 02/09/2024
+ * Last Changed     : $Date: 07/18/2022
  *
  ****************************************************************************/
 /****************************************************************************
  *                           	Include files
  ****************************************************************************/
 #include "spi_comp.h"
+#include "metro_utilities.h"
 #include <math.h>
 #include "metrology_hal.h"
 #include "Log.h"
@@ -25,6 +26,7 @@
 /****************************************************************************
  *                              Global variables
  ****************************************************************************/
+static const char* TAG = "Metro_HAL";
 METRO_AD_reg g_metroADreg;
 
 /****************************************************************************
@@ -34,31 +36,32 @@ METRO_AD_reg g_metroADreg;
 /**
  * @brief      This function disables the waveform capture
  * @param[in]  None
- * @retval     metro_err_t err type
+ * @retval     uint8_t err type
 */
-metro_err_t Metro_HAL_Waveform_Cap_Dis(void)
+uint8_t Metro_HAL_Waveform_Cap_Dis()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 	uint16_t spi_read_data = 0;
 
 		//Waveform Capture disabled
 
-	if (SPI_Write_ADE9039_Reg_16(ADDR_WFB_CFG, ADE9039_WFB_CFG_CAP_DIS) != METRO_SUCCESS)
+	if ((ret = Write_SPI_ADE9039_Reg_16(ADDR_WFB_CFG, ADE9000_WFB_CFG_CAP_DIS)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 		//Verify SPI read value to ensure SPI is working
 
-	if (SPI_Read_ADE9039_Reg_16(ADDR_WFB_CFG, &spi_read_data) != METRO_SUCCESS)
+	if ((ret = Read_SPI_ADE9039_Reg_16(ADDR_WFB_CFG, &spi_read_data)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
+
 	else
 	{
-		if (spi_read_data != ADE9039_WFB_CFG_CAP_DIS)
+		if (spi_read_data != ADE9000_WFB_CFG_CAP_DIS)
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
 		}
 	}
 
@@ -69,33 +72,33 @@ metro_err_t Metro_HAL_Waveform_Cap_Dis(void)
 /**
  * @brief      This function enables the waveform capture
  * @param[in]  None
- * @retval     metro_err_t err type
+ * @retval     uint8_t err type
 */
 
-metro_err_t Metro_HAL_Waveform_Cap_En(void)
+uint8_t Metro_HAL_Waveform_Cap_En()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 	uint16_t spi_read_data = 0;
 
 		//Waveform Capture Enabled
 
-	if (SPI_Write_ADE9039_Reg_16(ADDR_WFB_CFG, ADE9039_WFB_CFG_CAP_EN) != METRO_SUCCESS)
+	if ((ret = Write_SPI_ADE9039_Reg_16(ADDR_WFB_CFG, ADE9000_WFB_CFG_CAP_EN)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 		//Verify SPI read value to ensure SPI is working
 
-	if (SPI_Read_ADE9039_Reg_16(ADDR_WFB_CFG, &spi_read_data) != METRO_SUCCESS)
+	if ((ret = Read_SPI_ADE9039_Reg_16(ADDR_WFB_CFG, &spi_read_data)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 	else
 	{
-		if (spi_read_data != ADE9039_WFB_CFG_CAP_EN)
+		if (spi_read_data != ADE9000_WFB_CFG_CAP_EN)
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
 		}
 	}
 
@@ -106,14 +109,13 @@ metro_err_t Metro_HAL_Waveform_Cap_En(void)
 /**
  * @brief      This function reads required registers
  * @param[in]  None
- * @retval     metro_err_t err type
+ * @retval     uint8_t err type
 */
-metro_err_t Metro_HAL_read_required_reg(void)
+uint8_t Metro_HAL_read_required_reg()
 {
-	metro_err_t ret = METRO_SUCCESS;
 	uint8_t reg_count = 0;
+	uint8_t ret = METRO_SUCCESS;
 	uint32_t spi_read_data = 0;
-	uint16_t spi_read_data_16 = 0;
 
 		//Array of register address
 
@@ -124,9 +126,10 @@ metro_err_t Metro_HAL_read_required_reg(void)
 
 	for (reg_count = 0; reg_count < MAX_REQUIRED_DATA_REG; reg_count++)
 	{
-		if (SPI_Read_ADE9039_Reg_32(address_array[reg_count], &spi_read_data) != METRO_SUCCESS)		//Read register
+		if ((ret = Read_SPI_ADE9039_Reg_32(address_array[reg_count], &spi_read_data)) != METRO_SUCCESS)		//Read register
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
+			break;
 		}
 		else
 		{
@@ -217,6 +220,9 @@ metro_err_t Metro_HAL_read_required_reg(void)
 					g_metroADreg.BPERIOD = spi_read_data;
 					break;
 				}
+
+				default:
+					break;
 			}
 		}
 	}
@@ -225,23 +231,7 @@ metro_err_t Metro_HAL_read_required_reg(void)
 
 	if (spi_read_data == 0Xffffffff)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
-	}
-	else
-	{
-			//Verify SPI read value to ensure SPI is working
-
-		if (SPI_Read_ADE9039_Reg_16(ADDR_PGA_GAIN, &spi_read_data_16) != METRO_SUCCESS)
-		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
-		}
-		else
-		{
-			if (spi_read_data_16 != ADE9039_PGA_GAIN)
-			{
-				ret = METRO_SPI_ERR;	//SPI ERROR
-			}
-		}
+		ret = METRO_SPI_ERR;
 	}
 
 	return ret;
@@ -251,26 +241,25 @@ metro_err_t Metro_HAL_read_required_reg(void)
 /**
  * @brief      This function sets the Status register
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_set_Status_reg(uint32_t value)
+uint8_t Metro_HAL_set_Status_reg()
 {
-	metro_err_t ret = METRO_SUCCESS;
 	uint32_t set = 0xffffffff;
-
+	uint8_t ret =  METRO_SUCCESS;
 
 		//Write Status registers
 
-	if (SPI_Write_ADE9039_Reg_32(ADDR_STATUS1, set) != METRO_SUCCESS)
+	if ((ret = Write_SPI_ADE9039_Reg_32(ADDR_STATUS1, set)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 	else
 	{
-		if (SPI_Write_ADE9039_Reg_32(ADDR_STATUS0, value) != METRO_SUCCESS)
+		if ((ret = Write_SPI_ADE9039_Reg_32(ADDR_STATUS0, set)) != METRO_SUCCESS)
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
 		}
 	}
 
@@ -282,15 +271,14 @@ metro_err_t Metro_HAL_set_Status_reg(uint32_t value)
 /**
  * @brief      This function read waveform burst data of VA, IA, VB, IB for 1 cycle
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_read_Waveform_burst_data(void)
+uint8_t Metro_HAL_read_Waveform_burst_data(void)
 {
-	metro_err_t ret = METRO_SUCCESS;
 	uint16_t waveform_page_num = 0;
 	uint16_t page_init_addr;
+	uint8_t ret = METRO_SUCCESS;
 	uint32_t spi_read_data = 0;
-	uint16_t spi_read_data_16 = 0;
 
 		//waveform cycle data start address array
 
@@ -298,9 +286,9 @@ metro_err_t Metro_HAL_read_Waveform_burst_data(void)
 
 		//Read resampled last cycle status register
 
-	if (SPI_Read_ADE9039_Reg_32(ADDR_RESAMPLE_LAST_CYCLE, &spi_read_data) != METRO_SUCCESS)
+	if ((ret = Read_SPI_ADE9039_Reg_32(ADDR_RESAMPLE_LAST_CYCLE, &spi_read_data)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 	else
@@ -313,26 +301,14 @@ metro_err_t Metro_HAL_read_Waveform_burst_data(void)
 		{
 			page_init_addr = wfb_init_addr[waveform_page_num];
 
-			if (SPI_Burst_Read(page_init_addr) != METRO_SUCCESS)
+			if ((ret = Burst_Read_SPI_ADE9039(page_init_addr, MAX_BURST_READ_DATA_BYTES)) != METRO_SUCCESS)
 			{
-				ret = METRO_SPI_ERR;	//SPI ERROR
+				ret = METRO_SPI_ERR;
 			}
 		}
 		else
 		{
-				//Verify SPI read value to ensure SPI is working
-
-			if (SPI_Read_ADE9039_Reg_16(ADDR_PGA_GAIN, &spi_read_data_16) != METRO_SUCCESS)
-			{
-				ret = METRO_SPI_ERR;	//SPI ERROR
-			}
-			else
-			{
-				if (spi_read_data_16 != ADE9039_PGA_GAIN)
-				{
-					ret = METRO_SPI_ERR;	//SPI ERROR
-				}
-			}
+			ret = METRO_SPI_ERR;
 		}
 	}
 
@@ -342,17 +318,27 @@ metro_err_t Metro_HAL_read_Waveform_burst_data(void)
 /**
  * @brief      This function reads energy registers
  * @param[in]  METRO_Channel_t in_Metro_Channel: Channel1 or Channel 2
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel)
+uint8_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel)
 {
-	metro_err_t ret = METRO_SUCCESS;
 	uint8_t reg_count = 0;
+	uint8_t ret = METRO_SUCCESS;
+	uint16_t phase_sign_reg = 0;
 	uint32_t spi_read_data = 0;
 	uint16_t spi_read_data_16 = 0;
 
 	uint16_t address_array[] = {ADDR_AWATTHR_HI, ADDR_AFVARHR_HI, ADDR_AVAHR_HI,
 			ADDR_BWATTHR_HI, ADDR_BFVARHR_HI, ADDR_BVAHR_HI};
+
+	if ((ret = Read_SPI_ADE9039_Reg_16(ADDR_PHSIGN, &spi_read_data_16)) != METRO_SUCCESS)	//read sign of the energy
+	{
+		ret = METRO_SPI_ERR;
+	}
+	else
+	{
+		g_metroADreg.PHSIGN = spi_read_data_16;
+	}
 
 	switch(in_Metro_Channel)
 	{
@@ -362,9 +348,9 @@ metro_err_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel)
 
 			for(reg_count = 0; reg_count < MAX_ENERGY_REG_CH1; reg_count++)	//#define
 			{
-				if (SPI_Read_ADE9039_Reg_32(address_array[reg_count], &spi_read_data) != METRO_SUCCESS)
+				if ((ret = Read_SPI_ADE9039_Reg_32(address_array[reg_count], &spi_read_data)) != METRO_SUCCESS)
 				{
-					ret = METRO_SPI_ERR;	//SPI ERROR
+					ret = METRO_SPI_ERR;
 					break;
 				}
 				else
@@ -390,6 +376,9 @@ metro_err_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel)
 							g_metroADreg.AVAHR_HI = spi_read_data;
 							break;
 						}
+
+						default:
+							break;
 					}
 				}
 			}
@@ -403,9 +392,9 @@ metro_err_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel)
 
 			for (reg_count = 3; reg_count < MAX_ENERGY_REG; reg_count++)
 			{
-				if (SPI_Read_ADE9039_Reg_32(address_array[reg_count], &spi_read_data) != METRO_SUCCESS)
+				if ((ret = Read_SPI_ADE9039_Reg_32(address_array[reg_count], &spi_read_data)) != METRO_SUCCESS)
 				{
-					ret = METRO_SPI_ERR;	//SPI ERROR
+					ret = METRO_SPI_ERR;
 					break;
 				}
 
@@ -432,6 +421,9 @@ metro_err_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel)
 							g_metroADreg.BVAHR_HI = spi_read_data;
 							break;
 						}
+
+						default:
+							break;
 					}
 				}
 			}
@@ -445,23 +437,7 @@ metro_err_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel)
 
 	if (spi_read_data == 0xffffffff)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
-	}
-	else
-	{
-			//Verify SPI read value to ensure SPI is working
-
-		if (SPI_Read_ADE9039_Reg_16(ADDR_PGA_GAIN, &spi_read_data_16) != METRO_SUCCESS)
-		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
-		}
-		else
-		{
-			if (spi_read_data_16 != ADE9039_PGA_GAIN)
-			{
-				ret = METRO_SPI_ERR;	//SPI ERROR
-			}
-		}
+		ret = METRO_SPI_ERR;
 	}
 
 	return ret;
@@ -472,18 +448,18 @@ metro_err_t Metro_HAL_read_Energy_reg(METRO_Channel_t in_Metro_Channel)
 /**
  * @brief      This function reads the status register
  * @param[in]  uint32_t *status0_val: Stores status register value
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_get_Status_reg(uint32_t *status0_val)
+uint8_t Metro_HAL_get_Status_reg(uint32_t *status0_val)
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 	uint32_t spi_read_data = 0;
 
 		//Read Status0 register
 
-	if (SPI_Read_ADE9039_Reg_32(ADDR_STATUS0, &spi_read_data) != METRO_SUCCESS)
+	if ((ret = Read_SPI_ADE9039_Reg_32(ADDR_STATUS0, &spi_read_data)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 	else
 	{
@@ -498,29 +474,29 @@ metro_err_t Metro_HAL_get_Status_reg(uint32_t *status0_val)
 /**
  * @brief      This function start SPI communication
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_Start_SPI_Com(void)
+uint8_t Metro_HAL_Start_SPI_Com()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 	uint16_t spi_read_data = 0;
 
 		//Write RUN_ON register
 
-	if (SPI_Write_ADE9039_Reg_16(ADDR_RUN, ADE9039_RUN_ON) != METRO_SUCCESS)
+	if ((ret = Write_SPI_ADE9039_Reg_16(ADDR_RUN, ADE9000_RUN_ON)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
-	if (SPI_Read_ADE9039_Reg_16(ADDR_RUN, &spi_read_data)!= METRO_SUCCESS)
+	if ((ret = Read_SPI_ADE9039_Reg_16(ADDR_RUN, &spi_read_data))!= METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 	else
 	{
-		if (spi_read_data != ADE9039_RUN_ON)
+		if (spi_read_data != ADE9000_RUN_ON)
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
 		}
 	}
 
@@ -529,27 +505,121 @@ metro_err_t Metro_HAL_Start_SPI_Com(void)
 
 
 
+
+///**
+// * @brief      This function writes calibration registers
+// * @param[in]  None
+// * @retval     uint8_t error type
+//*/
+//uint8_t Metro_HAL_Write_Calibration_regs()
+//{
+//	uint8_t ret = METRO_SUCCESS;
+//	uint8_t reg_count;
+//	size_t length;
+//	metro_calib_struct calib_factors;
+//	uint32_t spi_read_data = 0;
+//
+//	length = nvs_read_metro_calib(&calib_factors);
+//
+//	if (length > 0)
+//	{
+//
+//		uint16_t address_arr_32[] = {ADDR_AIGAIN, ADDR_AVGAIN, ADDR_AIRMSOS, ADDR_APGAIN, ADDR_APHCAL0,
+//				ADDR_BIGAIN, ADDR_BVGAIN, ADDR_BIRMSOS, ADDR_BPGAIN, ADDR_BPHCAL0};		//Array of 32 bit register address
+//
+//		uint32_t reg_data_arr_32[MAX_CALIB_REG];
+//
+//		reg_data_arr_32[0] = calib_factors.aiGain;
+//		reg_data_arr_32[1] = calib_factors.avGain;
+//		reg_data_arr_32[2] = calib_factors.aiRmsOs;
+//		reg_data_arr_32[3] = calib_factors.apGain;
+//		reg_data_arr_32[4] = calib_factors.aphCal_0;
+//		reg_data_arr_32[5] = calib_factors.biGain;
+//		reg_data_arr_32[6] = calib_factors.bvGain;
+//		reg_data_arr_32[7] = calib_factors.biRmsOs;
+//		reg_data_arr_32[8] = calib_factors.bpGain;
+//		reg_data_arr_32[9] = calib_factors.bphCal_0;
+//
+//
+//#if 0
+//	ESP_LOGI("AIGAIN: 0x%x\n", reg_data_arr_32[0]);
+//	ESP_LOGI("AVGAIN: 0x%x\n", reg_data_arr_32[1]);
+//	ESP_LOGI("AIRMSOS: 0x%x\n", reg_data_arr_32[2]);
+//	ESP_LOGI("APGAIN: 0x%x\n", reg_data_arr_32[3]);
+//	ESP_LOGI("APHCAL0: 0x%x\n", reg_data_arr_32[4]);
+//
+//	ESP_LOGI("BIGAIN: 0x%x\n", reg_data_arr_32[5]);
+//	ESP_LOGI("BVGAIN: 0x%x\n", reg_data_arr_32[6]);
+//	ESP_LOGI("AIRMSOS: 0x%x\n", reg_data_arr_32[7]);
+//	ESP_LOGI("BPGAIN: 0x%x\n", reg_data_arr_32[8]);
+//	ESP_LOGI("BPHCAL0: 0x%x\n", reg_data_arr_32[9]);
+//#endif
+//
+//			//Write voltage, Current, Current offset, Phase calibration factors for channel 1 and 2
+//
+//		for (reg_count = 0; reg_count < MAX_CALIB_REG; reg_count++)
+//		{
+//			if ((ret = Write_SPI_ADE9039_Reg_32(address_arr_32[reg_count], reg_data_arr_32[reg_count])) != METRO_SUCCESS)
+//			{
+//				ret = METRO_SPI_ERR;
+//				break;
+//			}
+//		}
+//
+//		if ((ret = Read_SPI_ADE9039_Reg_32(ADDR_BPHCAL0, &spi_read_data)) != METRO_SUCCESS)
+//		{
+//			ret = METRO_SPI_ERR;
+//		}
+//		else
+//		{
+//				//Verify SPI read value to ensure SPI is working
+//
+//			if (spi_read_data != ADE9000_BPHCAL0)
+//			{
+//				ret = METRO_SPI_ERR;
+//			}
+//		}
+//	}
+//	else
+//	{
+//		ret = METRO_SPI_ERR;
+//	}
+//
+//	return ret;
+//}
+
 /**
 * @brief      This function writes calibration registers
 * @param[in]  None
-* @retval     metro_err_t error type
+* @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_Write_Calibration_regs(void)
+uint8_t Metro_HAL_Write_Calibration_regs()
 {
-	metro_err_t ret = METRO_SUCCESS;
+    uint8_t ret = METRO_SUCCESS;
     uint8_t reg_count;
     size_t length;
-    metro_calib_struct calib_factors = {0};
+    metro_calib_struct calib_factors;
     uint32_t spi_read_data = 0;
+
+
 
     length = nvs_read_metro_calib(&calib_factors);
 
+
+
     if (length > 0)
     {
+
+
+
         uint16_t address_arr_32[] = {ADDR_AIGAIN, ADDR_AVGAIN, ADDR_AIRMSOS, ADDR_APGAIN, ADDR_APHCAL0,
                 ADDR_BIGAIN, ADDR_BVGAIN, ADDR_BIRMSOS, ADDR_BPGAIN, ADDR_BPHCAL0};        //Array of 32 bit register address
 
+
+
         uint32_t reg_data_arr_32[MAX_CALIB_REG];
+
+
 
         reg_data_arr_32[0] = calib_factors.aiGain;
         reg_data_arr_32[1] = calib_factors.avGain;
@@ -562,48 +632,74 @@ metro_err_t Metro_HAL_Write_Calibration_regs(void)
         reg_data_arr_32[8] = calib_factors.bpGain;
         reg_data_arr_32[9] = calib_factors.bphCal_0;
 
+
+
+
+#if 0
+    ESP_LOGI("AIGAIN: 0x%x\n", reg_data_arr_32[0]);
+    ESP_LOGI("AVGAIN: 0x%x\n", reg_data_arr_32[1]);
+    ESP_LOGI("AIRMSOS: 0x%x\n", reg_data_arr_32[2]);
+    ESP_LOGI("APGAIN: 0x%x\n", reg_data_arr_32[3]);
+    ESP_LOGI("APHCAL0: 0x%x\n", reg_data_arr_32[4]);
+
+
+
+    ESP_LOGI("BIGAIN: 0x%x\n", reg_data_arr_32[5]);
+    ESP_LOGI("BVGAIN: 0x%x\n", reg_data_arr_32[6]);
+    ESP_LOGI("AIRMSOS: 0x%x\n", reg_data_arr_32[7]);
+    ESP_LOGI("BPGAIN: 0x%x\n", reg_data_arr_32[8]);
+    ESP_LOGI("BPHCAL0: 0x%x\n", reg_data_arr_32[9]);
+#endif
+
+
+
             //Write voltage, Current, Current offset, Phase calibration factors for channel 1 and 2
+
+
 
         for (reg_count = 0; reg_count < MAX_CALIB_REG; reg_count++)
         {
-            if (SPI_Write_ADE9039_Reg_32(address_arr_32[reg_count], reg_data_arr_32[reg_count]) != METRO_SUCCESS)
+            if ((ret = Write_SPI_ADE9039_Reg_32(address_arr_32[reg_count], reg_data_arr_32[reg_count])) != METRO_SUCCESS)
             {
-            	ret = METRO_SPI_ERR;	//SPI ERROR
+                ret = METRO_SPI_ERR;
+                break;
             }
         }
 
 
-        if (SPI_Read_ADE9039_Reg_32(ADDR_BPHCAL0, &spi_read_data) != METRO_SUCCESS)
+
+        if ((ret = Read_SPI_ADE9039_Reg_32(ADDR_BPHCAL0, &spi_read_data)) != METRO_SUCCESS)
         {
-        	ret = METRO_SPI_ERR;	//SPI ERROR
+            ret = METRO_SPI_ERR;
         }
         else
         {
                 //Verify SPI read value to ensure SPI is working
 
+
+
             if (spi_read_data != calib_factors.bphCal_0)
             {
-            	ret = METRO_SPI_ERR;	//SPI ERROR
+                ret = METRO_SPI_ERR;
             }
         }
     }
     else
     {
-    	ret = METRO_SPI_ERR;	//SPI ERROR
+        ret = METRO_SPI_ERR;
     }
 
     return ret;
 }
 
-
 /**
  * @brief      This function sets the Configuration
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_set_Config_regs(void)
+uint8_t Metro_HAL_set_Config_regs()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 	uint8_t reg_counter;
 	uint16_t spi_read_data = 0;
 
@@ -612,32 +708,33 @@ metro_err_t Metro_HAL_set_Config_regs(void)
 
 	uint16_t address_arr_32[] = {ADDR_CONFIG0, ADDR_MASK0};		//Array of 32 bit register address
 
-	uint16_t reg_data_arr_16[] = {ADE9039_CONFIG2, ADE9039_CONFIG3, ADE9039_CONFIG1, ADE9039_ACCMODE,
-			ADE9039_EGY_TIME, ADE9039_EP_CFG, ADE9039_ZX_LP_SEL, ADE9039_ZXTHRSH, ADE9039_CRC_FORCE};		//Array of 16 bit register data
+	uint16_t reg_data_arr_16[] = {ADE9000_CONFIG2, ADE9000_CONFIG3, ADE9000_CONFIG1, ADE9000_ACCMODE,
+			ADE9000_EGY_TIME, ADE9000_EP_CFG, ADE9000_ZX_LP_SEL, ADE9000_ZXTHRSH, ADE9000_CRC_FORCE};		//Array of 16 bit register data
 
-	uint32_t reg_data_arr_32[] = {ADE9039_CONFIG0, ADE9039_MASK0};		//Array of 32 bit register data
+	uint32_t reg_data_arr_32[] = {ADE9000_CONFIG0, ADE9000_MASK0};		//Array of 32 bit register data
 
 		//Enable energy Acc, Select zero crossing channel, Enables CRC calculations, Configure Zero crossing threshold
 
 	for (reg_counter = 0; reg_counter < MAX_CONFIG_REG_16; reg_counter++)
 	{
-		if (SPI_Write_ADE9039_Reg_16(address_arr_16[reg_counter], reg_data_arr_16[reg_counter]) != METRO_SUCCESS)
+		if ((ret = Write_SPI_ADE9039_Reg_16(address_arr_16[reg_counter], reg_data_arr_16[reg_counter])) != METRO_SUCCESS)
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+				ret = METRO_SPI_ERR;
+				break;
 		}
 	}
 
 		//Verify SPI read data
 
-	if (SPI_Read_ADE9039_Reg_16(ADDR_CRC_FORCE, &spi_read_data) != METRO_SUCCESS)
+	if ((ret = Read_SPI_ADE9039_Reg_16(ADDR_CRC_FORCE, &spi_read_data)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 	else
 	{
-		if (spi_read_data != ADE9039_CRC_FORCE)
+		if (spi_read_data != ADE9000_CRC_FORCE)
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
 		}
 		else
 		{
@@ -645,9 +742,10 @@ metro_err_t Metro_HAL_set_Config_regs(void)
 
 			for (reg_counter = 0; reg_counter < MAX_CONFIG_REG_32; reg_counter++)
 			{
-				if (SPI_Write_ADE9039_Reg_32(address_arr_32[reg_counter], reg_data_arr_32[reg_counter]) != METRO_SUCCESS)
+				if ((ret = Write_SPI_ADE9039_Reg_32(address_arr_32[reg_counter], reg_data_arr_32[reg_counter])) != METRO_SUCCESS)
 				{
-					ret = METRO_SPI_ERR;	//SPI ERROR
+					ret = METRO_SPI_ERR;
+					break;
 				}
 			}
 		}
@@ -660,29 +758,29 @@ metro_err_t Metro_HAL_set_Config_regs(void)
 /**
  * @brief      This function redirect metro channels using Mux
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_Redirect_Channels(void)
+uint8_t Metro_HAL_Redirect_Channels()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 	uint32_t spi_read_data = 0;
 
-	if (SPI_Write_ADE9039_Reg_32(ADDR_ADC_REDIRECT, ADE9039_ADC_REDIRECT) != METRO_SUCCESS)
+	if ((ret = Write_SPI_ADE9039_Reg_32(ADDR_ADC_REDIRECT, ADE9000_ADC_REDIRECT)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 		//Verify SPI read value to ensure SPI is working
 
-	if (SPI_Read_ADE9039_Reg_32(ADDR_ADC_REDIRECT, &spi_read_data) != METRO_SUCCESS)
+	if ((ret = Read_SPI_ADE9039_Reg_32(ADDR_ADC_REDIRECT, &spi_read_data)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 	else
 	{
-		if (spi_read_data != ADE9039_ADC_REDIRECT)
+		if (spi_read_data != ADE9000_ADC_REDIRECT)
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
 		}
 	}
 
@@ -694,31 +792,31 @@ metro_err_t Metro_HAL_Redirect_Channels(void)
 /**
  * @brief      This function sets the Channel gain
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_HAL_set_Channel_Gain(void)
+uint8_t Metro_HAL_set_Channel_Gain()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 	uint16_t spi_read_data = 0;
 
 		//Configure PGA gain for channels
 
-	if (SPI_Write_ADE9039_Reg_16(ADDR_PGA_GAIN, ADE9039_PGA_GAIN) != METRO_SUCCESS)
+	if ((ret = Write_SPI_ADE9039_Reg_16(ADDR_PGA_GAIN, ADE9000_PGA_GAIN)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 		//Verify SPI read value to ensure SPI is working
 
-	if (SPI_Read_ADE9039_Reg_16(ADDR_PGA_GAIN, &spi_read_data) != METRO_SUCCESS)
+	if ((ret = Read_SPI_ADE9039_Reg_16(ADDR_PGA_GAIN, &spi_read_data)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 	else
 	{
-		if (spi_read_data != ADE9039_PGA_GAIN)
+		if (spi_read_data != ADE9000_PGA_GAIN)
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
 		}
 	}
 
@@ -728,15 +826,15 @@ metro_err_t Metro_HAL_set_Channel_Gain(void)
 /**
  * @brief      This function initialize SPI communication
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Merto_HAL_SPI_Init(void)
+uint8_t Merto_HAL_SPI_Init()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 
-	if ((SPI_Init()) != METRO_SUCCESS)
+	if ((ret = SPI_Init()) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 	return ret;
@@ -746,8 +844,8 @@ metro_err_t Merto_HAL_SPI_Init(void)
 
 /**
  * @brief      Read raw rms voltage for channel
- * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, float *calc_RMS_Voltage
- * @retval     None
+ * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2
+ * @retval     uint8_t err type
 */
 void Metro_HAL_read_RMS_Voltage(METRO_Channel_t in_Metro_Channel, float *calc_RMS_Voltage)
 {
@@ -769,6 +867,10 @@ void Metro_HAL_read_RMS_Voltage(METRO_Channel_t in_Metro_Channel, float *calc_RM
 			break;
 
 	}		//end switch
+
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw vol : 0x%x \n", *calc_RMS_Voltage);
+#endif
 }
 
 
@@ -798,6 +900,10 @@ void Metro_HAL_read_RMS_Current(METRO_Channel_t in_Metro_Channel, float *calc_RM
 			break;
 
 	}		//end switch
+
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw current : 0x%x \n", *calc_RMS_Current);
+#endif
 }
 
 
@@ -829,6 +935,10 @@ void Metro_HAL_read_Active_Power(METRO_Channel_t in_Metro_Channel, float *calc_R
 	}		//end switch
 
 	*calc_RMS_Power = (float)raw_power * POWER_CONV_FACT;
+
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw power : %f \n", *calc_RMS_Power);
+#endif
 }
 
 
@@ -862,6 +972,11 @@ void Metro_HAL_read_Reactive_Power(METRO_Channel_t in_Metro_Channel, float *calc
 	}		//end switch
 
 	*calc_RMS_Power = (float)raw_power * POWER_CONV_FACT;
+
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw power : %f \n", *calc_RMS_Power);
+#endif
+
 }
 
 
@@ -893,12 +1008,17 @@ void Metro_HAL_read_Apparent_Power(METRO_Channel_t in_Metro_Channel, float *calc
 	}		//end switch
 
 	*calc_RMS_Power = (float)raw_power * POWER_CONV_FACT;
+
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw power : %f \n", *calc_RMS_Power);
+#endif
+
 }
 
 
 /**
  * @brief      This function read power factor for channel
- * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, float *cal_pf
+ * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2
  * @retval     None
 */
 void Metro_HAL_read_Power_Factor(METRO_Channel_t in_Metro_Channel, float *cal_pf)
@@ -925,13 +1045,17 @@ void Metro_HAL_read_Power_Factor(METRO_Channel_t in_Metro_Channel, float *cal_pf
 	}		//end switch
 
 	*cal_pf = (float)raw_pf * (pow(2,-27));
+
+#ifdef METRO_RAW_DATA_DEBUG
+		ESP_LOGI(TAG,"raw_pf : %f \n", *cal_pf);
+#endif
 }
 
 
 
 /**
  * @brief      This function read period for channel
- * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, uint32_t *raw_period
+ * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2
  * @retval     None
 */
 void Metro_HAL_read_Period(METRO_Channel_t in_Metro_Channel, uint32_t *raw_period)
@@ -960,65 +1084,52 @@ void Metro_HAL_read_Period(METRO_Channel_t in_Metro_Channel, uint32_t *raw_perio
 /**
  * @brief      This function read phase sign
  * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, uint16_t *phase_sign
- * @retval     metro_err_t error type
+ * @retval     None
 */
-metro_err_t Metro_HAL_read_Phase_Sign(METRO_Channel_t in_Metro_Channel, uint16_t *phase_sign)
+void Metro_HAL_read_Phase_Sign(METRO_Channel_t in_Metro_Channel, uint16_t *phase_sign)
 {
-	metro_err_t ret = METRO_SUCCESS;
-	uint16_t spi_read_data_16 = 0;
-
-	if (SPI_Read_ADE9039_Reg_16(ADDR_PHSIGN, &spi_read_data_16) != METRO_SUCCESS)	//read sign of the energy
+	switch (in_Metro_Channel)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
-	}
-	else
-	{
-		g_metroADreg.PHSIGN = spi_read_data_16;
-
-		//Sign = 0 --> Positive sign
-		//Sign = 1 --> Negative sign
-
-		switch (in_Metro_Channel)
+		case (CHANNEL_1):
 		{
-			case (CHANNEL_1):
+			if (g_metroADreg.PHSIGN & 0x0001)
 			{
-				if (g_metroADreg.PHSIGN & 0x0001)
-				{
-					*phase_sign = 1;
-				}
-				else
-				{
-					*phase_sign = 0;
-				}
-				break;
+				*phase_sign = 1;
 			}
-
-			case (CHANNEL_2):
+			else
 			{
-				if (g_metroADreg.PHSIGN & 0x0004)
-				{
-					*phase_sign = 1;
-				}
-				else
-				{
-					*phase_sign = 0;
-				}
-				break;
+				*phase_sign = 0;
 			}
+			break;
+		}
 
-			default:
-				break;
+		case (CHANNEL_2):
+		{
+			if (g_metroADreg.PHSIGN & 0x0004)
+			{
+				*phase_sign = 1;
+			}
+			else
+			{
+				*phase_sign = 0;
+			}
+			break;
+		}
 
-		}		//end switch
-	}
+		default:
+			break;
 
-	return ret;
+	}		//end switch
+
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw: energy 0x%x \n", *calc_energy);
+#endif
 }
 
 
 /**
  * @brief      This function read active energy for channel
- * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, uint32_t *raw_energy
+ * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2
  * @retval     None
 */
 void Metro_HAL_read_Active_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *raw_energy)
@@ -1055,12 +1166,16 @@ void Metro_HAL_read_Active_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *ra
 			break;
 
 	}		//end switch
+
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw: energy 0x%x \n", *calc_energy);
+#endif
 }
 
 
 /**
  * @brief      This function read reactive energy for channel
- * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, uint32_t *raw_energy
+ * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2
  * @retval     None
 */
 void Metro_HAL_read_Reactive_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *raw_energy)
@@ -1097,13 +1212,17 @@ void Metro_HAL_read_Reactive_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *
 			break;
 
 	}		//end switch
+
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw reactive energy: 0x%x \n", *calc_energy);
+#endif
 }
 
 
 
 /**
  * @brief      This function read apparent energy for channel
- * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, uint32_t *raw_energy
+ * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2
  * @retval     None
 */
 void Metro_HAL_read_Apparent_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *raw_energy)
@@ -1140,89 +1259,8 @@ void Metro_HAL_read_Apparent_Energy(METRO_Channel_t in_Metro_Channel, uint32_t *
 			break;
 
 	}		//end switch
-}
 
-
-/**
- * @brief      This function set energy read time
- * @param[in]   uint16_t timer_count
- * @retval     metro_err_t err type
- */
-metro_err_t Metro_HAL_set_EGY_TIME_reg(uint16_t timer_count)
-{
-	metro_err_t ret = METRO_SUCCESS;
-	uint16_t spi_read_data = 0;
-
-		//Write timer count to EGY_TIME register
-
-	if (SPI_Write_ADE9039_Reg_16(ADDR_EGY_TIME, timer_count) != METRO_SUCCESS)
-	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
-	}
-	else
-	{
-			//Read back EGY_TIME register and verify
-
-		if (SPI_Read_ADE9039_Reg_16(ADDR_EGY_TIME, &spi_read_data) != METRO_SUCCESS)
-		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
-		}
-		else
-		{
-			if (spi_read_data != timer_count)
-			{
-				ret = METRO_SPI_ERR;	//SPI ERROR
-			}
-		}
-	}
-
-	return ret;
-}
-
-/**
-* @brief      This function sets the lower energy acc threshold
-* @param[in]  None
-* @retval     metro_err error type
-*/
-metro_err_t Metro_HAL_set_Energy_Threshold(void)
-{
-	metro_err_t ret = METRO_SUCCESS;
-	uint32_t spi_read_data = 0;
-
-	if (SPI_Write_ADE9039_Reg_32(ADDR_ACT_NL_LVL, ADE9039_EGY_NL_LVL) != METRO_SUCCESS)
-	{
-		ret = METRO_SPI_ERR;
-	}
-	else
-	{
-		if (SPI_Write_ADE9039_Reg_32(ADDR_REACT_NL_LVL, ADE9039_EGY_NL_LVL) != METRO_SUCCESS)
-		{
-			ret = METRO_SPI_ERR;
-		}
-		else
-		{
-			if (SPI_Write_ADE9039_Reg_32(ADDR_APP_NL_LVL, ADE9039_EGY_NL_LVL) != METRO_SUCCESS)
-			{
-				ret = METRO_SPI_ERR;
-			}
-			else
-			{
-				if (SPI_Read_ADE9039_Reg_32(ADDR_APP_NL_LVL, &spi_read_data) != METRO_SUCCESS)
-				{
-					ret = METRO_SPI_ERR;
-				}
-				else
-				{
-					//Verify SPI read data
-
-					if (spi_read_data != ADE9039_EGY_NL_LVL)
-					{
-						ret = METRO_SPI_ERR;
-					}
-				}
-			}
-		}
-	}
-
-	return ret;
+#ifdef METRO_RAW_DATA_DEBUG
+	ESP_LOGI(TAG,"raw apparent energy: 0x%x \n", *calc_energy);
+#endif
 }

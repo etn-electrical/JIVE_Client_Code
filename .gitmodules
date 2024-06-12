@@ -1,0 +1,8 @@
+[submodule "esp32_common"]
+	path = esp32_common
+	url = https://github.com/etn-electrical/esp32_common.git
+	update = merge
+[submodule "Babelfish"]
+	path = Babelfish
+	url = https://github.com/etn-electrical/Babelfish.git
+	update = merge

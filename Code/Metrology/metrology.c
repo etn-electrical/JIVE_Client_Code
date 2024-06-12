@@ -9,9 +9,9 @@
  *
  * Author           : Kothe, AARTI J
  *
- * Last Changed By  : $Kothe, AARTI J $
+ * Last Changed By  : $Author: tia $
  * Revision         : $Revision: 1.0 $
- * Last Changed     : $Date: 02/09/2024
+ * Last Changed     : $Date: 07/18/2022
  *
  ****************************************************************************/
 
@@ -27,39 +27,59 @@
 /****************************************************************************
  *                              Global variables
  ****************************************************************************/
+static const char* TAG = "Metro data";
 
 /****************************************************************************
  *                    Local function Definitions
  ****************************************************************************/
 /**
- * @brief      This function read energy registers as per channels
- * @param[in]  METRO_Channel_t in_Metro_Channel
- * @retval     metro_err_t err type
+ * @brief      This function read energy register values
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_Read_Energy_reg(METRO_Channel_t in_Metro_Channel)
+uint8_t Metro_Get_Energy()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 
-	if (Metro_HAL_read_Energy_reg(in_Metro_Channel) != METRO_SUCCESS)
+	if ((ret = Metro_Read_Energy_reg(CHANNEL_1)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
+	else
+	{
+		if ((ret = Metro_Read_Energy_reg(CHANNEL_2)) != METRO_SUCCESS)
+		{
+			ret = METRO_SPI_ERR;
+		}
+	}
+
+	return ret;
+}
+
+uint8_t Metro_Read_Energy_reg(METRO_Channel_t in_Metro_Channel)
+{
+	uint8_t ret = METRO_SUCCESS;
+
+	if ((Metro_HAL_read_Energy_reg(in_Metro_Channel)) != METRO_SUCCESS)
+	{
+		ret = METRO_SPI_ERR;
+	}
+
 	return ret;
 }
 
 
 /**
  * @brief      This function clear the interrupt status on IRQ pin for next inetrrupt
- * @param[in]  uint32_t value
- * @retval     metro_err_t err type
+ * @param[in]  None
+ * @retval     uint8_t err type
 */
-metro_err_t Metro_Clear_Interrupt_Status(uint32_t value)
+uint8_t Metro_Clear_Interrupt_Status()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret =  METRO_SUCCESS;
 
-	if ((ret = Metro_HAL_set_Status_reg(value)) != METRO_SUCCESS)
+	if ((ret = Metro_HAL_set_Status_reg()) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 	return ret;
@@ -69,17 +89,17 @@ metro_err_t Metro_Clear_Interrupt_Status(uint32_t value)
 /**
  * @brief      This function read required registers for power monitoring routine
  * @param[in]  none
- * @retval     metro_err_t err type
+ * @retval     uint8_t err type
 */
-metro_err_t Metro_Get_Measures(void)
+uint8_t Metro_read_data_regs(void)
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 
 		//Read Vrms, Irms, Power, Energy, Frequency, PF registers
 
-	if (Metro_HAL_read_required_reg() != METRO_SUCCESS)
+	if ((ret = Metro_HAL_read_required_reg()) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 
 	return ret;
@@ -89,17 +109,16 @@ metro_err_t Metro_Get_Measures(void)
 /**
  * @brief      This function reads the interrupt status
  * @param[in]  uint32_t * status0_val : stores status0 register value
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_get_Interrupt_Status(uint32_t *status0_val)
+uint8_t Metro_get_Interrupt_Status(uint32_t *status0_val)
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 
-	if (Metro_HAL_get_Status_reg(status0_val) != METRO_SUCCESS)
+	if ((ret = Metro_HAL_get_Status_reg(status0_val)) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
-
 	return ret;
 }
 
@@ -107,49 +126,49 @@ metro_err_t Metro_get_Interrupt_Status(uint32_t *status0_val)
 /**
  * @brief      This function is designed to initialize ADE9039 chipset
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_AD_Init(void)
+uint8_t Metro_AD_Init()
 {
-	metro_err_t ret = METRO_SUCCESS;
+#ifdef METRO_DEBUG_PRINTS
+	ESP_LOGI(TAG,"AD Init\n");
+#endif
 
-	if (Metro_HAL_Redirect_Channels() != METRO_SUCCESS)		//Redirect channels
+	uint8_t ret = METRO_SUCCESS;
+
+	if ((ret = Metro_HAL_Redirect_Channels()) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
+
 	else
 	{
-
-		if (Metro_HAL_set_Channel_Gain() != METRO_SUCCESS)		//Set channel gain for Channel1 and Channel2
+		if ((ret = Metro_HAL_set_Channel_Gain()) != METRO_SUCCESS)		//Set channel gain for Channel1 and Channel2
 		{
-			ret = METRO_SPI_ERR;	//SPI ERROR
+			ret = METRO_SPI_ERR;
 		}
 		else
 		{
-			if (Metro_HAL_set_Config_regs() != METRO_SUCCESS)		//Write Configuration registers
+			if ((ret = Metro_HAL_set_Config_regs()) != METRO_SUCCESS)		//Write Configuration registers
 			{
-				ret = METRO_SPI_ERR;	//SPI ERROR
+				ret = METRO_SPI_ERR;
 			}
 			else
 			{
-				if ((ret = Metro_HAL_set_Energy_Threshold()) != METRO_SUCCESS)
+				if ((ret = Metro_HAL_Write_Calibration_regs()) != METRO_SUCCESS)		//Configure calibration factors for VA, IA, VB, IB
 				{
 					ret = METRO_SPI_ERR;
 				}
 				else
 				{
-					if (Metro_HAL_Write_Calibration_regs() != METRO_SUCCESS)		//Configure calibration factors for VA, IA, VB, IB
+					if ((ret = Metro_HAL_Start_SPI_Com()) != METRO_SUCCESS)		//Start SPI Communication
 					{
-						ret = METRO_SPI_ERR;	//SPI ERROR
-					}
-					else
-					{
-						ret = Metro_HAL_Start_SPI_Com();		//Start SPI Communication
+						ret = METRO_SPI_ERR;
 					}
 				}
-			}
-		}
-	}
+			}	//if ends
+		}	//if ends
+	}//if ends
 
 	return ret;
 }
@@ -157,10 +176,9 @@ metro_err_t Metro_AD_Init(void)
 
 /**
  * @brief      This function reset the ADE9039 chipset
- * @param[in]  None
  * @retval     None
 */
-void Metro_AD_Reset(void)
+void Metro_AD_Reset()
 {
 #if 0
 		//RST logic for ESP kit
@@ -180,10 +198,9 @@ void Metro_AD_Reset(void)
 
 /**
  * @brief      This function stop the functionality of ADE9039 chipset
- * @param[in]  None
  * @retval     None
 */
-void Metro_AD_Stop(void)
+void Metro_AD_Stop()
 {
 #if 0
 		//RST logic for ESP kit
@@ -203,21 +220,32 @@ void Metro_AD_Stop(void)
 /**
  * @brief      This function initialize SPI communication
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_SPI_Comm_Init(void)
+uint8_t Metro_SPI_Comm_Init()
 {
-	return Merto_HAL_SPI_Init();
+	uint8_t ret = METRO_SUCCESS;
+
+	if ((Merto_HAL_SPI_Init()) != METRO_SUCCESS)
+	{
+		ret = METRO_SPI_ERR;
+	}
+
+	return ret;
 }
 
 
 /**
  * @brief      This function Read power factor for channel
- * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, float *cal_pf: to store pf value
+ * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2
  * @retval     None
 */
 void Metro_Read_Power_Factor(METRO_Channel_t in_Metro_Channel, float *cal_pf)
 {
+#ifdef METRO_DEBUG_PRINTS
+	ESP_LOGI(TAG,"read period\n");
+#endif
+
 	Metro_HAL_read_Power_Factor(in_Metro_Channel, cal_pf);		//Get Power factor according to channel
 }
 
@@ -225,7 +253,7 @@ void Metro_Read_Power_Factor(METRO_Channel_t in_Metro_Channel, float *cal_pf)
 
 /**
  * @brief  :   Read frequency for the selected channel
- * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2, float *raw_freq: to store freq value
+ * @param[in]  METRO_Channel_t in_Metro_Channel :Channel1 or Channel2
  * @retval     None
  */
 void Metro_Read_Frequency(METRO_Channel_t in_Metro_Channel, float *raw_freq)
@@ -257,23 +285,17 @@ void Metro_Read_Power(METRO_Power_selection_t in_Metro_Power_Selection, METRO_Ch
 {
 	switch (in_Metro_Power_Selection)
 	{
-			//Active Power
-
 		case (W_ACTIVE):
 		{
 			Metro_HAL_read_Active_Power(in_Metro_Channel, calc_RMS_Power);		//Get active power according to channel
 			break;
 		}
 
-			//Reactive Power
-
 		case (REACTIVE):
 		{
 			Metro_HAL_read_Reactive_Power(in_Metro_Channel, calc_RMS_Power);		//Get reactive power according to channel
 			break;
 		}
-
-			//Apparent Power
 
 		case (APPARENT):
 		{
@@ -287,13 +309,17 @@ void Metro_Read_Power(METRO_Power_selection_t in_Metro_Power_Selection, METRO_Ch
 	 }		//end switch
 
 	*calc_RMS_Power = *calc_RMS_Power / MILLI_DIV_FACTOR;
+
+#ifdef METRO_DEBUG_PRINTS
+	ESP_LOGI(TAG,"calc power: %f\n",calc_RMS_Power);
+#endif
 }
 
 
 
 /**
  * @brief      This function read RMS values of both voltage and current for the selected channel
- * @param[in]   in_Metro_Channel : CHANNEL1 or CHANNEL2, float * out_Metro_RMS_voltage, float * out_Metro_RMS_current
+ * @param[in]   in_Metro_Channel : CHANNEL1 or CHANNEL2
  * @param[out]  out_Metro_RMS_voltage , out_Metro_RMS_current
  * @retval     None
  * */
@@ -316,7 +342,7 @@ void Metro_Read_RMS(METRO_Channel_t in_Metro_Channel, float * out_Metro_RMS_volt
 
 /**
  * @brief      This function Read energy according to the selected type for the given channel
- * @param[in]  in_Metro_Power_Selection : W_ACTIVE, REACTIVE, APPARENT, calculated energy variable, METRO_Channel_t in_Metro_Channel, double *calc_energy
+ * @param[in]  in_Metro_Power_Selection : W_ACTIVE, REACTIVE, APPARENT, calculated energy variable
  * @retval	   None
  */
 void Metro_Read_Energy(METRO_Power_selection_t in_Metro_Power_Selection, METRO_Channel_t in_Metro_Channel, double *calc_energy)
@@ -325,23 +351,17 @@ void Metro_Read_Energy(METRO_Power_selection_t in_Metro_Power_Selection, METRO_C
 
 	switch (in_Metro_Power_Selection)
 	{
-			//Active Energy
-
 		case (W_ACTIVE):
 		{
 			Metro_HAL_read_Active_Energy(in_Metro_Channel, &raw_energy);	//Get active energy
 			break;
 		}
 
-			//Reactive Energy
-
 		case (REACTIVE):
 		{
 			Metro_HAL_read_Reactive_Energy(in_Metro_Channel, &raw_energy);	//Get Reactive energy
 			break;
 		}
-
-			//Apparent Energy
 
 		case (APPARENT):
 		{
@@ -353,86 +373,118 @@ void Metro_Read_Energy(METRO_Power_selection_t in_Metro_Power_Selection, METRO_C
 			break;
 	 }		//end switch
 
-
-		//mWh to KWh conversion
-
 	*calc_energy = (double)raw_energy * ENERGY_CONV_FACT;
 	*calc_energy = *calc_energy / MILLI_DIV_FACTOR;		//calculate energy in mWh
 	*calc_energy = *calc_energy / MILLI_DIV_FACTOR;		//calculate energy in Wh
 	*calc_energy = *calc_energy / MILLI_DIV_FACTOR;		//calculate energy in kWh
 }
 
-
-
 /**
  * @brief      This function Read energy according to the selected type for the given channel
- * @param[in]  METRO_Channel_t in_Metro_Channel, calculated energy sign
- * @retval	   metro_err_t error type
+ * @param[in]  METRO_Channel_t in_Metro_Channel, calculated energy variable
+ * @retval	   None
  */
-metro_err_t Metro_Get_Energy_Sign(METRO_Channel_t in_Metro_Channel, uint16_t *phase_sign_reg)
+void Metro_Get_Energy_Sign(METRO_Channel_t in_Metro_Channel, uint16_t *phase_sign_reg)
 {
-	return Metro_HAL_read_Phase_Sign(in_Metro_Channel, phase_sign_reg);;
+	Metro_HAL_read_Phase_Sign(in_Metro_Channel, phase_sign_reg);
 }
 
 
+
+/**
+ * @brief      This function writes waveform config regs
+ * @retval     None
+*/
 #ifdef AD_WFB_EN
 
 /**
  * @brief      This function reads waveform data
  * @param[in]  None
- * @retval     metro_err_t err type
+ * @retval     None
 */
-metro_err_t Metro_read_Waveform_data(void)
+uint8_t Metro_read_Waveform_data()
 {
-	return Metro_HAL_read_Waveform_burst_data();	//Read waveform buffer
+	uint8_t ret = METRO_SUCCESS;
+
+	if ((ret = Metro_HAL_read_Waveform_burst_data()) != METRO_SUCCESS)		//Read waveform buffer
+	{
+		ret = METRO_SPI_ERR;
+	}
+
+	return ret;
 }
 
 
 /**
  * @brief      This function initialize waveform capture
  * @param[in]  None
- * @retval     metro_err_t error type
+ * @retval     uint8_t error type
 */
-metro_err_t Metro_Start_Waveform(void)
+uint8_t Metro_Start_Waveform()
 {
-	metro_err_t ret = METRO_SUCCESS;
+	uint8_t ret = METRO_SUCCESS;
 
-		//To enable waveform capture, disable waveform and then enable it
-
-	if (Metro_HAL_Waveform_Cap_Dis() != METRO_SUCCESS)
+	if ((ret = Metro_HAL_Waveform_Cap_Dis()) != METRO_SUCCESS)
 	{
-		ret = METRO_SPI_ERR;	//SPI ERROR
+		ret = METRO_SPI_ERR;
 	}
 	else
 	{
-		ret = Metro_HAL_Waveform_Cap_En();
+		if ((ret = Metro_HAL_Waveform_Cap_En()) != METRO_SUCCESS)
+		{
+			ret = METRO_SPI_ERR;
+		}
 	}
 
 	return ret;
 }
 #endif
 
-
-/**
- * @brief      This function update calibration into NVS
- * @param[in]  None
- * @retval     None
-*/
-metro_err_t Metro_Update_Calib_Fact(void)
+uint8_t Metro_Write_EOL_Calibration_Params(BreakerEOLCalibration_st *pBreakerEOLCalibration)
 {
-	printf("\nUpdating cal factors\n");
-
-	return Metro_HAL_Write_Calibration_regs();		//Configure calibration factors for VA, IA, VB, IB
+	uint8_t ret = METRO_SUCCESS;
+	if(pBreakerEOLCalibration != NULL)
+	{
+		printf("set calibration values\n");
+		if((ret = Metro_HAL_Write_EOL_Calibration_Params(pBreakerEOLCalibration)) != METRO_SUCCESS)
+		{
+			ret = METRO_SPI_ERR;
+		}
+	}
+	return ret;
 }
 
 
-
 /**
- * @brief      This function set energy read time
- * @param[in]   uint16_t timer_count
- * @retval     metro_err_t err type
- */
-metro_err_t Metro_set_Energy_Ready_time(uint16_t timer_count)
+ * @brief      This function update calibration into NVS
+ * @retval     None
+*/
+uint8_t Metro_Update_Calib_Fact()
 {
-	return Metro_HAL_set_EGY_TIME_reg(timer_count);
+	uint8_t ret = METRO_SUCCESS;
+
+//	metro_calib_struct metro_update_calib = {
+//		.avGain = METRO_CALB_AV_GAIN,
+//		.aiGain = METRO_CALB_AI_GAIN,
+//		.aiRmsOs = METRO_CALB_AI_OS_GAIN,
+//		.apGain = METRO_CALB_AP_GAIN,
+//		.aphCal_0 = METRO_CALB_APHCAL0_GAIN,
+//
+//		.bvGain = METRO_CALB_BV_GAIN,
+//		.biGain = METRO_CALB_BI_GAIN,
+//		.biRmsOs = METRO_CALB_BI_OS_GAIN,
+//		.bpGain = METRO_CALB_BP_GAIN,
+//		.bphCal_0 = METRO_CALB_BPHCAL0_GAIN,
+//	};
+
+	printf("\nUpdating cal factors\n");
+
+//	nvs_write_metro_calib(metro_update_calib);
+
+	if ((ret = Metro_HAL_Write_Calibration_regs()) != METRO_SUCCESS)		//Configure calibration factors for VA, IA, VB, IB
+	{
+		ret = METRO_SPI_ERR;
+	}
+
+	return ret;
 }

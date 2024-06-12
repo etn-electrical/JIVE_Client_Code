@@ -15,8 +15,6 @@
  *
  ****************************************************************************/
  
-
-
 #include "Includes.h"
 #include "DCI_Data.h"
 #include "StdLib_MV.h"
@@ -27,7 +25,7 @@
 #include "EventManager.h"
 #include "KeyManager.h"
 #include "DeviceGPIO.h"
-#include "sblcp.h"
+
 
 #include "Includes.h"
 #include "IOT_DCI_Config.h"
@@ -36,11 +34,6 @@
 #include "String_Sanitize_Whitelists.h"
 #include "StdLib_MV.h"
 #include "Ram.h"
-extern "C" {
-#include "uart_events.h"
-}
-
-#include "esp_wifi.h"
 
 static const char *TAG = "IOT_DCI_Interface";
 extern metroData_t g_cloudTrendingData;
@@ -50,7 +43,7 @@ DCI_Owner* m_SecondaryContactStatus;           //tag_value 112078
 DCI_Owner* m_PathStatus;  						//teg_value 10228020
 DCI_Owner* m_PrimaryState;  					//teg_value 10228021
 DCI_Owner* m_SecondaryState;  					//teg_value 10228022
-DCI_Owner* m_PowerUpState; 					//tag_value 112079
+DCI_Owner* m_POWER_UP_STATE;                //tag_value 112079
 
 DCI_Owner* m_NetworkSSID;	                //tag_value 112083
 DCI_Owner* m_NetworkPassword;	            //tag_value 112084
@@ -71,12 +64,6 @@ DCI_Owner* m_ConnectionString;
 
 DCI_Owner* m_DeviceUUID;
 
-DCI_Owner* m_Temperature;			  	    //tag_value  10302277// Temperature from ST side
-
-DCI_Owner* m_DpsEndpoint;
-DCI_Owner* m_DpsIdScope;
-DCI_Owner* m_DpsSymmetricKey;
-DCI_Owner* m_DpsDeviceRegId;
 DCI_Owner* m_VoltageL1;						//tag_value 10083394 //Voltage Line 1
 
 DCI_Owner* m_VoltageL2;						//tag_value 10083395 //Voltage Line 2
@@ -129,8 +116,6 @@ DCI_Owner* m_FrequencyL1;					//tag_value 10134552 //Frequency Line 1
 
 DCI_Owner* m_FrequencyL2;					//tag_value 10134553 //Frequency Line 2
 
-DCI_Owner* m_PercentLoad;					//Tag Value
-
 DCI_Owner* m_UnicastPrimaryUDPKey;  			//tag_value 10186907 UnicastPrimaryUDPKey
 DCI_Owner* m_GetUnicastPrimaryUDPKey;			//tag_value 10186911 GetUnicastPrimaryUDPKey
 DCI_Owner* m_BroadcastPrimaryUDPKey;			//tag_value 10186909 BroadcastPrimaryUDPKey
@@ -139,14 +124,8 @@ DCI_Owner* m_UnicastSecondaryUDPKey;			//tag_value 10192325 UnicastSecondaryUDPK
 DCI_Owner* m_GetUnicastSecondaryUDPKey;			//tag_value 10192326 GetUnicastSecondaryUDPKey
 DCI_Owner* m_BroadcastSecondaryUDPKey;			//tag_value 10192327 BroadcastSecondaryUDPKey
 DCI_Owner* m_GetBroadcastSecondaryUDPKey;		//tag_value 10192328 GetBroadcastSecondaryUDPKey
-DCI_Owner* m_DeleteUnicastPrimaryUDPKey;  		//tag_value 10273357 DeleteUnicastPrimaryUDPKey
-DCI_Owner* m_DeleteBroadcastPrimaryUDPKey;		//tag_value 10273358 DeleteBroadcastPrimaryUDPKey
-DCI_Owner* m_DeleteUnicastSecondaryUDPKey;		//tag_value 10273809 DeleteUnicastSecondaryUDPKey
-DCI_Owner* m_DeleteBroadcastSecondaryUDPKey;	//tag_value 10273810 DeleteBroadcastSecondaryUDPKey
 DCI_Owner* m_ErrorLogData;						//tag_value 10083415 Error log Data
-DCI_Owner* m_WIFI_RSSI_Signal_Strength ;		//tag_value 10290885 Error log Data
-DCI_Owner* m_IdentifyMe;           //tag_value 10289358
-DCI_Owner* m_SBLCPEnDis;           //tag_value 10306405
+
 
 extern DRAM_ATTR Device_Info_str DeviceInfo;
 
@@ -157,10 +136,7 @@ void DCI_Update_ErroLogUpdate(const char * ErrorLog)
 	//ets_printf("%s \n", ErrorLog);
 	//format for now
 	// Send To Cloud Breaker Turns ON 40 at 1677284584   Fri Feb 24 19:40:57 2023
-	//new format now ErrorCode Timestamp ErrorDescription
-	// 315 1692170207 Breaker TIME_BASE LOG   Wednesday, August 16, 2023 7:16:47 AM
 }
-
 
 void DCI_Update_VoltageL1()
 {
@@ -174,26 +150,6 @@ void DCI_Update_VoltageL1()
 	}
 }
 
-void DCI_Update_Temperature()
-{
-	static float STTemperature = 0;
-	// the data is coming though uart
-	if (g_cloudTrendingData.st_temperature != STTemperature)
-	{
-		STTemperature = g_cloudTrendingData.st_temperature;
-
-		m_Temperature->Check_In((DCI_DATA_PASS_TD *)&STTemperature);
-	}
-}
-
-void Ask_For_Temperature()
-{
-	M2M_UART_COMMN m2m_uart_comm_temp;
-	//send uart command
-	prepare_uart_command(&m2m_uart_comm_temp, UPDATE_TEMPERATURE, NO_PAYLOAD, NO_PAYLOAD_2, NO_PAYLOAD_2);
-	//send_packet_to_m2m_uart("TX", (const char*)&m2m_uart_comm_temp, sizeof(M2M_UART_COMMN));
-	UART_Send_Event_To_Queue((void *)&m2m_uart_comm_temp);
-}
 
 void DCI_Update_VoltageL2()
 {
@@ -531,32 +487,14 @@ static void SecondaryContactStatusCallback_Static( void )
     }
 }
 
-static void IdentifymeCallback_Static( void ) //10289358
-{
-	uint8_t IdentifyMeStatus = 0;
-	// receive the command from cloud
-	m_IdentifyMe->Check_Out((DCI_DATA_PASS_TD *)&IdentifyMeStatus);
-	ets_printf("m_IdentifyMeStatus %d\n",IdentifyMeStatus);
-
-
-	if(IdentifyMeStatus == 1)
-	{
-		// received the identifyme command and forward to protection MCU
-		IdentifyMeBegin();
-		// checkin to update the identify me status to 0,
-		IdentifyMeStatus = 0;
-		m_IdentifyMe->Check_In((DCI_DATA_PASS_TD *)&IdentifyMeStatus);
-	}
-
-}
-
-
 static void SecondaryStateCallback_Static( void )
 {
 	uint8_t LoadStatus;
 
 	m_SecondaryState->Check_Out((DCI_DATA_PASS_TD *)&LoadStatus);
     ets_printf("m_SecondaryState %d\n",LoadStatus);
+
+    DeviceInfo.SecondaryContactState = (ss_status_t)LoadStatus;
 
 #if defined PREVENT_REQUESTING_CURRENT_STATE
     if (LoadStatus != DeviceInfo.SecondaryContactState)
@@ -571,44 +509,14 @@ static void SecondaryStateCallback_Static( void )
         {
         	TurnBreakerOff();
         }
-        else
-        {
-        	//Value currently out of spec so re check in current value.
-        	LoadStatus = DeviceInfo.SecondaryContactState;
-        	m_SecondaryContactStatus->Check_In((DCI_DATA_PASS_TD *)&LoadStatus);
-        }
     }
-}
-
-static void SBLCP_EN_DIS_Callback_Static( void )
-{
-	bool EnDis;
-
-	m_SBLCPEnDis->Check_Out((DCI_DATA_PASS_TD *)&EnDis);
-    ets_printf("m_SBLCPEnDis:[%d]\n",EnDis);
-
-    if (EnDis != DeviceInfo.Sblcp_En_Dis)
-    {
-    	DeviceInfo.Sblcp_En_Dis = EnDis;
-    }
-}
-
-void DCI_UpdateSblcpEnDisStatus(void)
-{
-    static bool EnDis;
-    
-	if (DeviceInfo.Sblcp_En_Dis != EnDis)
-	{
-		EnDis = DeviceInfo.Sblcp_En_Dis;
-		m_SBLCPEnDis->Check_In((DCI_DATA_PASS_TD *)&DeviceInfo.Sblcp_En_Dis);
-	}
 }
 
 void DCI_UpdateSecondaryContactStatus(void)
 {
     static ss_status_t PrevDeviceState = SS_UNKNOWN;
     bool BreakerState;
-
+    
 	if (DeviceInfo.SecondaryContactState != PrevDeviceState)
 	{
 		PrevDeviceState = DeviceInfo.SecondaryContactState;
@@ -648,31 +556,6 @@ void DCI_UpdateSecondaryState(void)
 
 		//m_LOAD_STATUS->Check_Out((DCI_DATA_PASS_TD *)&BreakerState);
 		//ets_printf("m_LOAD_STATUSRead Saved vlaue %d\n",BreakerState);
-	}
-}
-
-static void PowerUpStateCallback_Static( void )
-{
-	uint8_t startup_config;
-	m_PowerUpState->Check_Out((DCI_DATA_PASS_TD *)&startup_config);
-    ets_printf("m_PowerUpState %d\n",startup_config);
-
-    updateStartupConfig(startup_config);
-}
-
-//We likely do not need this function as it will have the same startup default
-//and should only be changed through the cloud.
-//However, it has been added in preparation for the SBLCP to potentially
-//update this value if the need arises.
-void DCI_UpdatePowerUpState(uint8_t startup_config)
-{
-    static uint8_t PrevDeviceState = 1;
-    if (startup_config != PrevDeviceState)
-	{
-		PrevDeviceState = startup_config;
-
-		m_PowerUpState->Check_In((DCI_DATA_PASS_TD *)&startup_config);
-		//ets_printf("m_PowerUpConfig Saved value %d\n",BreakerState);
 	}
 }
 
@@ -717,39 +600,6 @@ void DCI_UpdatePrimaryState(void)
 
 		//m_LOAD_STATUS->Check_Out((DCI_DATA_PASS_TD *)&BreakerState);
 		//ets_printf("m_LOAD_STATUSRead Saved vlaue %d\n",BreakerState);
-	}
-}
-
-void DCI_UpdateIdentifyMeStatus(void)
-{
-	// if somehow the status is not updated in the cloud, identifyme will not work again.
-	// so set the status back to 0 in the cloud
-	uint8_t IdentifyMeStatus = 0;
-	m_IdentifyMe->Check_Out((DCI_DATA_PASS_TD *)&IdentifyMeStatus);
-	if(IdentifyMeStatus != 0)
-	{
-		IdentifyMeStatus = 0;
-		m_IdentifyMe->Check_In((DCI_DATA_PASS_TD *)&IdentifyMeStatus);
-	}
-}
-
-void DCI_Update_Wifi_RSS_Signal_Strength()
-{
-	int8_t PrewifiSignalStrength = 0;
-	wifi_ap_record_t ap;
-
-	memset(&ap, 0, sizeof(wifi_ap_record_t));
-
-	esp_wifi_sta_get_ap_info(&ap);
-	PrewifiSignalStrength = ap.rssi;
-
-//	ets_printf("######## PrewifiSignalStrength:%d\n",PrewifiSignalStrength);
-
-	if (DeviceInfo.Wifi_RSSI_Signal_Strength != PrewifiSignalStrength)
-	{
-		DeviceInfo.Wifi_RSSI_Signal_Strength = PrewifiSignalStrength;
-
-		m_WIFI_RSSI_Signal_Strength->Check_In((DCI_DATA_PASS_TD *)&PrewifiSignalStrength);
 	}
 }
 
@@ -810,7 +660,8 @@ void GetDeviceSsid(void)
 
 void DCI_Update_DeviceMacAdd()
 {
-    uint8_t eth_mac[6] = {0};
+    uint8_t eth_mac[6];
+
     
     esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
     if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
@@ -880,146 +731,68 @@ static void BreakerNameCallback_Static( void )
 
 static void UnicastPrimaryUDPKeyCallback_Static( void )
 {
-	unsigned char UnicastPrimaryUDPKey[CRYPTO_HASH_LENGTH + 16];
+	unsigned char UnicastPrimaryUDPKey[CRYPTO_HASH_LENGTH];
 
 	m_UnicastPrimaryUDPKey->Check_Out((DCI_DATA_PASS_TD *)UnicastPrimaryUDPKey);
-    ets_printf("m_UnicastPrimaryUDPKey %s\n",UnicastPrimaryUDPKey);
+    ets_printf("m_UnicastPrimaryUDPKey %d\n",UnicastPrimaryUDPKey);
 
 
-    if(memcmp(UnicastPrimaryUDPKey, DeviceInfo.UnicastPrimaryUDPKey, (CRYPTO_HASH_LENGTH)) != 0 )
+    if(memcmp(UnicastPrimaryUDPKey, DeviceInfo.BroadcastSecondaryUDPKey, CRYPTO_HASH_LENGTH) != 0 )
     {
-        memcpy((char *)&DeviceInfo.UnicastPrimaryUDPKey, &UnicastPrimaryUDPKey, (CRYPTO_HASH_LENGTH));
-
-        m_UnicastPrimaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)UnicastPrimaryUDPKey);
-
-        memset ((char *)&DeviceInfo.UnicastPrimaryUDPKey,0, (CRYPTO_HASH_LENGTH + 1));
-        memset(UnicastPrimaryUDPKey, 0, (CRYPTO_HASH_LENGTH + 1));
-        m_UnicastPrimaryUDPKey->Check_Out_Init((DCI_DATA_PASS_TD *)UnicastPrimaryUDPKey);
-
-        memcpy((char *)&DeviceInfo.UnicastPrimaryUDPKey, &UnicastPrimaryUDPKey, CRYPTO_HASH_LENGTH);
-
-        update_unicastPrimaryKey();
-        ets_printf("Primary Unicast key saved \n");
+        memcpy(DeviceInfo.BroadcastSecondaryUDPKey, UnicastPrimaryUDPKey, CRYPTO_HASH_LENGTH);
     }
+
 }
+
 
 static void UnicastSecondaryUDPKeyCallback_Static( void )
 {
-    unsigned char UnicastSecondaryUDPKey[CRYPTO_HASH_LENGTH + 16];
+    unsigned char UnicastSecondaryUDPKey[CRYPTO_HASH_LENGTH];
 
 	m_UnicastSecondaryUDPKey->Check_Out((DCI_DATA_PASS_TD *)UnicastSecondaryUDPKey);
-    ets_printf("m_UnicastSecondaryUDPKey %s\n",UnicastSecondaryUDPKey);
+    ets_printf("m_UnicastSecondaryUDPKey %d\n",UnicastSecondaryUDPKey);
 
-    if(memcmp(UnicastSecondaryUDPKey, DeviceInfo.UnicastSecondaryUDPKey, CRYPTO_HASH_LENGTH) != 0 )
+
+    if(memcmp(UnicastSecondaryUDPKey, DeviceInfo.BroadcastSecondaryUDPKey, CRYPTO_HASH_LENGTH) != 0 )
     {
-        memcpy((char *)&DeviceInfo.UnicastSecondaryUDPKey, &UnicastSecondaryUDPKey, CRYPTO_HASH_LENGTH);
-        m_UnicastSecondaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)UnicastSecondaryUDPKey);
-
-        memset(UnicastSecondaryUDPKey, 0, (CRYPTO_HASH_LENGTH + 16));
-        memset((char *)&DeviceInfo.UnicastSecondaryUDPKey,0, (CRYPTO_HASH_LENGTH + 1));
-        m_UnicastSecondaryUDPKey->Check_Out_Init((DCI_DATA_PASS_TD *)UnicastSecondaryUDPKey);
-
-        memcpy((char *)&DeviceInfo.UnicastSecondaryUDPKey, &UnicastSecondaryUDPKey, CRYPTO_HASH_LENGTH);
-
-        update_unicastSecondaryKey();
+        memcpy(DeviceInfo.BroadcastSecondaryUDPKey, UnicastSecondaryUDPKey, CRYPTO_HASH_LENGTH);
     }
 
 }
+
 
 static void BroadcastPrimaryUDPKeyCallback_Static( void )
 {
-    unsigned char BroadcastPrimaryUDPKey[CRYPTO_HASH_LENGTH + 16];
+    unsigned char BroadcastPrimaryUDPKey[CRYPTO_HASH_LENGTH];
 
 	m_BroadcastPrimaryUDPKey->Check_Out((DCI_DATA_PASS_TD *)BroadcastPrimaryUDPKey);
-    ets_printf("m_BroadcastPrimaryUDPKey %s\n",BroadcastPrimaryUDPKey);
+    ets_printf("m_BroadcastPrimaryUDPKey %d\n",BroadcastPrimaryUDPKey);
 
 
-    if(memcmp(BroadcastPrimaryUDPKey, DeviceInfo.BroadcastPrimaryUDPKey, CRYPTO_HASH_LENGTH) != 0 )
+    if(memcmp(BroadcastPrimaryUDPKey, DeviceInfo.BroadcastSecondaryUDPKey, CRYPTO_HASH_LENGTH) != 0 )
     {
-        memcpy((char *)&DeviceInfo.BroadcastPrimaryUDPKey, &BroadcastPrimaryUDPKey, CRYPTO_HASH_LENGTH);
-        m_BroadcastPrimaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)BroadcastPrimaryUDPKey);
-
-        memset(BroadcastPrimaryUDPKey, 0, (CRYPTO_HASH_LENGTH + 16));
-        memset ((char *)&DeviceInfo.BroadcastPrimaryUDPKey,0, (CRYPTO_HASH_LENGTH + 1));
-        m_BroadcastPrimaryUDPKey->Check_Out_Init((DCI_DATA_PASS_TD *)BroadcastPrimaryUDPKey);
-
-        memcpy((char *)&DeviceInfo.BroadcastPrimaryUDPKey, &BroadcastPrimaryUDPKey, CRYPTO_HASH_LENGTH);
-
-        update_broadcastPrimaryKey();
+        memcpy(DeviceInfo.BroadcastSecondaryUDPKey, BroadcastPrimaryUDPKey, CRYPTO_HASH_LENGTH);
     }
+
 }
+
 
 static void BroadcastSecondaryUDPKeyCallback_Static( void )
 {
-	unsigned char BroadcastSecondaryUDPKey[CRYPTO_HASH_LENGTH + 16];
+	unsigned char BroadcastSecondaryUDPKey[CRYPTO_HASH_LENGTH];
 
 	m_BroadcastSecondaryUDPKey->Check_Out((DCI_DATA_PASS_TD *)BroadcastSecondaryUDPKey);
-    ets_printf("m_BroadcastSecondaryUDPKey %s\n",BroadcastSecondaryUDPKey);
+    ets_printf("m_BroadcastSecondaryUDPKey %d\n",BroadcastSecondaryUDPKey);
 
 
     if(memcmp(BroadcastSecondaryUDPKey, DeviceInfo.BroadcastSecondaryUDPKey, CRYPTO_HASH_LENGTH) != 0 )
     {
-        memcpy((char *)&DeviceInfo.BroadcastSecondaryUDPKey, &BroadcastSecondaryUDPKey, CRYPTO_HASH_LENGTH);
-        m_BroadcastSecondaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)BroadcastSecondaryUDPKey);
-
-        memset(BroadcastSecondaryUDPKey, 0, (CRYPTO_HASH_LENGTH + 16));
-        memset((char *)&DeviceInfo.BroadcastSecondaryUDPKey,0, (CRYPTO_HASH_LENGTH + 1));
-        m_BroadcastSecondaryUDPKey->Check_Out_Init((DCI_DATA_PASS_TD *)BroadcastSecondaryUDPKey);
-        memcpy((char *)&DeviceInfo.BroadcastSecondaryUDPKey, &BroadcastSecondaryUDPKey, CRYPTO_HASH_LENGTH);
-
-        update_broadcastSecondaryKey();
+        memcpy(DeviceInfo.BroadcastSecondaryUDPKey, BroadcastSecondaryUDPKey, CRYPTO_HASH_LENGTH);
     }
+
 }
 
-static void DeleteUnicastPrimaryUDPKeyCallback_Static(void)
-{
-	bool delete_status = 0;
 
-	m_DeleteUnicastPrimaryUDPKey->Check_Out((DCI_DATA_PASS_TD *)&delete_status);
-    ets_printf("m_DeleteUnicastPrimaryUDPKey %d\n",delete_status);
-
-
-    if(delete_status == true)
-    {
-    	reset_primaryUnicastkey();
-    }
-}
-static void DeleteBroadcastPrimaryUDPKeyCallback_Static(void)
-{
-	bool delete_status = 0;
-
-	m_DeleteBroadcastPrimaryUDPKey->Check_Out((DCI_DATA_PASS_TD *)&delete_status);
-    ets_printf("m_DeleteBroadcastPrimaryUDPKey %d\n",delete_status);
-
-    if(delete_status == true)
-    {
-    	reset_primaryBroadcastkey();
-    }
-}
-static void DeleteUnicastSecondaryUDPKeyCallback_Static(void)
-{
-	bool delete_status = 0;
-
-	m_DeleteUnicastSecondaryUDPKey->Check_Out((DCI_DATA_PASS_TD *)&delete_status);
-    ets_printf("m_DeleteUnicastSecondaryUDPKey %d\n",delete_status);
-
-    if(delete_status == true)
-    {
-    	reset_secondaryUnicastkey();
-    }
-}
-static void DeleteBroadcastSecondaryUDPKeyCallback_Static(void)
-{
-	bool delete_status = 0;
-
-	m_DeleteBroadcastSecondaryUDPKey->Check_Out((DCI_DATA_PASS_TD *)&delete_status);
-    ets_printf("m_DeleteBroadcastSecondaryUDPKey %d\n",delete_status);
-
-    if(delete_status == true)
-    {
-    	reset_secondaryBroadcastkey();
-    }
-}
 void DCI_UpdateBuildType(void)
 {
     m_BuildType->Check_In( DeviceInfo.BuildType );
@@ -1030,59 +803,10 @@ void DCI_UpdateNewProgrammedPartNumber(void)
     m_ProgrammedPartNumber->Check_In( DeviceInfo.NewProgramedPartNumber );
 }
 
-void DCI_UpdateDPSDeviceRegId( void )
-{
-    m_DpsDeviceRegId->Check_In( (DCI_DATA_PASS_TD *)DeviceInfo.DpsDeviceRegId );      // only saves to RAM
-    m_DpsDeviceRegId->Check_In_Init( (DCI_DATA_PASS_TD *)DeviceInfo.DpsDeviceRegId ); // persist to "initial" value (NV/Flash)
-}
-
-void DCI_UpdateDPSEndpoint( void )
-{
-    m_DpsEndpoint->Check_In( (DCI_DATA_PASS_TD *)DeviceInfo.DpsEndpoint );      // only saves to RAM
-    m_DpsEndpoint->Check_In_Init( (DCI_DATA_PASS_TD *)DeviceInfo.DpsEndpoint ); // persist to "initial" value (NV/Flash)
-}
-
-void DCI_UpdateDPSIDScope( void )
-{
-    m_DpsIdScope->Check_In( (DCI_DATA_PASS_TD *)DeviceInfo.DpsIdScope );      // only saves to RAM
-    m_DpsIdScope->Check_In_Init( (DCI_DATA_PASS_TD *)DeviceInfo.DpsIdScope ); // persist to "initial" value (NV/Flash)
-}
-
-void DCI_UpdateDPSSymmetricKey( void )
-{
-    m_DpsSymmetricKey->Check_In( (DCI_DATA_PASS_TD *)DeviceInfo.DpsSymmetricKey );      // only saves to RAM
-    m_DpsSymmetricKey->Check_In_Init( (DCI_DATA_PASS_TD *)DeviceInfo.DpsSymmetricKey ); // persist to "initial" value (NV/Flash)
-}
-
-void DCI_GetDPSDeviceRegId( void )
-{
-    memset ((char *)&DeviceInfo.DpsDeviceRegId, 0, sizeof (DeviceInfo.DpsDeviceRegId));
-    m_DpsDeviceRegId->Check_Out( DeviceInfo.DpsDeviceRegId );
-}
-
-void DCI_GetDPSEndpoint( void )
-{
-    memset ((char *)&DeviceInfo.DpsEndpoint, 0, sizeof (DeviceInfo.DpsEndpoint));
-    m_DpsEndpoint->Check_Out( DeviceInfo.DpsEndpoint );
-}
-
-void DCI_GetDPSIDScope( void )
-{
-    memset ((char *)&DeviceInfo.DpsIdScope, 0, sizeof (DeviceInfo.DpsIdScope));
-    m_DpsIdScope->Check_Out( DeviceInfo.DpsIdScope );
-}
-
-void DCI_GetDPSSymmetricKey( void )
-{
-    memset ((char *)&DeviceInfo.DpsSymmetricKey, 0, sizeof (DeviceInfo.DpsSymmetricKey));
-    m_DpsSymmetricKey->Check_Out( DeviceInfo.DpsSymmetricKey );
-}
 
 void BreakerDCIInit( void )
 {
 	m_ErrorLogData = new DCI_Owner (  DCI_IOT_ErrorLogData_DCID );
-
-	m_Temperature = new DCI_Owner (  DCI_IOT_TEMPERATURE_DCID );
 
 	m_VoltageL1 = new DCI_Owner (  DCI_IOT_VoltageL1_DCID );
 	m_VoltageL2 = new DCI_Owner (  DCI_IOT_VoltageL2_DCID );
@@ -1123,8 +847,6 @@ void BreakerDCIInit( void )
 	m_FrequencyL1 = new DCI_Owner (  DCI_IOT_FrequencyL1_DCID );
 	m_FrequencyL2 = new DCI_Owner (  DCI_IOT_FrequencyL2_DCID );
 
-	m_PercentLoad = new DCI_Owner (  DCI_IOT_Load_Percentage_DCID );
-
 	m_UnicastPrimaryUDPKey        = new DCI_Owner (  DCI_IOT_UNICAST_PRIMARY_UDP_KEY_DCID );
 	m_GetUnicastPrimaryUDPKey     = new DCI_Owner (  DCI_IOT_GET_UNICAST_UDP_KEY_DCID );
 	m_BroadcastPrimaryUDPKey      = new DCI_Owner (  DCI_IOT_BROADCAST_UDP_PRIMARY_KEY_DCID );
@@ -1134,11 +856,6 @@ void BreakerDCIInit( void )
 	m_BroadcastSecondaryUDPKey    = new DCI_Owner (  DCI_IOT_BROADCAST_SECONDARY_UDP_KEY_DCID );
 	m_GetBroadcastSecondaryUDPKey = new DCI_Owner (  DCI_IOT_GET_BROADCAST_SECONDARY_UDP_KEY_DCID );
 
-	m_DeleteUnicastPrimaryUDPKey =  new DCI_Owner (  DCI_IOT_DELETE_PRIMARY_UNICAST_UDP_KEY_DCID );
-	m_DeleteUnicastSecondaryUDPKey =  new DCI_Owner (  DCI_IOT_DELETE_SECONDARY_UNICAST_UDP_KEY_DCID );
-	m_DeleteBroadcastPrimaryUDPKey = new DCI_Owner (  DCI_IOT_DELETE_PRIMARY_BROADCAST_UDP_KEY_DCID );
-	m_DeleteBroadcastSecondaryUDPKey = new DCI_Owner (  DCI_IOT_DELETE_SECONDARY_BROADCAST_UDP_KEY_DCID );
-
 
    	m_PrimaryContactStatus	    = new DCI_Owner (  DCI_IOT_PRIMARY_CONTACT_STATUS_DCID  );
     m_SecondaryContactStatus	= new DCI_Owner (  DCI_IOT_SECONDARY_CONTACT_STATUS_DCID  );
@@ -1147,8 +864,6 @@ void BreakerDCIInit( void )
     m_PrimaryState			    = new DCI_Owner (  DCI_IOT_PRIMARY_STATE_DCID  );
     m_SecondaryState			= new DCI_Owner (  DCI_IOT_SECONDARY_STATE_DCID  );
     
-    m_PowerUpState				= new DCI_Owner (  DCI_IOT_POWER_UP_STATE_DCID  );
-
     m_NetworkSSID = new DCI_Owner( DCI_IOT_NetworkSSID_DCID);
     m_NetworkPassword = new DCI_Owner( DCI_IOT_NetworkPassword_DCID);
     m_WiFiModuleFirmwareVersion = new DCI_Owner( DCI_IOT_FirmwareVersion_DCID);
@@ -1167,33 +882,18 @@ void BreakerDCIInit( void )
     
     m_BuildType = new DCI_Owner( DCI_BUILD_TYPE_DCID);
     
-    m_IdentifyMe	= new DCI_Owner (  DCI_IOT_IDENTIFY_ME_DCID  );
-    m_DpsEndpoint = new DCI_Owner( DCI_IOT_DPS_ENDPOINT_DCID);
-    m_DpsIdScope = new DCI_Owner( DCI_IOT_DPS_ID_SCOPE_DCID);
-    m_DpsSymmetricKey = new DCI_Owner( DCI_IOT_DPS_SYMM_KEY_DCID);
-    m_DpsDeviceRegId = new DCI_Owner( DCI_IOT_DPS_DEVICE_REG_ID_DCID);
-
-    m_SBLCPEnDis    = new DCI_Owner (  DCI_IOT_SBLCP_EN_DIS_DCID  );
-
-    m_WIFI_RSSI_Signal_Strength = new DCI_Owner (  DCI_IOT_WIFI_RSSI_SIGNAL_STRENGTH_DCID );
-
-    m_IdentifyMe->Attach_Callback( (DCI_CBACK_FUNC_TD *)&IdentifymeCallback_Static,
-           		NULL, static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));
-
-    m_SecondaryContactStatus->Attach_Callback( (DCI_CBACK_FUNC_TD *)&SecondaryContactStatusCallback_Static,
-        		NULL,
-                static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
+	m_SecondaryContactStatus->Attach_Callback( (DCI_CBACK_FUNC_TD *)&SecondaryContactStatusCallback_Static,
+    		NULL,
+            static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
 
 	m_SecondaryState->Attach_Callback( (DCI_CBACK_FUNC_TD *)&SecondaryStateCallback_Static,
     		NULL,
             static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
-	m_PowerUpState->Attach_Callback( (DCI_CBACK_FUNC_TD *)&PowerUpStateCallback_Static,
-	    		NULL,
-	            static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
 
     m_ResetBreaker->Attach_Callback( (DCI_CBACK_FUNC_TD *)&BreakerResetCallback_Static,
     		NULL,
             static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
+
 
     m_ProductName->Attach_Callback( (DCI_CBACK_FUNC_TD *)&BreakerNameCallback_Static,
     		NULL,
@@ -1212,26 +912,6 @@ void BreakerDCIInit( void )
     		NULL,
             static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
 
-    m_DeleteUnicastPrimaryUDPKey->Attach_Callback( (DCI_CBACK_FUNC_TD *)&DeleteUnicastPrimaryUDPKeyCallback_Static,
-       		NULL,
-               static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
-
-    m_DeleteBroadcastPrimaryUDPKey->Attach_Callback( (DCI_CBACK_FUNC_TD *)&DeleteBroadcastPrimaryUDPKeyCallback_Static,
-       		NULL,
-               static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
-
-    m_DeleteUnicastSecondaryUDPKey->Attach_Callback( (DCI_CBACK_FUNC_TD *)&DeleteUnicastSecondaryUDPKeyCallback_Static,
-       		NULL,
-               static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
-
-    m_DeleteBroadcastSecondaryUDPKey->Attach_Callback( (DCI_CBACK_FUNC_TD *)&DeleteBroadcastSecondaryUDPKeyCallback_Static,
-       		NULL,
-               static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
-
-    m_SBLCPEnDis->Attach_Callback( (DCI_CBACK_FUNC_TD *)&SecondaryContactStatusCallback_Static,
-        		NULL,
-                static_cast<DCI_CB_MSK_TD>(DCI_ACCESS_POST_SET_RAM_CMD_MSK));//DCI_ACCESS_SET_RAM_CMD_MSK | DCI_ACCESS_POST_SET_RAM_CMD_MSK
-
 
 }
 
@@ -1240,7 +920,6 @@ void SetConnectStringInfo()
 {
  
      uint16_t size;
-    bool connectionStringValid = false;
 
     memset ((char *)&DeviceInfo.HostName,0, sizeof (DeviceInfo.HostName)); 
     memset ((char *)&DeviceInfo.DeviceId,0, sizeof (DeviceInfo.DeviceId));
@@ -1248,44 +927,26 @@ void SetConnectStringInfo()
     
     
     size = strlen (DeviceInfo.ConnectionString);
-    if ( ConnectionStringMinValidLength <= size )
+    if (size<100)
     {
-        ParseConnectionString();
-        connectionStringValid = true;
+    	//invalid connection string, reset
+    	ESP_LOGI(TAG, "Invalid connection string, reset");
+        ResetDevice(MANUFACTURING_RESET, true);
+        return;
     }
-    else
-    {
-    	//invalid connection string
-    	ESP_LOGW(TAG, "Invalid connection string");
-    }
-	if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
-	{
-    	ets_printf ("Start saving connection string \n");
-	}
-    // We want to write the connection string if it is valid or blank
-    if ((ConnectionStringMinValidLength <= size) || (0 == size))
-    {
-        m_ConnectionString->Check_In((DCI_DATA_PASS_TD *)DeviceInfo.ConnectionString);
-        m_ConnectionString->Check_In_Init((DCI_DATA_PASS_TD *)DeviceInfo.ConnectionString);
-        
-        memset ((char *)&DeviceInfo.ConnectionString,0, sizeof (DeviceInfo.ConnectionString));
-        m_ConnectionString->Check_Out_Init((DCI_DATA_PASS_TD *)DeviceInfo.ConnectionString);
+    ParseConnectionString();
+    m_ConnectionString->Check_In((DCI_DATA_PASS_TD *)DeviceInfo.ConnectionString);
+    m_ConnectionString->Check_In_Init((DCI_DATA_PASS_TD *)DeviceInfo.ConnectionString);
     
-        m_DeviceUUID->Check_In((DCI_DATA_PASS_TD *)DeviceInfo.DeviceId);
-        m_DeviceUUID->Check_In_Init((DCI_DATA_PASS_TD *)DeviceInfo.DeviceId);
-
-        DeviceInfo.ConnectionStringSaved = connectionStringValid;
-
-		if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
-		{
-			ets_printf ("connection string saved\n");
-		}
-    }
-	if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
-	{
-		ets_printf ("connection string saved\n");
-	}
-
+    memset ((char *)&DeviceInfo.ConnectionString,0, sizeof (DeviceInfo.ConnectionString));
+    m_ConnectionString->Check_Out_Init((DCI_DATA_PASS_TD *)DeviceInfo.ConnectionString);
+   
+    
+    m_DeviceUUID->Check_In((DCI_DATA_PASS_TD *)DeviceInfo.DeviceId);
+    m_DeviceUUID->Check_In_Init((DCI_DATA_PASS_TD *)DeviceInfo.DeviceId);
+    
+    
+    DeviceInfo.ConnectionStringSaved = true;
 }
 
 void GetConnectStringInfo()
@@ -1305,7 +966,7 @@ void GetConnectStringInfo()
     
     size = strlen (DeviceInfo.ConnectionString);
     
-    if ( ConnectionStringMinValidLength > size)
+    if (size<100)
     {
         DeviceInfo.ConnectionStringSaved = false;
         if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
@@ -1344,7 +1005,7 @@ void ParseConnectionString(void)
     
     if (DeviceInfo.DeviceInFactoryMode != DEVICE_IS_IN_FACTORY_MODE)
     {    
-    	ets_printf( "ConnectionString: %s \n",  DeviceInfo.ConnectionString);
+    	ets_printf( "ConnectionString: %.*s \n",  DeviceInfo.ConnectionString);
     }
     
 
@@ -1363,269 +1024,7 @@ void ResetConnectStringInfo()
     //WriteStringToFlash(EEOFFSET_PASWORD_LABEL,DeviceInfo.PassWord,sizeof(DeviceInfo.PassWord));
 }
 
-void read_PrimaryUnicastUdpKey()
-{
-	unsigned char primaryunicastkey[CRYPTO_HASH_LENGTH + 16];
-
-	memset(primaryunicastkey, 0, (CRYPTO_HASH_LENGTH + 16));
-	memset(DeviceInfo.UnicastPrimaryUDPKey, 0, CRYPTO_HASH_LENGTH);
-
-	m_UnicastPrimaryUDPKey->Check_Out_Init((DCI_DATA_PASS_TD *)primaryunicastkey);
-	memcpy(DeviceInfo.UnicastPrimaryUDPKey, primaryunicastkey, CRYPTO_HASH_LENGTH);
-	DeviceInfo.UnicastPrimaryUDPKey[CRYPTO_HASH_LENGTH] = '\0';
-    ets_printf("UnicastPrimaryUDPKey after reading back from encrypted flash %s\n",DeviceInfo.UnicastPrimaryUDPKey);
-}
-void read_secondaryUnicastUdpKey()
-{
-	unsigned char secondaryUnicastKey[CRYPTO_HASH_LENGTH + 16];
-
-	memset(secondaryUnicastKey, 0, (CRYPTO_HASH_LENGTH + 16));
-	memset(DeviceInfo.UnicastSecondaryUDPKey, 0, CRYPTO_HASH_LENGTH);
-	m_UnicastSecondaryUDPKey->Check_Out_Init((DCI_DATA_PASS_TD *)secondaryUnicastKey);
-
-	memcpy(DeviceInfo.UnicastSecondaryUDPKey, secondaryUnicastKey, CRYPTO_HASH_LENGTH);
-	DeviceInfo.UnicastSecondaryUDPKey[CRYPTO_HASH_LENGTH] = '\0';
-
-    printf("UnicastSecondaryUDPKey after reading back from encrypted flash %s\n",DeviceInfo.UnicastSecondaryUDPKey);
-}
-void read_PrimaryBroadcasttUdpKey()
-{
-	unsigned char primaryBroadcastKey[CRYPTO_HASH_LENGTH + 16];
-
-	memset(primaryBroadcastKey, 0, (CRYPTO_HASH_LENGTH + 16));
-	memset(DeviceInfo.BroadcastPrimaryUDPKey, 0, CRYPTO_HASH_LENGTH);
-
-    m_BroadcastPrimaryUDPKey->Check_Out_Init((DCI_DATA_PASS_TD *)primaryBroadcastKey);
-    memcpy(DeviceInfo.BroadcastPrimaryUDPKey, primaryBroadcastKey, CRYPTO_HASH_LENGTH);
-    DeviceInfo.BroadcastPrimaryUDPKey[CRYPTO_HASH_LENGTH] = '\0';
-
-    ets_printf("BroadcastPrimaryUDPKey after reading back from encrypted flash %s\n",DeviceInfo.BroadcastPrimaryUDPKey);
-}
-void read_secondaryBroadcasttUdpKey()
-{
-	unsigned char secondaryBroadcastKey[CRYPTO_HASH_LENGTH + 16];
-
-	memset(secondaryBroadcastKey, 0, (CRYPTO_HASH_LENGTH + 16));
-	memset(DeviceInfo.BroadcastSecondaryUDPKey, 0, CRYPTO_HASH_LENGTH);
-
-	m_BroadcastSecondaryUDPKey->Check_Out_Init((DCI_DATA_PASS_TD *)secondaryBroadcastKey);
-	memcpy(DeviceInfo.BroadcastSecondaryUDPKey, secondaryBroadcastKey, CRYPTO_HASH_LENGTH);
-	DeviceInfo.BroadcastSecondaryUDPKey[CRYPTO_HASH_LENGTH] = '\0';
-
-    ets_printf("BroadcastSecondaryUDPKey after reading back from encrypted flash %s\n",DeviceInfo.BroadcastSecondaryUDPKey);
-}
-void delete_primaryUnicastudpKeys()
-{
-	unsigned char udp_key_reset[CRYPTO_HASH_LENGTH + 16];
-	memset(udp_key_reset, 0, (CRYPTO_HASH_LENGTH + 16));
-
-	//reset primary unicast key from encrypted flash
-	memset ((char *)&DeviceInfo.UnicastPrimaryUDPKey,0, CRYPTO_HASH_LENGTH);
-//	m_UnicastPrimaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)DeviceInfo.UnicastPrimaryUDPKey);
-	m_UnicastPrimaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)udp_key_reset);
-	ets_printf("UnicastPrimaryUDPkey after erase %s\n",DeviceInfo.UnicastPrimaryUDPKey);
-}
-void delete_secondaryUnicastudpKeys()
-{
-	unsigned char udp_key_reset[CRYPTO_HASH_LENGTH + 16];
-	memset(udp_key_reset, 0, (CRYPTO_HASH_LENGTH + 16));
-
-	//reset secondary unicast key from encrypted flash
-	memset ((char *)&DeviceInfo.UnicastSecondaryUDPKey,0, CRYPTO_HASH_LENGTH);
-//	m_UnicastSecondaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)DeviceInfo.UnicastSecondaryUDPKey);
-	m_UnicastSecondaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)udp_key_reset);
-	ets_printf("UnicastSecondaryUDPkey after erase %s\n",DeviceInfo.UnicastSecondaryUDPKey);
-}
-void delete_primary_BroadcastKey()
-{
-	unsigned char udp_key_reset[CRYPTO_HASH_LENGTH + 16];
-	memset(udp_key_reset, 0, (CRYPTO_HASH_LENGTH + 16));
-
-	//reset primary broadcast key from encrypted flash
-	memset ((char *)&DeviceInfo.BroadcastPrimaryUDPKey,0, CRYPTO_HASH_LENGTH);
-//	m_BroadcastPrimaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)DeviceInfo.BroadcastPrimaryUDPKey);
-	m_BroadcastPrimaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)udp_key_reset);
-	ets_printf("BroadcastPrimaryUDPKey after erase %s\n",DeviceInfo.BroadcastPrimaryUDPKey);
-}
-void delete_secondary_BroadcastKey()
-{
-	unsigned char udp_key_reset[CRYPTO_HASH_LENGTH + 16];
-	memset(udp_key_reset, 0, (CRYPTO_HASH_LENGTH + 16));
-
-	//reset secondary broadcast key from encrypted flash
-	memset ((char *)&DeviceInfo.BroadcastSecondaryUDPKey,0, CRYPTO_HASH_LENGTH);
-//	m_BroadcastSecondaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)DeviceInfo.BroadcastSecondaryUDPKey);
-	m_BroadcastSecondaryUDPKey->Check_In_Init((DCI_DATA_PASS_TD *)udp_key_reset);
-	ets_printf("BroadcastSecondaryUDPKey after erase %s\n",DeviceInfo.BroadcastSecondaryUDPKey);
-}
-
-void DCI_Update_LoadPercent()
-{
-	static float PrevPercentLoad = 0;
-	float load_percentage;
-
-	Metro_Get_Percentage_Load(&load_percentage);
-	m_PercentLoad->Check_In((DCI_DATA_PASS_TD *)&load_percentage);
-//	if (load_percentage != PrevPercentLoad)
-//	{
-//		PrevPercentLoad = load_percentage;
-//
-//		m_PercentLoad->Check_In((DCI_DATA_PASS_TD *)&PrevPercentLoad);
-//	}
-
-}
-
-void SetDPSConcatenatedMessageToIndividualFields( void )
-{
-    uint16_t size;
-    bool dpsConcatenatedMessageValid = false;
-
-    memset (DeviceInfo.DpsDeviceRegId, 0, sizeof (DeviceInfo.DpsDeviceRegId));
-    memset (DeviceInfo.DpsEndpoint, 0, sizeof (DeviceInfo.DpsEndpoint));
-    memset (DeviceInfo.DpsIdScope, 0, sizeof (DeviceInfo.DpsIdScope));
-    memset (DeviceInfo.DpsSymmetricKey, 0, sizeof (DeviceInfo.DpsSymmetricKey));
-
-    size = strlen(DeviceInfo.DpsConcatenatedMessage);
-    if( DpsConcatenatedMessageMinValidLength <= size )
-    {
-        ParseDPSConcatenatedMessage();
-        dpsConcatenatedMessageValid = true;
-    }
-    else
-    {
-    	//invalid concatenated-DPS-message
-    	ESP_LOGW(TAG, "Invalid concatenated DPS message");
-    }
-
-    //we want to write the DPS infomation if it is valid or blank
-    if( (DpsConcatenatedMessageMinValidLength <= size) || (0 == size) )
-    {
-        DCI_UpdateDPSDeviceRegId();
-        DCI_UpdateDPSEndpoint();
-        DCI_UpdateDPSIDScope();
-        DCI_UpdateDPSSymmetricKey();
-    }
-
-    DeviceInfo.DpsInfoSaved = dpsConcatenatedMessageValid;
-}
-
-void GetDPSConcatenatedMessageFromIndividualFields( void )
-{
-    DCI_GetDPSDeviceRegId();
-    DCI_GetDPSEndpoint();
-    DCI_GetDPSIDScope();
-    DCI_GetDPSSymmetricKey();
-
-    memset (DeviceInfo.DpsConcatenatedMessage, 0, sizeof (DeviceInfo.DpsConcatenatedMessage));
     
-    CreateDPSConcatenatedMessage();
-
-    bool dpsConcatenatedMessageValid = false;
-    uint16_t size = strlen(DeviceInfo.DpsConcatenatedMessage);
-    if (DpsConcatenatedMessageMinValidLength < size)
-    {
-        dpsConcatenatedMessageValid = true;
-    }
-
-    DeviceInfo.DpsInfoSaved = dpsConcatenatedMessageValid;
-} 
-
-void ParseDPSConcatenatedMessage( void )
-{
-    // Concatenated DPS message format for UART uses literal keys with colon suffix, then value with semicolon suffix
-    // "DpsDevRegID:{guid};DpsEndpoint:{url};DpsIdScope:{idscope};DpsSymmetricKey:{key};"
-
-	char const * p = (char *)&DeviceInfo.DpsConcatenatedMessage;
-	char const * pToken = p;
-	char const * const pEnd = p + strlen(DeviceInfo.DpsConcatenatedMessage);
-
-	while(pEnd > p)
-	{
-		size_t valueLen = 0;
-		size_t tokenLen = strcspn(p,":");
-			
-		if(0 != tokenLen)
-		{
-			pToken = p;
-			p += tokenLen + 1;
-			valueLen = strcspn(p,";");
-
-			if(0 == memcmp("DpsDevRegID",pToken,tokenLen))
-			{
-				// copy into DeviceInfo.DpsDeviceRegId, starting at p, over valueLen, then add null terminator
-                memcpy (DeviceInfo.DpsDeviceRegId, p, valueLen);
-                memset (DeviceInfo.DpsDeviceRegId + valueLen, 0, 1);    
-			}
-			else if(0 == memcmp("DpsEndpoint",pToken,tokenLen))
-			{
-				// copy into DeviceInfo.DpsEndpoint, starting at p, over valueLen, then add null terminator
-                memcpy (DeviceInfo.DpsEndpoint, p, valueLen);
-                memset (DeviceInfo.DpsEndpoint + valueLen, 0, 1);    
-			}
-			else if(0 == memcmp("DpsIdScope",pToken,tokenLen))
-			{
-				// copy into DeviceInfo.DpsIdScope, starting at p, over valueLen, then add null terminator
-                memcpy (DeviceInfo.DpsIdScope, p, valueLen);
-                memset (DeviceInfo.DpsIdScope + valueLen, 0, 1);    
-			}
-			else if(0 == memcmp("DpsSymmetricKey",pToken,tokenLen))
-			{
-				// copy into DeviceInfo.DpsSymmetricKey, starting at p, over valueLen, then add null terminator
-                memcpy (DeviceInfo.DpsSymmetricKey, p, valueLen);
-                memset (DeviceInfo.DpsSymmetricKey + valueLen, 0, 1);    
-			}
-			
-			p += valueLen + 1;
-		}
-		else
-		{
-			break;
-		}
-	}
-}
-
-void CreateDPSConcatenatedMessage( void )
-{
-    // Concatenated DPS message format for UART uses literal keys with colon suffix, then value with semicolon suffix
-    // "DpsDevRegID:{guid};DpsEndpoint:{url};DpsIdScope:{idscope};DpsSymmetricKey:{key};"
-    const char * dpsDevRegIdToken = "DpsDevRegID:";
-    const char * dpsEndpointToken = ";DpsEndpoint:";
-    const char * dpsIdScopeToken = ";DpsIdScope:";
-    const char * dpsSymmetricKeyToken = ";DpsSymmetricKey:";
-    const char * dpsEndToken = ";";
-
-	char * p = (char *)&DeviceInfo.DpsConcatenatedMessage;    
-    size_t len;
-
-    len = strlen(dpsDevRegIdToken);
-    memcpy (p, dpsDevRegIdToken, len);
-    p += len;
-    len = strlen(DeviceInfo.DpsDeviceRegId);
-    memcpy (p, &DeviceInfo.DpsDeviceRegId, len);
-    p += len;
-    len = strlen(dpsEndpointToken);
-    memcpy (p, dpsEndpointToken, len);
-    p += len;
-    len = strlen(DeviceInfo.DpsEndpoint);
-    memcpy (p, &DeviceInfo.DpsEndpoint, len);
-    p += len;
-    len = strlen(dpsIdScopeToken);
-    memcpy (p, dpsIdScopeToken, len);
-    p += len;
-    len = strlen(DeviceInfo.DpsIdScope);
-    memcpy (p, &DeviceInfo.DpsIdScope, len);
-    p += len;
-    len = strlen(dpsSymmetricKeyToken);
-    memcpy (p, dpsSymmetricKeyToken, len);
-    p += len;
-    len = strlen(DeviceInfo.DpsSymmetricKey);
-    memcpy (p, &DeviceInfo.DpsSymmetricKey, len);
-    p += len;
-    len = strlen(dpsEndToken);
-    memcpy (p, dpsEndToken, len);
-    p += len;
-    memset (p, 0, 1);   
-}
     
 #if 0
 

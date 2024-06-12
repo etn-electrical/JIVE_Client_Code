@@ -8,7 +8,6 @@ set(srcs "spi_comp.c"
 
 set (include_dirs "."
                   "../../esp32_common/esp-idf/components/nvs_flash/include"
-                  "../EERAM"
     
     )
 

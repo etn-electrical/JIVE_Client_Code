@@ -44,9 +44,10 @@ extern "C"
 void ToggleBreakerState(void);    
 void TurnBreakerOn (void);
 void TurnBreakerOff (void);
-void IdentifyMeBegin();
-void ReadTemperature();
-void updateStartupConfig(uint8_t startup_config);
+
+
+void Event10msTimer(void);
+
 void EventOneSeconedTimer(void);
 
 

@@ -3,8 +3,8 @@ set CA_cert="Eaton_Commercial_Root_CA_1"
 set CA_cert_extn=crt
 set intermediate_cert="Eaton_Firmware_Signing_MA_Issuing_CA_1"
 set intermediate_cert_extn=crt
-set product_cert="FW-Smartbreaker2-CMS"
-set product_cert_extn=crt
+set product_cert="CNPXGreen_OUElectrical Sector_OEaton"
+set product_cert_extn=cer
 
 
 REM extact Public key from Root certificate

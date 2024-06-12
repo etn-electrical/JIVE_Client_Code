@@ -13,8 +13,6 @@
 #ifndef IOT_CONFIG_H
    #define IOT_CONFIG_H
 
-#include "Breaker.h"   
-
 /*
  *****************************************************************************************
  *		Includes
@@ -51,10 +49,7 @@
 
 // Use this to disable logging in Azure code (saves considerable flash space)
 // You can comment this out to enable the logging, during development only
-//Ahmed_DPS_ADU
-#ifdef _FACTORY_BUILD_
-	#define NO_LOGGING
-#endif
+// #define NO_LOGGING
 
 #ifdef PX_GREEN_IOT_SUPPORT
 	#define REFCOUNT_ATOMIC_DONTCARE	// What is this? Not used anywhere!
