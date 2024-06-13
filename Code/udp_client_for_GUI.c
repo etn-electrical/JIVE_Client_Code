@@ -277,9 +277,8 @@ void udp_client_txrx_task(void* nothing) {
 				send_SEND_MANUFACTRUNG_RESET();
 			}else if (keyPressed == '-'){
 				send_SEND_DEVICE_LOCK();
-			}else if (keyPressed == '!') {
-				send_SEND_IDENTIFY_ME();
-			}else {
+			}
+			else {
 				if (keyPressed == 'Q') selectWhichIpAddressToTalkTo(0);
 				else if (keyPressed == 'W') selectWhichIpAddressToTalkTo(1);
 				else if (keyPressed == 'E') selectWhichIpAddressToTalkTo(2);
@@ -290,10 +289,24 @@ void udp_client_txrx_task(void* nothing) {
 				else if (keyPressed == 'I') selectWhichIpAddressToTalkTo(7);
 				else if (keyPressed == 'O') selectWhichIpAddressToTalkTo(8);
 				else if (keyPressed == 'P') selectWhichIpAddressToTalkTo(9);
+
+				else if (keyPressed == 'A') send_SEND_IDENTIFY_ME(0);
+				else if (keyPressed == 'S') send_SEND_IDENTIFY_ME(1);
+				else if (keyPressed == 'D') send_SEND_IDENTIFY_ME(2);
+				else if (keyPressed == 'F') send_SEND_IDENTIFY_ME(3);
+				else if (keyPressed == 'G') send_SEND_IDENTIFY_ME(4);
+				else if (keyPressed == 'H') send_SEND_IDENTIFY_ME(5);
+				else if (keyPressed == 'J') send_SEND_IDENTIFY_ME(6);
+				else if (keyPressed == 'K') send_SEND_IDENTIFY_ME(7);
+				else if (keyPressed == 'L') send_SEND_IDENTIFY_ME(8);
+				else if (keyPressed == 'Z') send_SEND_IDENTIFY_ME(9);
+
+				dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
+
 				// If no key was pressed, keep waiting
 				continue;
 			}
-
+			
 			listenToBreakerResponseAndPrintResponse();
         }
 
@@ -712,10 +725,11 @@ int pingAllBreakersOnTheNetwork() {
  * index and assign that to HOST_IP_ADDR so all messages moving forward will talk to
  * that IP address.
  */
-//#define DEBUGGING_selectWhichIpAddressToTalkTo_FUNCTION
+#define DEBUGGING_selectWhichIpAddressToTalkTo_FUNCTION
 void selectWhichIpAddressToTalkTo(int index) {
 	if (index >= 0) {
 		HOST_IP_ADDR = arrOfBreakerIdentifierStructs[index].ipAddress;
+
 #ifdef DEBUGGING_selectWhichIpAddressToTalkTo_FUNCTION
 		printf("[DEBUG] selectWhichIpAddressToTalkTo(): Updating Target IP Address to: %s\n", HOST_IP_ADDR);
 #endif
@@ -1155,14 +1169,14 @@ int send_SEND_DEVICE_LOCK(){
 //    return 1;
 //}
 
-int send_SEND_IDENTIFY_ME() {
+void send_SEND_IDENTIFY_ME(int index) {
 
+	
+    char* OLD_HOST_IP_ADDR = HOST_IP_ADDR;
+    HOST_IP_ADDR = arrOfBreakerIdentifierStructs[index].ipAddress;
+	dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
 	send_SBLCP_message(SEND_IDENTIFY_ME, NULL);
-//    char* OLD_HOST_IP_ADDR = HOST_IP_ADDR;
-//    HOST_IP_ADDR = arrOfBreakerIdentifierStructs[index].ipAddress;
-//
-//    HOST_IP_ADDR = OLD_HOST_IP_ADDR;
-    return 1;
+    HOST_IP_ADDR = OLD_HOST_IP_ADDR;
 }
 
 int send_SEND_GET_METER_TELEMETRY_DATA_message() {
@@ -1714,53 +1728,62 @@ int listenToBreakerResponseAndPrintResponse() {
 			} else if (message_code == GET_TRIP_CURVE) {
 				printf("\n");
 
-				ErrorLog_st *trip_log = malloc(sizeof(ErrorLog_st));
-				char errorLog[TRIP_LOG_SIZE];
-				char epochTime[TRIP_LOG_SIZE];
-				char cloudUpdate[TRIP_LOG_SIZE];
-
-				memcpy(trip_log, rx_buffer + HEADER_OFFSET, sizeof(ErrorLog_st));
-
-				for(uint16_t i = 0; i < TRIP_LOG_SIZE; i++)
-				{
-					errorLog[i] = trip_log->logs[i].ErrorLog;
-					epochTime[i] = trip_log->logs[i].EpochTime;
-					cloudUpdate[i] = trip_log->logs[i].CloudUpdated;
-				}
-
-//				printf("TRIP_PARAM_JSON_START{");
-//				printf("\"errorLog\": %s", errorLog);
-//				printf("\"epochTime\": %s", epochTime);
-//				printf("\"cloudUpdate\": %s", cloudUpdate);
-//				printf("}TRIP_PARAM_JSON_END\n");
-
-
-				printf("TRIP_PARAM_JSON_START{");
-				for(uint16_t i = 0; i < TRIP_LOG_SIZE; i++)
-				{
-					if (i == (TRIP_LOG_SIZE - 1)) {
-						printf("%d:%d",trip_log->logs[i].EpochTime, trip_log->logs[i].ErrorLog);
-					} else {
-						printf("%d:%d, ",trip_log->logs[i].EpochTime,trip_log->logs[i].ErrorLog);
+ErrorLog_st *trip_log = malloc(sizeof(ErrorLog_st));
+                // char errorLog[TRIP_LOG_SIZE];
+                // char epochTime[TRIP_LOG_SIZE];
+                // char cloudUpdate[TRIP_LOG_SIZE];
+ 
+                memcpy(trip_log, rx_buffer + HEADER_OFFSET, sizeof(ErrorLog_st));
+ 
+                // for(uint16_t i = 0; i < TRIP_LOG_SIZE; i++)
+                // {
+                //  errorLog[i] = trip_log->logs[i].ErrorLog;
+                //  epochTime[i] = trip_log->logs[i].EpochTime;
+                //  cloudUpdate[i] = trip_log->logs[i].CloudUpdated;
+                // }
+ 
+//              printf("TRIP_PARAM_JSON_START{");
+//              printf("\"errorLog\": %s", errorLog);
+//              printf("\"epochTime\": %s", epochTime);
+//              printf("\"cloudUpdate\": %s", cloudUpdate);
+//              printf("}TRIP_PARAM_JSON_END\n");
+ 
+ 
+                printf("TRIP_PARAM_JSON_START{");
+                for(uint16_t i = 0; i < TRIP_LOG_SIZE; i++)
+                {
+					if (trip_log->logs[i].EpochTime!=0)
+                    {
+					time_t default_time = trip_log->logs[i].EpochTime;
+                    //struct tm ts = *localtime(&default_time);
+                    char buf[80];
+                    strftime(buf, sizeof(buf), "%a--%Y-%m-%d--%H-%M-%S", localtime(&default_time));
+					
+                    //if (i == (TRIP_LOG_SIZE - 1)) {
+                      //  printf("%d-%s:Hex-%x-Dec-%d",i,buf, trip_log->logs[i].ErrorLog,trip_log->logs[i].ErrorLog);
+                    //} else {
+                        printf("%d-%s:Hex-%x-Dec-%d,",i,buf,trip_log->logs[i].ErrorLog,trip_log->logs[i].ErrorLog);
+                    //}
 					}
-
-				}
-				printf("}TRIP_PARAM_JSON_END\n");
-
-
-//				for(uint16_t i = 0; i < TRIP_LOG_SIZE; i++)
-//				{
-//					printf("[%x],[%d],[%d]\n", trip_log->logs[i].ErrorLog, trip_log->logs[i].EpochTime, trip_log->logs[i].CloudUpdated);
-//				}
-//				printf("Index %d\n", trip_log->index);
-
-				printf("Hash:-[");
-				for(uint8_t i = 0; i < 32; i++)
-				{
-					printf("%x ",rx_buffer[HEADER_OFFSET + sizeof(ErrorLog_st) + i]);
-				}
-				printf("]\n");
-				free(trip_log);
+ 
+                }
+				printf("End:End");
+                printf("}TRIP_PARAM_JSON_END\n");
+ 
+ 
+//              for(uint16_t i = 0; i < TRIP_LOG_SIZE; i++)
+//              {
+//                  printf("[%x],[%d],[%d]\n", trip_log->logs[i].ErrorLog, trip_log->logs[i].EpochTime, trip_log->logs[i].CloudUpdated);
+//              }
+//              printf("Index %d\n", trip_log->index);
+ 
+                printf("Hash:-[");
+                for(uint8_t i = 0; i < 32; i++)
+                {
+                    printf("%x ",rx_buffer[HEADER_OFFSET + sizeof(ErrorLog_st) + i]);
+                }
+                printf("]\n");
+                free(trip_log);
 			} else if (message_code == GET_MAC_ADDRESS) {
 				printf("\n");
 
