@@ -183,6 +183,7 @@ void udp_client_txrx_task(void* nothing) {
 		// ---------------------------------------------------------------------------
         int numberOfBreakersPinged = pingAllBreakersOnTheNetwork();
         if (numberOfBreakersPinged >= 1) {
+			// connect to the first breaker by default.
 			selectWhichIpAddressToTalkTo(0);
 			printf("[INFO] udp_client_txrx_task(): Pinged breaker(s):\n");
 			printf("BREAKERS_IP_LIST_JSON_START{");
@@ -228,7 +229,7 @@ void udp_client_txrx_task(void* nothing) {
 
 			// Honestly no idea what this is doing
 			dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
-
+            static int curr_index = 0;
 			if(keyPressed == '1') {
 				send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();
 			} else if (keyPressed == 'a') {
@@ -278,31 +279,26 @@ void udp_client_txrx_task(void* nothing) {
 			}else if (keyPressed == '-'){
 				send_SEND_DEVICE_LOCK();
 			}
+			else if (keyPressed == '!'){
+				send_SEND_IDENTIFY_ME();
+			}
 			else {
-				if (keyPressed == 'Q') selectWhichIpAddressToTalkTo(0);
-				else if (keyPressed == 'W') selectWhichIpAddressToTalkTo(1);
-				else if (keyPressed == 'E') selectWhichIpAddressToTalkTo(2);
-				else if (keyPressed == 'R') selectWhichIpAddressToTalkTo(3);
-				else if (keyPressed == 'T') selectWhichIpAddressToTalkTo(4);
-				else if (keyPressed == 'Y') selectWhichIpAddressToTalkTo(5);
-				else if (keyPressed == 'U') selectWhichIpAddressToTalkTo(6);
-				else if (keyPressed == 'I') selectWhichIpAddressToTalkTo(7);
-				else if (keyPressed == 'O') selectWhichIpAddressToTalkTo(8);
-				else if (keyPressed == 'P') selectWhichIpAddressToTalkTo(9);
-
-				else if (keyPressed == 'A') send_SEND_IDENTIFY_ME(0);
-				else if (keyPressed == 'S') send_SEND_IDENTIFY_ME(1);
-				else if (keyPressed == 'D') send_SEND_IDENTIFY_ME(2);
-				else if (keyPressed == 'F') send_SEND_IDENTIFY_ME(3);
-				else if (keyPressed == 'G') send_SEND_IDENTIFY_ME(4);
-				else if (keyPressed == 'H') send_SEND_IDENTIFY_ME(5);
-				else if (keyPressed == 'J') send_SEND_IDENTIFY_ME(6);
-				else if (keyPressed == 'K') send_SEND_IDENTIFY_ME(7);
-				else if (keyPressed == 'L') send_SEND_IDENTIFY_ME(8);
-				else if (keyPressed == 'Z') send_SEND_IDENTIFY_ME(9);
-
+				
+				if (keyPressed == 'Q') {selectWhichIpAddressToTalkTo(0);} //send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index = 0;}
+				else if (keyPressed == 'W') {selectWhichIpAddressToTalkTo(1);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =1;}
+				else if (keyPressed == 'E') {selectWhichIpAddressToTalkTo(2);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =2;}
+				else if (keyPressed == 'R') {selectWhichIpAddressToTalkTo(3);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =3;}
+				else if (keyPressed == 'T') {selectWhichIpAddressToTalkTo(4);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =4;}
+				else if (keyPressed == 'Y') {selectWhichIpAddressToTalkTo(5);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =5;}
+				else if (keyPressed == 'U') {selectWhichIpAddressToTalkTo(6);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =6;}
+				else if (keyPressed == 'I') {selectWhichIpAddressToTalkTo(7);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =7;}
+				else if (keyPressed == 'O') {selectWhichIpAddressToTalkTo(8);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =8;}
+				else if (keyPressed == 'P') {selectWhichIpAddressToTalkTo(9);}//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();}//curr_index =9;}
+				
+				
+				
 				dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
-
+                
 				// If no key was pressed, keep waiting
 				continue;
 			}
@@ -852,15 +848,19 @@ int send_SBLCP_message(uint16_t givenMessageCode, void* givenMessageBody) {
 				printf("Sending SET_MANUFACTURING_RESET command");
 			}
 			break;
-			case SEND_GET_TRIP_CURVE:
+		case SEND_GET_TRIP_CURVE:
 			printf("Sending TRIP_CURVE command");
 			break;
 		case SEND_GET_MAC_ADDRESS:
 			printf("Sending MAC_ADDRESS command");
-		break;
+			break;
+			// added by siril. debug purpose
+		case SEND_IDENTIFY_ME:
+			printf("Sending IDENTIFY_ME command");
+			break;
 		case SEND_SET_MANUFACTURING_RESET:
 			printf("Sending ET_MANUFACTURING_RESET command");
-		break;
+			break;
 		default:
 			printf("[WARNING] udp_client_for_GUI.c:send_SBLCP_message(): Sending Unknown command");
 			break;
@@ -1169,14 +1169,22 @@ int send_SEND_DEVICE_LOCK(){
 //    return 1;
 //}
 
-void send_SEND_IDENTIFY_ME(int index) {
+int send_SEND_IDENTIFY_ME() {
+	printf("Identify me started \n");
+	// send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();
+	
+	send_SBLCP_message(SEND_IDENTIFY_ME, NULL);
+	//listenToBreakerResponseAndPrintResponse();
+	 
+	//send_SEND_GET_NEXT_EXPECTED_UDP_SEQUENCE_NUMBER_message();
+	
 
 	
-    char* OLD_HOST_IP_ADDR = HOST_IP_ADDR;
-    HOST_IP_ADDR = arrOfBreakerIdentifierStructs[index].ipAddress;
-	dest_addr.sin_addr.s_addr = inet_addr(HOST_IP_ADDR);
-	send_SBLCP_message(SEND_IDENTIFY_ME, NULL);
-    HOST_IP_ADDR = OLD_HOST_IP_ADDR;
+	printf("host addr after swap: %s\n",HOST_IP_ADDR);
+	printf("Broadcasting status: %d\n",broadcasting);
+	// reset seq number with the older...
+
+	return 1;
 }
 
 int send_SEND_GET_METER_TELEMETRY_DATA_message() {
@@ -1352,7 +1360,7 @@ int listenToBreakerResponseAndPrintResponse() {
 	// Set the timeout value (in this example, 3 seconds)
 	struct timeval timeout;
 //	timeout.tv_sec = 8;
-	timeout.tv_sec = 3;
+	timeout.tv_sec = 20;
 	timeout.tv_usec = 0;
 	// Set up the file descriptors for the select function
 	fd_set readfds;
@@ -1397,9 +1405,9 @@ int listenToBreakerResponseAndPrintResponse() {
 			inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
 			rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
 
-//			if (!broadcasting) {
-//				makeSureHostIPAddressIsRight(addr_str);
-//			}
+			if (!broadcasting) {
+				makeSureHostIPAddressIsRight(addr_str);
+			}
 
 			printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>> Received Response <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
 			ESP_LOGI(TAG, "Received %d bytes from %s on WiFi: %s.", len, addr_str, wifiSSID);
@@ -1451,6 +1459,9 @@ int listenToBreakerResponseAndPrintResponse() {
 					// Check:
 					// If we seen the ip before do something, just ignore it? TODO think about it
 					// If we havent seen the ip before add to arrOfBreakerIdentifierStructs
+					printf("/----------------------   -------------------------/\n");
+					printf("*****    BORADCASTING !!!!!!!! **********************\n");
+					printf("--------------------------------------------------------");
 					strcpy(arrOfBreakerIdentifierStructs[numberOfBreakersTalkedTo].ipAddress, addr_str);
 					strcpy(arrOfBreakerIdentifierStructs[numberOfBreakersTalkedTo].serial_number, g_getSeqNum->serial_number);
 					arrOfBreakerIdentifierStructs[numberOfBreakersTalkedTo].sequenceNumber = g_getSeqNum->seq_number;

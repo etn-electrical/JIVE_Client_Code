@@ -336,7 +336,7 @@ int send_SEND_GET_MAC_ADDRESS();
 int send_SEND_GET_TRIP_CURVE();
 int send_SEND_MANUFACTRUNG_RESET();
 int send_SEND_DEVICE_LOCK();
-void send_SEND_IDENTIFY_ME(int index);
+int send_SEND_IDENTIFY_ME();
 
 int listenToBreakerResponseAndPrintResponse();
 void makeSureHostIPAddressIsRight(char* givenIPAddress);
