@@ -54,7 +54,7 @@ jobs:
         run: |
           cd ${{github.workspace}}/esp32_common/esp-idf
           echo %cd%
-          install.bat >install_log.txt 2>&1
+          install.sh >install_log.txt 2>&1
           echo "********************************************"
         shell: cmd
 
