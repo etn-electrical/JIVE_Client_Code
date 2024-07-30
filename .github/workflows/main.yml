@@ -56,7 +56,7 @@ jobs:
           echo %cd%
           install.sh >install_log.txt 2>&1
           echo "********************************************"
-        shell: cmd
+        shell: bash
 
       - name: Build
         run: |
@@ -64,4 +64,4 @@ jobs:
           echo %cd%
           echo "********************************************"
           ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py build
-        shell: cmd
+        shell: bash
