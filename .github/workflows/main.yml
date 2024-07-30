@@ -53,9 +53,10 @@ jobs:
       - name: Install toolchain
         run: |
           cd ${{github.workspace}}/esp32_common/esp-idf
-          echo #%cd% 
-          ${{github.workspace}}\esp32_common\esp-idf\export.bat
+          echo #%cd%
           install.bat >install_log.txt 2>&1
+          ${{github.workspace}}\esp32_common\esp-idf\export.bat
+          
           echo "********************************************"
         shell: cmd
 
@@ -71,8 +72,8 @@ jobs:
           coverity_project_name: ${{ github.event.repository.name }}
           coverity_stream_name: ${{ github.event.repository.name }}-${{ github.ref_name }}
           coverity_policy_view: 'Outstanding Issues'
-          coverity_build_command: idf.py build
-          coverity_clean_command: idf.py clean
+          coverity_build_command: create_build.bat
+          coverity_clean_command: tools\idf-python\3.8.7\python.exe idf.py clean
           coverity_local: true
       # this should be ideally done by coverity.
       - name: build
