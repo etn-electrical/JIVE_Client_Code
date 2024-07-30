@@ -59,10 +59,26 @@ jobs:
           echo "********************************************"
         shell: cmd
 
-      - name: Build
+      
+      
+      - name: Coverity Scan
+        uses: synopsys-sig/synopsys-action@v1.11.0
+        with:
+          ### SCANNING: Required fields
+          coverity_url: ${{ vars.COVERITY_URL }}
+          coverity_user: ${{ secrets.COVERITY_USER }}
+          coverity_passphrase: ${{ secrets.COVERITY_PASSPHRASE }}
+          coverity_project_name: ${{ github.event.repository.name }}
+          coverity_stream_name: ${{ github.event.repository.name }}-${{ github.ref_name }}
+          coverity_policy_view: 'Outstanding Issues'
+          coverity_build_command: ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py build
+          coverity_clean_command: ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py clean
+      
+      # this should be ideally done by coverity.
+      - name: build
         run: |
-          cd ${{github.workspace}}
-          echo %cd%
-          echo "********************************************"
-          ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py build
+            cd ${{github.workspace}}
+            echo %cd%
+            echo "********************************************"
+            ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py build
         shell: cmd
