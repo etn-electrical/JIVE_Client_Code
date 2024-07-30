@@ -53,7 +53,8 @@ jobs:
       - name: Install toolchain
         run: |
           cd ${{github.workspace}}/esp32_common/esp-idf
-          echo %cd%
+          echo pwd 
+          
           install.sh >install_log.txt 2>&1
           echo "********************************************"
         shell: bash
