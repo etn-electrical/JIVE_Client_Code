@@ -30,7 +30,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       # workaround when working in container, https://github.com/actions/runner/issues/2058
       # use ${{ env.WORKSPACE }} in succeeding steps to access github workspace path
@@ -53,11 +53,11 @@ jobs:
       - name: Install toolchain
         run: |
           cd ${{github.workspace}}/esp32_common/esp-idf
-          echo pwd 
+          echo #%cd% 
           
-          install.sh >install_log.txt 2>&1
+          install.bat >install_log.txt 2>&1
           echo "********************************************"
-        shell: bash
+        shell: cmd
 
       - name: Build
         run: |
@@ -65,4 +65,4 @@ jobs:
           echo %cd%
           echo "********************************************"
           ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py build
-        shell: bash
+        shell: cmd
