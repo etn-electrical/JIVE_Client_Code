@@ -73,7 +73,7 @@ jobs:
           coverity_policy_view: 'Outstanding Issues'
           coverity_build_command: ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py build
           coverity_clean_command: ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py clean
-      
+          coverity_local: true
       # this should be ideally done by coverity.
       - name: build
         run: |
