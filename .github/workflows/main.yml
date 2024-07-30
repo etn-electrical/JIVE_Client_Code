@@ -1,0 +1,68 @@
+name: Build
+run-name: ${{ github.workflow }}_${{ github.ref_name }}_${{ github.run_number }}.${{ github.run_attempt }}
+
+permissions:
+  actions: read
+  checks: read
+  contents: write
+  deployments: read
+  issues: read
+  discussions: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  security-events: read
+  statuses: read
+
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_tag_and_release:
+        description: "Set this to true to create tag and release"
+        default: 'false'
+        required: false
+        type: string
+  push:
+    branches:
+      - develop
+      - SB2FW-XXXX_create-github-workflows
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      # workaround when working in container, https://github.com/actions/runner/issues/2058
+      # use ${{ env.WORKSPACE }} in succeeding steps to access github workspace path
+      - name: Set Github workspace environment variable
+        run: |
+          if [[ -n "${{ job.container.id }}" ]];then
+            echo "WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+          else
+            echo "WORKSPACE=${{ github.workspace }}" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.workspace }}\sb2.0\
+          submodules: recursive
+          token: ${{ secrets.SB2_CI_SECRET }}
+
+      - name: Install toolchain
+        run: |
+          cd ${{github.workspace}}\sb2.0\esp32_common\esp-idf
+          echo %cd%
+          install.bat >install_log.txt 2>&1
+          echo "********************************************"
+        shell: cmd
+
+      - name: Build
+        run: |
+          cd ${{github.workspace}}\sb2.0\
+          echo %cd%
+          echo "********************************************"
+          ${{github.workspace}}\sb2.0\esp32_common\esp-idf\export.bat && idf.py build
+        shell: cmd
