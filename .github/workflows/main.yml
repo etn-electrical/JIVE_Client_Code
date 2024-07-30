@@ -54,7 +54,7 @@ jobs:
         run: |
           cd ${{github.workspace}}/esp32_common/esp-idf
           echo #%cd% 
-          
+          ${{github.workspace}}\esp32_common\esp-idf\export.bat
           install.bat >install_log.txt 2>&1
           echo "********************************************"
         shell: cmd
@@ -71,9 +71,9 @@ jobs:
           coverity_project_name: ${{ github.event.repository.name }}
           coverity_stream_name: ${{ github.event.repository.name }}-${{ github.ref_name }}
           coverity_policy_view: 'Outstanding Issues'
-          coverity_build_command: ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py build
-          coverity_clean_command: ${{github.workspace}}\esp32_common\esp-idf\export.bat && idf.py clean
-          coverity_local: true
+          coverity_build_command: idf.py build
+          coverity_clean_command: idf.py clean
+          
       # this should be ideally done by coverity.
       - name: build
         run: |
