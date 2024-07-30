@@ -26,7 +26,7 @@ on:
         type: string
   push:
     branches:
-      - develop
+      - main
       - SB2FW-XXXX_create-github-workflows
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
         with:
           path: ${{ github.workspace }}\sb2.0\
           submodules: recursive
-          token: ${{ secrets.SB2_CI_SECRET }}
+          token: ${{ secrets.MY_SECRET }}
 
       - name: Install toolchain
         run: |
