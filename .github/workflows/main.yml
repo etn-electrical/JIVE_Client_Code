@@ -76,6 +76,10 @@ jobs:
           coverity_build_command: create_build.bat
           coverity_clean_command: tools\idf-python\3.8.7\python.exe idf.py clean
           coverity_local: true
+          exclude: 
+            ${{github.workspace}}/Babelfish/
+            ${{github.workspace}}/esp32_common
+
           run: |
             echo "Now setting the compiler to xtesna elf 32 gcc."
             cov-configure  --template --compiler xtensa-esp32-elf-gcc
