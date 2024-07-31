@@ -77,7 +77,7 @@ jobs:
           coverity_build_command: create_build.bat
           coverity_clean_command: clean_project.bat
           coverity_local: true
-          coverity_args: cov-manage-emit --dir idir ${{github.workspace}}/Babelfish/
+          coverity_args: --dir idir ${{github.workspace}}/Babelfish/
               
           
           
