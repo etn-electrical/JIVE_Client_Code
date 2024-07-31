@@ -65,6 +65,7 @@ jobs:
       
       - name: Coverity Scan
         uses: synopsys-sig/synopsys-action@v1.11.0
+
         with:
           ### SCANNING: Required fields
           coverity_url: ${{ vars.COVERITY_URL }}
@@ -76,13 +77,10 @@ jobs:
           coverity_build_command: create_build.bat
           coverity_clean_command: clean_project.bat
           coverity_local: true
-          exclude: 
-            ${{github.workspace}}/Babelfish/
-            ${{github.workspace}}/esp32_common
-
-          run: |
-            echo "Now setting the compiler to xtesna elf 32 gcc."
-            cov-configure  --template --compiler xtensa-esp32-elf-gcc
+          coverity_args: cov-manage-emit --dir idir ${{github.workspace}}/Babelfish/
+              
+          
+          
 
       # this should be ideally done by coverity.
       - name: build
