@@ -74,7 +74,7 @@ jobs:
           coverity_stream_name: ${{ github.event.repository.name }}-${{ github.ref_name }}
           coverity_policy_view: 'Outstanding Issues'
           coverity_build_command: create_build.bat
-          coverity_clean_command: tools\idf-python\3.8.7\python.exe idf.py clean
+          coverity_clean_command: clean_project.bat
           coverity_local: true
           exclude: 
             ${{github.workspace}}/Babelfish/
