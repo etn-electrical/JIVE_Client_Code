@@ -61,6 +61,7 @@ jobs:
         shell: cmd
 
       
+         
       
       - name: Coverity Scan
         uses: synopsys-sig/synopsys-action@v1.11.0
@@ -75,6 +76,10 @@ jobs:
           coverity_build_command: create_build.bat
           coverity_clean_command: tools\idf-python\3.8.7\python.exe idf.py clean
           coverity_local: true
+          run: |
+            echo "Now setting the compiler to xtesna elf 32 gcc."
+            cov-configure  --template --compiler xtensa-esp32-elf-gcc
+
       # this should be ideally done by coverity.
       - name: build
         run: |
