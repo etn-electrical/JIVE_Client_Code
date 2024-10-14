@@ -33,13 +33,22 @@ jobs:
           ./install.sh
           . ./export.sh
 
+      - name: Set up ESP-IDF
+        run: |
+          export IDF_PATH=${{ github.workspace }}/esp32_common/esp-idf
+          export PATH=$IDF_PATH/tools:$PATH
+          cd $IDF_PATH
+          chmod +x install.sh
+          ./install.sh
+          . ./export.sh
+      
       - name: Build project
         run: |
           cd ${{ github.workspace }}
           chmod +x $IDF_PATH/tools/idf.py
           . $IDF_PATH/export.sh
-          $IDF_PATH/tools/idf.py build
-
+          idf.py build
+      
       - name: Archive build output artifacts
         uses: actions/upload-artifact@v3
         with:
