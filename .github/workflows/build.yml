@@ -29,8 +29,8 @@ jobs:
         run: |
           export IDF_PATH=${{ github.workspace }}/esp32_common/esp-idf
           export PATH=$IDF_PATH/tools:$PATH
-          cd $IDF_PATH
-          chmod +x install.sh
+          
+          chmod +x $IDF_PATH/install.sh
           ./install.sh
           . ./export.sh
 
