@@ -23,9 +23,13 @@ jobs:
           chmod +x install.sh
           ./install.sh
           . ./export.sh
-      - name: Install Python dependencies
+
+      - name: Manually install specific dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install file://${{ github.workspace }}/esp32_common/esp-idf/tools/kconfig_new/esp-windows-curses
+      - name: Install Python dependencies
+        run: |
           pip install -r ${{ github.workspace }}/esp32_common/esp-idf/requirements.txt
           ${{ github.workspace }}/esp32_common/esp-idf/install.sh
       
