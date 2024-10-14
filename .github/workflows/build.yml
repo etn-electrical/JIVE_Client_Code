@@ -16,6 +16,8 @@ jobs:
 
       - name: Set up ESP-IDF
         run: |
+          echo "running pwd"
+          pwd
           export IDF_PATH=${{ github.workspace }}/esp32_common/esp-idf
           export PATH=$IDF_PATH/tools:$PATH
           export IDF_PYTHON_ENV_PATH=${{ github.workspace }}/esp32_common/esp-idf-python-env
@@ -33,12 +35,13 @@ jobs:
           pip install -r ${{ github.workspace }}/esp32_common/esp-idf/requirements.txt
           ${{ github.workspace }}/esp32_common/esp-idf/install.sh
       
-      - name: Verify idf.py presence
+      - name: Verify workspace presence
         run: |
           ls -la ${{ github.workspace }}
           
       - name: Verify idf.py presence
         run: |
+          echo $IDF_PATH
           ls -la $IDF_PATH
       - name: Build project
         run: |
