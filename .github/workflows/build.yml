@@ -36,7 +36,7 @@ jobs:
       - name: Build project
         run: |
           cd ${{ github.workspace }}
-          chmod +x $PATH/idf.py
+          chmod +x idf.py
           . $IDF_PATH/export.sh
           idf.py build
       
