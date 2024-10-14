@@ -1,0 +1,58 @@
+name: Build and Artifact the ESP-IDF Project
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up ESP-IDF
+        run: |
+          $env:IDF_PATH="${{ github.workspace }}\esp32_common\esp-idf"
+          $env:IDF_TOOLS_PATH="${{ github.workspace }}\esp32_common\esp-idf-tools"
+          $env:IDF_PYTHON_ENV_PATH="${{ github.workspace }}\esp32_common\esp-idf-python-env"
+          $env:PATH="$env:IDF_PATH\tools;$env:IDF_TOOLS_PATH;$env:PATH"
+          cd $env:IDF_PATH
+          ./install.bat
+          . .\export.bat
+
+      - name: Manually install specific dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install file:///${{ github.workspace }}/esp32_common/esp-idf/tools/kconfig_new/esp-windows-curses
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r ${{ github.workspace }}\esp32_common\esp-idf\requirements.txt
+          ${{ github.workspace }}\esp32_common\esp-idf\install.bat
+
+      - name: Verify idf.py presence in workspace
+        run: |
+          dir ${{ github.workspace }}
+
+      - name: Verify idf.py presence in IDF_PATH
+        run: |
+          dir $env:IDF_PATH
+
+      - name: Build project
+        run: |
+          cd ${{ github.workspace }}
+          chmod +x ${{ github.workspace }}\esp32_common\esp-idf\tools\idf.py
+          $env:IDF_PATH\tools\idf.py build
+
+      - name: Archive build output artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: |
+            build\bootloader\bootloader.bin
+            build\partition_table\partition-table.bin
+            build\*
