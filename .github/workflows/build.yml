@@ -26,8 +26,10 @@ jobs:
       - name: Verify idf.py presence
         run: |
           ls -la ${{ github.workspace }}
+          
+      - name: Verify idf.py presence
+        run: |
           ls -la $IDF_PATH
-      
       - name: Build project
         run: |
           cd ${{ github.workspace }}
