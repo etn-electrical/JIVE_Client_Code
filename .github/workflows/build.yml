@@ -38,7 +38,7 @@ jobs:
           cd ${{ github.workspace }}
           chmod +x $IDF_PATH/tools/idf.py
           . $IDF_PATH/export.sh
-          idf.py build
+          $IDF_PATH/tools/idf.py build
 
       - name: Archive build output artifacts
         uses: actions/upload-artifact@v3
