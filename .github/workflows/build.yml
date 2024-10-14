@@ -26,7 +26,7 @@ jobs:
 
       - name: Set up ESP-IDF
         run: |
-          export IDF_PATH=${{ github.workspace }}/path/to/esp-idf
+          export IDF_PATH=${{ github.workspace }}/esp32_common/esp-idf
           export PATH=$IDF_PATH/tools:$PATH
           cd $IDF_PATH
           ./install.sh
@@ -35,7 +35,7 @@ jobs:
       - name: Build project
         run: |
           cd ${{ github.workspace }}
-          . ${{ github.workspace }}/path/to/esp-idf/export.sh
+          . ${{ github.workspace }}/esp32_common/esp-idf/export.sh
           idf.py build
 
       - name: Archive build output artifacts
