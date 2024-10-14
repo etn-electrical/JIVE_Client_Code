@@ -3,7 +3,6 @@
 name: Build and Artifact the ESP-IDF Project
 
 # Controls when the action will run. 
-# Controls when the action will run. 
 on:
   # Triggers the workflow on every push to any branch
   push:
@@ -29,16 +28,16 @@ jobs:
         run: |
           export IDF_PATH=${{ github.workspace }}/esp32_common/esp-idf
           export PATH=$IDF_PATH/tools:$PATH
-          
-          chmod +x $IDF_PATH/install.sh
+          cd $IDF_PATH
+          chmod +x install.sh
           ./install.sh
           . ./export.sh
 
       - name: Build project
         run: |
           cd ${{ github.workspace }}
-          . ${{ github.workspace }}/esp32_common/esp-idf/export.sh
           chmod +x $IDF_PATH/tools/idf.py
+          . $IDF_PATH/export.sh
           idf.py build
 
       - name: Archive build output artifacts
