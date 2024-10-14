@@ -34,7 +34,6 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           chmod +x ${{ github.workspace }}/esp32_common/esp-idf/tools/idf.py
-          . $IDF_PATH/export.sh
           ${{ github.workspace }}/esp32_common/esp-idf/tools/idf.py build
       
       - name: Archive build output artifacts
