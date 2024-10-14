@@ -18,10 +18,15 @@ jobs:
         run: |
           export IDF_PATH=${{ github.workspace }}/esp32_common/esp-idf
           export PATH=$IDF_PATH/tools:$PATH
+          export IDF_PYTHON_ENV_PATH=${{ github.workspace }}/esp32_common/esp-idf-python-env
           cd $IDF_PATH
           chmod +x install.sh
           ./install.sh
           . ./export.sh
+      - name: Install Python dependencies
+        run: |
+          
+          ${{ github.workspace }}/esp32_common/esp-idf/install.sh
       
       - name: Verify idf.py presence
         run: |
