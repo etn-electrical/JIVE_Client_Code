@@ -16,33 +16,33 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-# The type of runner that the job will run on
-runs-on: ubuntu-latest
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
 
-# Steps represent a sequence of tasks that will be executed as part of the job
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v2
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-  - name: Set up ESP-IDF
-    run: |
-      export IDF_PATH=${{ github.workspace }}/esp32_common/esp-idf
-      export PATH=$IDF_PATH/tools:$PATH
-      cd $IDF_PATH
-      ./install.sh
-      . ./export.sh
+      - name: Set up ESP-IDF
+        run: |
+          export IDF_PATH=${{ github.workspace }}/esp32_common/esp-idf
+          export PATH=$IDF_PATH/tools:$PATH
+          cd $IDF_PATH
+          ./install.sh
+          . ./export.sh
 
-  - name: Build project
-    run: |
-      cd ${{ github.workspace }}
-      . ${{ github.workspace }}/esp32_common/esp-idf/export.sh
-      idf.py build
+      - name: Build project
+        run: |
+          cd ${{ github.workspace }}
+          . ${{ github.workspace }}/esp32_common/esp-idf/export.sh
+          idf.py build
 
-  - name: Archive build output artifacts
-    uses: actions/upload-artifact@v3
-    with:
-      name: build
-      path: |
-        build/bootloader/bootloader.bin
-        build/partition_table/partition-table.bin
-        build/*
+      - name: Archive build output artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: |
+            build/bootloader/bootloader.bin
+            build/partition_table/partition-table.bin
+            build/*
